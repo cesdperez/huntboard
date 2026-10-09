@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseGameSettings } from './game-settings-form.js';
+import { GAME_NAME_MAX_LENGTH } from '#lib/game-settings.js';
+import { gameNameError, parseGameSettings } from './game-settings-form.js';
 
 function form(fields: Record<string, string>): FormData {
 	const data = new FormData();
@@ -91,5 +92,21 @@ describe('parseGameSettings', () => {
 			ok: false,
 			errors: { name: expect.any(String), late_penalty_per_minute: expect.any(String) }
 		});
+	});
+});
+
+describe('gameNameError', () => {
+	it('accepts a name up to the maximum length', () => {
+		expect(gameNameError('x'.repeat(GAME_NAME_MAX_LENGTH))).toBeNull();
+	});
+
+	it('requires a name', () => {
+		expect(gameNameError('')).toBe('Give the game a name.');
+	});
+
+	it('rejects a name over the maximum length', () => {
+		expect(gameNameError('x'.repeat(GAME_NAME_MAX_LENGTH + 1))).toBe(
+			`Keep the name to ${GAME_NAME_MAX_LENGTH} characters or fewer.`
+		);
 	});
 });

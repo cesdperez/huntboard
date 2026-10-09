@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { GAME_NAME_MAX_LENGTH } from '#lib/game-settings.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
@@ -29,7 +30,13 @@
 	>
 		<div class="flex flex-col gap-2">
 			<Label for="name">Game name</Label>
-			<Input id="name" name="name" required maxlength={100} value={form?.name ?? ''} />
+			<Input
+				id="name"
+				name="name"
+				required
+				maxlength={GAME_NAME_MAX_LENGTH}
+				value={form?.name ?? ''}
+			/>
 		</div>
 
 		<div class="flex flex-col gap-2">

@@ -4,6 +4,7 @@ import { resolve } from '$app/paths';
 import { creationCodeMatches } from '#lib/server/creation-code.js';
 import { createGame } from '#lib/server/db/games.js';
 import { readString } from '#lib/server/form.js';
+import { gameNameError } from '#lib/server/game-settings-form.js';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -12,7 +13,8 @@ export const actions: Actions = {
 		const code = readString(data, 'code');
 		const name = readString(data, 'name');
 
-		if (!name) return fail(400, { name, error: 'Give the game a name.' });
+		const nameError = gameNameError(name);
+		if (nameError) return fail(400, { name, error: nameError });
 		if (!(await creationCodeMatches(code, env.CREATE_GAME_CODE))) {
 			return fail(403, { name, error: 'That creation code is not right. Check it and try again.' });
 		}

@@ -7,6 +7,15 @@ export type GameSettingsErrors = Partial<Record<keyof GameSettings, string>>;
 export type GameSettingsResult =
 	{ ok: true; settings: GameSettings } | { ok: false; errors: GameSettingsErrors };
 
+/** Shared by game creation and the settings form, so a created game can always be saved again. */
+export function gameNameError(name: string): string | null {
+	if (!name) return 'Give the game a name.';
+	if (name.length > GAME_NAME_MAX_LENGTH) {
+		return `Keep the name to ${GAME_NAME_MAX_LENGTH} characters or fewer.`;
+	}
+	return null;
+}
+
 /**
  * Reads the game settings form. The browser sends times already converted to UTC ISO,
  * or '' for a time that is not set.
@@ -15,10 +24,8 @@ export function parseGameSettings(data: FormData): GameSettingsResult {
 	const errors: GameSettingsErrors = {};
 
 	const name = readString(data, 'name');
-	if (!name) errors.name = 'Give the game a name.';
-	else if (name.length > GAME_NAME_MAX_LENGTH) {
-		errors.name = `Keep the name to ${GAME_NAME_MAX_LENGTH} characters or fewer.`;
-	}
+	const nameError = gameNameError(name);
+	if (nameError) errors.name = nameError;
 
 	const startsAt = readUtcTime(data, 'starts_at');
 	if (startsAt === undefined) errors.starts_at = 'Enter a valid start time.';
