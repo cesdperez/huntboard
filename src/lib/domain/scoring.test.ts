@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
 	computeScoreboard,
-	latePenalty,
 	minutesLate,
 	rankByTotal,
 	type ScoringClaim,
@@ -54,24 +53,6 @@ describe('minutesLate', () => {
 	it('rejects a timestamp that does not parse', () => {
 		expect(() => minutesLate(ENDS_AT, 'yesterday')).toThrow(RangeError);
 		expect(() => minutesLate('soon', ENDS_AT)).toThrow(RangeError);
-	});
-});
-
-describe('latePenalty', () => {
-	it('multiplies whole minutes late by the penalty per minute', () => {
-		expect(latePenalty(ENDS_AT, '2026-06-01T19:07:45.000Z', 5)).toBe(35);
-	});
-
-	it('is 0 without an arrival', () => {
-		expect(latePenalty(ENDS_AT, null, 5)).toBe(0);
-	});
-
-	it('is 0 when arriving on time', () => {
-		expect(latePenalty(ENDS_AT, '2026-06-01T18:59:00.000Z', 5)).toBe(0);
-	});
-
-	it('is 0 when the penalty per minute is 0', () => {
-		expect(latePenalty(ENDS_AT, '2026-06-01T19:30:00.000Z', 0)).toBe(0);
 	});
 });
 
@@ -162,6 +143,39 @@ describe('computeScoreboard', () => {
 
 		expect(row.latePenalty).toBe(0);
 		expect(row.total).toBe(10);
+	});
+
+	it('applies no penalty to a team that arrived on time', () => {
+		const [row] = computeScoreboard({
+			game,
+			teams: [team(1, { arrivedAt: '2026-06-01T18:59:00.000Z' })],
+			claims: [],
+			adjustments: []
+		});
+
+		expect(row.latePenalty).toBe(0);
+	});
+
+	it('applies no penalty when the penalty per minute is 0', () => {
+		const [row] = computeScoreboard({
+			game: { endsAt: ENDS_AT, latePenaltyPerMinute: 0 },
+			teams: [team(1, { arrivedAt: '2026-06-01T19:30:00.000Z' })],
+			claims: [],
+			adjustments: []
+		});
+
+		expect(row).toMatchObject({ minutesLate: 30, latePenalty: 0 });
+	});
+
+	it('multiplies whole minutes late by the penalty per minute', () => {
+		const [row] = computeScoreboard({
+			game: { endsAt: ENDS_AT, latePenaltyPerMinute: 5 },
+			teams: [team(1, { arrivedAt: '2026-06-01T19:07:45.000Z' })],
+			claims: [],
+			adjustments: []
+		});
+
+		expect(row.latePenalty).toBe(35);
 	});
 
 	it('allows a negative total', () => {

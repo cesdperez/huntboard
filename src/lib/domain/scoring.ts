@@ -56,14 +56,6 @@ export function minutesLate(endsAt: string | null, arrivedAt: string | null): nu
 	return Math.max(0, Math.floor(lateMs / MS_PER_MINUTE));
 }
 
-export function latePenalty(
-	endsAt: string | null,
-	arrivedAt: string | null,
-	penaltyPerMinute: number
-): number {
-	return minutesLate(endsAt, arrivedAt) * penaltyPerMinute;
-}
-
 /** Rank for each total, in input order, highest total first. */
 export function rankByTotal(totals: number[]): number[] {
 	return totals.map((total) => 1 + totals.filter((other) => other > total).length);
@@ -82,32 +74,34 @@ export function computeScoreboard({
 	);
 	const adjustmentPoints = sumByTeam(adjustments, (adjustment) => adjustment.points);
 
-	const rows = teams.map((team) => {
-		const late = minutesLate(game.endsAt, team.arrivedAt);
-		const penalty = late * game.latePenaltyPerMinute;
-		const fromClaims = claimPoints.get(team.id) ?? 0;
-		const fromAdjustments = adjustmentPoints.get(team.id) ?? 0;
-		return {
-			team,
-			score: {
-				teamId: team.id,
-				name: team.name,
-				claimPoints: fromClaims,
-				adjustmentPoints: fromAdjustments,
-				minutesLate: late,
-				latePenalty: penalty,
-				total: fromClaims + fromAdjustments - penalty,
-				rank: 0
-			}
-		};
-	});
+	const scores = teams.map((team) =>
+		scoreTeam(team, game, claimPoints.get(team.id) ?? 0, adjustmentPoints.get(team.id) ?? 0)
+	);
+	const ranks = rankByTotal(scores.map((score) => score.total));
 
-	const ranks = rankByTotal(rows.map((row) => row.score.total));
-	rows.forEach((row, i) => (row.score.rank = ranks[i]));
-
-	return rows
-		.sort((a, b) => a.score.rank - b.score.rank || a.team.position - b.team.position)
+	return teams
+		.map((team, i) => ({ position: team.position, score: { ...scores[i], rank: ranks[i] } }))
+		.sort((a, b) => a.score.rank - b.score.rank || a.position - b.position)
 		.map((row) => row.score);
+}
+
+function scoreTeam(
+	team: ScoringTeam,
+	game: ScoringGame,
+	claimPoints: number,
+	adjustmentPoints: number
+): Omit<TeamScore, 'rank'> {
+	const late = minutesLate(game.endsAt, team.arrivedAt);
+	const latePenalty = late * game.latePenaltyPerMinute;
+	return {
+		teamId: team.id,
+		name: team.name,
+		claimPoints,
+		adjustmentPoints,
+		minutesLate: late,
+		latePenalty,
+		total: claimPoints + adjustmentPoints - latePenalty
+	};
 }
 
 function sumByTeam<T extends { teamId: number }>(
