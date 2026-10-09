@@ -1,9 +1,6 @@
+import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/game-settings.js';
 import type { GameSettings } from './db/games.js';
 import { readString } from './form.js';
-
-export const GAME_NAME_MAX_LENGTH = 100;
-// Keeps penalty times minutes late far below Number.MAX_SAFE_INTEGER.
-export const LATE_PENALTY_MAX = 1_000_000;
 
 export type GameSettingsErrors = Partial<Record<keyof GameSettings, string>>;
 
