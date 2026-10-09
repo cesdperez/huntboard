@@ -22,7 +22,6 @@
 	--muted: #5b6578;
 	--line: #dde2ea;
 	--flag: #f25c05;
-	/* White on #F25C05 is 3.3:1 and fails AA for marker numbers and button labels. Ink is 4.8:1. */
 	--on-flag: #14213d;
 	--danger: #c42847;
 	--scrim: rgb(20 33 61 / 0.4);

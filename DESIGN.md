@@ -20,14 +20,16 @@ Defined as CSS custom properties on `:root`, with a dark set under `prefers-colo
 | `--muted` | `#5B6578` | `#9AA4B8` | Secondary text, open markers |
 | `--line` | `#DDE2EA` | `#26324D` | Dividers, input borders |
 | `--flag` | `#F25C05` | `#FF7A2E` | Pending and scored markers, primary actions |
-| `--on-flag` | `#FFFFFF` | `#14213D` | Text on flag orange |
+| `--on-flag` | `#14213D` | `#14213D` | Text on flag orange |
 | `--danger` | `#C42847` | `#FF6B85` | Reject, penalties, destructive actions |
+| `--scrim` | `rgb(20 33 61 / 0.4)` | `rgb(5 10 20 / 0.6)` | Overlay behind sheets |
 
 Rules:
 
 - Orange means "this is ours, it counts". Use it for markers, the primary action on a screen, and the team's own row on the scoreboard. Nowhere else.
 - No gradients, no tinted washes, no decorative colour.
 - Every pair used for text meets WCAG AA. Check `--flag` with `--on-flag` at the sizes used before changing either.
+- `--on-flag` is navy in both themes. White on `#F25C05` is 3.3:1 and fails AA for marker numbers and button labels; navy is 4.8:1.
 - State is never told by colour alone. The marker shape carries it.
 
 ## The claim marker
