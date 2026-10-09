@@ -1,6 +1,4 @@
-import type { ChallengeRow, WithClaimCount } from './types.js';
-
-export type ChallengeWithClaimCount = ChallengeRow & WithClaimCount;
+import type { ChallengeWithClaimCount } from './types.js';
 
 export async function listChallengesWithClaimCounts(
 	db: D1Database,

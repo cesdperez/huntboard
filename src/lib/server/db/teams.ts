@@ -1,6 +1,4 @@
-import type { TeamRow, WithClaimCount } from './types.js';
-
-export type TeamWithClaimCount = TeamRow & WithClaimCount;
+import type { TeamWithClaimCount } from './types.js';
 
 export async function listTeamsWithClaimCounts(
 	db: D1Database,

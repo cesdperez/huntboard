@@ -51,3 +51,7 @@ export interface ClaimRow {
 export interface WithClaimCount {
 	claim_count: number;
 }
+
+export type TeamWithClaimCount = TeamRow & WithClaimCount;
+
+export type ChallengeWithClaimCount = ChallengeRow & WithClaimCount;
