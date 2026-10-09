@@ -4,8 +4,13 @@ import { readString } from './form.js';
 
 export type GameSettingsErrors = Partial<Record<keyof GameSettings, string>>;
 
+type GameTimes = Pick<GameSettings, 'starts_at' | 'ends_at'>;
+
+/** Times are absent when the form had none to send, so the stored times stay as they are. */
+export type ParsedGameSettings = Omit<GameSettings, keyof GameTimes> & Partial<GameTimes>;
+
 export type GameSettingsResult =
-	{ ok: true; settings: GameSettings } | { ok: false; errors: GameSettingsErrors };
+	{ ok: true; settings: ParsedGameSettings } | { ok: false; errors: GameSettingsErrors };
 
 /** Shared by game creation and the settings form, so a created game can always be saved again. */
 export function gameNameError(name: string): string | null {
@@ -18,7 +23,7 @@ export function gameNameError(name: string): string | null {
 
 /**
  * Reads the game settings form. The browser sends times already converted to UTC ISO,
- * or '' for a time that is not set.
+ * or '' for a time that is not set. Before hydration it sends no time fields at all.
  */
 export function parseGameSettings(data: FormData): GameSettingsResult {
 	const errors: GameSettingsErrors = {};
@@ -42,15 +47,12 @@ export function parseGameSettings(data: FormData): GameSettingsResult {
 	}
 
 	if (Object.keys(errors).length > 0) return { ok: false, errors };
-	return {
-		ok: true,
-		settings: {
-			name,
-			starts_at: startsAt ?? null,
-			ends_at: endsAt ?? null,
-			late_penalty_per_minute: latePenalty
-		}
-	};
+	const settings: ParsedGameSettings = { name, late_penalty_per_minute: latePenalty };
+	if (data.has('starts_at') || data.has('ends_at')) {
+		settings.starts_at = startsAt ?? null;
+		settings.ends_at = endsAt ?? null;
+	}
+	return { ok: true, settings };
 }
 
 /** null for an empty field, undefined for one that is not in toISOString() format. */

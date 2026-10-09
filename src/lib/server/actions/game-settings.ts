@@ -17,7 +17,11 @@ export const gameSettingsActions = {
 			return fail(400, { gameSettings: { errors: result.errors } satisfies GameSettingsFormData });
 		}
 
-		await updateGameSettings(env.DB, game.id, result.settings);
+		await updateGameSettings(env.DB, game.id, {
+			starts_at: game.starts_at,
+			ends_at: game.ends_at,
+			...result.settings
+		});
 		return { gameSettings: { saved: true } satisfies GameSettingsFormData };
 	}
 } satisfies AdminActions;

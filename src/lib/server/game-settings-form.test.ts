@@ -33,6 +33,17 @@ describe('parseGameSettings', () => {
 		expect(result).toMatchObject({ ok: true, settings: { starts_at: null, ends_at: null } });
 	});
 
+	it('leaves the times out when the form sends no time fields', () => {
+		const data = form({});
+		data.delete('starts_at');
+		data.delete('ends_at');
+
+		expect(parseGameSettings(data)).toEqual({
+			ok: true,
+			settings: { name: 'Canal hunt', late_penalty_per_minute: 5 }
+		});
+	});
+
 	it('requires a name', () => {
 		expect(parseGameSettings(form({ name: ' ' }))).toEqual({
 			ok: false,

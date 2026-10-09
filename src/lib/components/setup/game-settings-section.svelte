@@ -72,11 +72,15 @@
 				<Input
 					id="game-starts-at"
 					type="datetime-local"
+					disabled={!browser}
 					bind:value={startsLocal}
 					aria-invalid={errors.starts_at ? true : undefined}
 					aria-describedby={errors.starts_at ? 'game-starts-at-error' : undefined}
 				/>
-				<input type="hidden" name="starts_at" value={localInputToUtc(startsLocal) ?? ''} />
+				<!-- Without the browser's time zone there is no UTC to send, so the server keeps the stored time. -->
+				{#if browser}
+					<input type="hidden" name="starts_at" value={localInputToUtc(startsLocal) ?? ''} />
+				{/if}
 				{@render fieldError('game-starts-at-error', errors.starts_at)}
 			</div>
 
@@ -85,11 +89,15 @@
 				<Input
 					id="game-ends-at"
 					type="datetime-local"
+					disabled={!browser}
 					bind:value={endsLocal}
 					aria-invalid={errors.ends_at ? true : undefined}
 					aria-describedby={errors.ends_at ? 'game-ends-at-error' : undefined}
 				/>
-				<input type="hidden" name="ends_at" value={localInputToUtc(endsLocal) ?? ''} />
+				<!-- Without the browser's time zone there is no UTC to send, so the server keeps the stored time. -->
+				{#if browser}
+					<input type="hidden" name="ends_at" value={localInputToUtc(endsLocal) ?? ''} />
+				{/if}
 				{@render fieldError('game-ends-at-error', errors.ends_at)}
 			</div>
 		</fieldset>
