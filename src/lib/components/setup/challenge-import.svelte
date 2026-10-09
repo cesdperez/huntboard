@@ -1,0 +1,210 @@
+<script lang="ts">
+	import { enhance, type SubmitFunction } from '$app/forms';
+	import { page } from '$app/state';
+	import { Points } from '#lib/components/points/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
+	import { groupBySection } from './group-by-section.js';
+
+	const PLACEHOLDER =
+		'# Around town\n- Make a birthday card [5-20]\n  Judged on effort.\n- Swim in a fountain [25]';
+
+	let { hasChallenges }: { hasChallenges: boolean } = $props();
+
+	const result = $derived(page.form?.challenges as ChallengesFormResult | undefined);
+	const previewResult = $derived(result?.kind === 'preview' ? result : null);
+	const preview = $derived(previewResult?.preview ?? null);
+	const imported = $derived(result?.kind === 'imported' ? result.count : null);
+
+	const initial = page.form?.challenges as ChallengesFormResult | undefined;
+	let text = $state(initial?.kind === 'preview' ? initial.text : '');
+	let pending = $state(false);
+
+	const stale = $derived(previewResult !== null && previewResult.text !== text);
+	const deletedClaimCount = $derived(
+		preview?.deletedWithClaims.reduce((sum, { claimCount }) => sum + claimCount, 0) ?? 0
+	);
+	const canImport = $derived(
+		preview !== null && preview.errors.length === 0 && preview.rows.length > 0 && !stale
+	);
+
+	const submit: SubmitFunction = () => {
+		pending = true;
+		return async ({ result, update }) => {
+			await update({ reset: false });
+			pending = false;
+			if (result.type === 'success' && result.data?.challenges?.kind === 'imported') text = '';
+		};
+	};
+
+	const summary = $derived.by(() => {
+		if (!preview || preview.rows.length === 0) return null;
+		const added = preview.rows.filter((row) => row.change === 'new').length;
+		const deleted = preview.deleted.length + preview.deletedWithClaims.length;
+		const parts = [plural(added, 'new challenge'), plural(preview.rows.length - added, 'update')];
+		if (deleted > 0) parts.push(plural(deleted, 'delete'));
+		return `${parts.join(', ')}.`;
+	});
+
+	function plural(count: number, one: string, many = `${one}s`) {
+		return `${count} ${count === 1 ? one : many}`;
+	}
+</script>
+
+<form method="POST" action="?/challengesPreview" class="flex flex-col gap-3" use:enhance={submit}>
+	<div class="flex flex-col gap-2">
+		<Label for="challenge-text">{hasChallenges ? 'Replace the list' : 'Paste your list'}</Label>
+		<p id="challenge-text-hint" class="type-secondary">
+			One challenge per line, starting with a dash. Points go at the end, like [5-20] or (10).
+			Headings with # become sections. Lines under a challenge are its description.
+		</p>
+		<textarea
+			id="challenge-text"
+			name="text"
+			rows="10"
+			bind:value={text}
+			aria-describedby="challenge-text-hint"
+			aria-invalid={previewResult?.error && !preview ? true : undefined}
+			class="min-h-48 w-full rounded-control border-2 border-line bg-surface px-3 py-2 text-ink placeholder:text-muted focus-visible:border-ink aria-invalid:border-danger"
+			placeholder={PLACEHOLDER}></textarea>
+	</div>
+	<Button type="submit" disabled={pending || text.trim() === ''}>Preview</Button>
+</form>
+
+{#if imported !== null}
+	<p class="type-secondary" role="status">Imported {plural(imported, 'challenge')}.</p>
+{/if}
+
+{#if previewResult?.error}
+	<p class="text-[15px] text-danger" role="alert">{previewResult.error}</p>
+{/if}
+
+{#if preview}
+	<div class="flex flex-col gap-4" aria-labelledby="challenge-preview-heading" role="region">
+		<h3 id="challenge-preview-heading" class="type-heading">Preview</h3>
+
+		{#if stale}
+			<p class="text-[15px] text-danger" role="alert">
+				The list changed since this preview. Preview again before importing.
+			</p>
+		{/if}
+
+		{#if preview.errors.length > 0}
+			<div class="flex flex-col gap-2">
+				<p class="text-[15px] text-danger">
+					{plural(preview.errors.length, 'line')} could not be read. Fix the list and preview again.
+				</p>
+				<ul class="flex flex-col border-t border-danger/40">
+					{#each preview.errors as error (error.line)}
+						<li class="flex flex-col gap-1 border-b border-danger/40 py-2">
+							<span class="text-[15px]">
+								<span class="font-semibold tabular">Line {error.line}:</span>
+								{error.message}
+							</span>
+							<code class="type-secondary break-words whitespace-pre-wrap">{error.source}</code>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+
+		{#if summary}
+			<p class="type-secondary">{summary}</p>
+		{/if}
+
+		{#if preview.deleted.length > 0}
+			<p class="type-secondary">Not in the new list, deleted: {preview.deleted.join(', ')}.</p>
+		{/if}
+
+		{#if preview.deletedWithClaims.length > 0}
+			<div class="flex flex-col gap-2 rounded-control border-2 border-danger p-3">
+				<p class="text-[15px] text-danger">
+					These challenges are not in the new list but have claims. Importing deletes them and their {plural(
+						deletedClaimCount,
+						'claim'
+					)}.
+				</p>
+				<ul class="flex flex-col gap-1">
+					{#each preview.deletedWithClaims as deleted (deleted.id)}
+						<li class="text-[15px]">
+							{deleted.title}<span class="text-muted">, {plural(deleted.claimCount, 'claim')}</span>
+						</li>
+					{/each}
+				</ul>
+				<p class="type-secondary">To fix a typo in a title, edit that challenge instead.</p>
+			</div>
+		{/if}
+
+		{#if preview.clampedScores.length > 0}
+			<div class="flex flex-col gap-2">
+				<p class="text-[15px]">These scores move into the new range:</p>
+				<ul class="flex flex-col gap-1">
+					{#each preview.clampedScores as clamped, index (index)}
+						<li class="text-[15px]">
+							{clamped.teamName}, {clamped.title}:
+							<span class="tabular">{clamped.from} to {clamped.to}</span>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+
+		{#if preview.rows.length > 0}
+			<table class="w-full border-collapse text-left">
+				<thead class="sr-only">
+					<tr>
+						<th scope="col">Challenge</th>
+						<th scope="col">Points</th>
+					</tr>
+				</thead>
+				{#each groupBySection(preview.rows) as group, groupIndex (groupIndex)}
+					<tbody>
+						{#if group.section}
+							<tr>
+								<th scope="rowgroup" colspan="2" class="pt-4 pb-1 type-heading">
+									{group.section}
+								</th>
+							</tr>
+						{/if}
+						{#each group.items as row (row.title)}
+							<tr class="border-t">
+								<td class="py-3 pr-3 align-top">
+									<span class="block">{row.title}</span>
+									<span class="block type-secondary">
+										{row.change === 'new' ? 'New' : 'Updated'}
+									</span>
+									{#if row.description}
+										<span class="block type-secondary whitespace-pre-line">{row.description}</span>
+									{/if}
+								</td>
+								<td class="py-3 text-right align-top">
+									<Points min={row.min_points} max={row.max_points} />
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				{/each}
+			</table>
+		{/if}
+
+		<form
+			method="POST"
+			action="?/challengesImport"
+			class="flex flex-col gap-2"
+			use:enhance={submit}
+		>
+			<input type="hidden" name="text" value={previewResult?.text ?? ''} />
+			{#each preview.deletedWithClaims as deleted (deleted.id)}
+				<input type="hidden" name="acknowledged" value={deleted.id} />
+			{/each}
+			<Button type="submit" variant="primary" size="lg" disabled={pending || !canImport}>
+				{#if deletedClaimCount > 0}
+					Import and delete {plural(deletedClaimCount, 'claim')}
+				{:else}
+					Import {plural(preview.rows.length, 'challenge')}
+				{/if}
+			</Button>
+		</form>
+	</div>
+{/if}
