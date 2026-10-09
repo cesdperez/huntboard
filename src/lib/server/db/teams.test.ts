@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createGame } from './games.js';
-import { listTeamsWithClaimCounts } from './teams.js';
+import { addTeam, deleteTeam, listTeamsWithClaimCounts, moveTeam, renameTeam } from './teams.js';
 import { createTestDb } from './testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import type { GameRow } from './types.js';
@@ -40,5 +40,109 @@ describe('listTeamsWithClaimCounts', () => {
 			{ ...rats, claim_count: 3 },
 			{ ...owls, claim_count: 0 }
 		]);
+	});
+});
+
+async function names(gameId = game.id) {
+	const teams = await listTeamsWithClaimCounts(db, gameId);
+	return teams.map((team) => `${team.position}:${team.name}`);
+}
+
+describe('addTeam', () => {
+	it('adds the team at the end with its own link token', async () => {
+		await seedTeam(db, game.id, { name: 'Canal Rats' });
+
+		const owls = await addTeam(db, game.id, 'Night Owls');
+
+		expect(owls).toMatchObject({ game_id: game.id, name: 'Night Owls', position: 1 });
+		expect(owls.token).toMatch(/^[A-Za-z0-9_-]{22}$/);
+		expect(await names()).toEqual(['0:Canal Rats', '1:Night Owls']);
+	});
+
+	it('starts at position 0 in a game without teams, whatever other games hold', async () => {
+		const other = await createGame(db, 'Other hunt');
+		await seedTeam(db, other.id);
+
+		expect((await addTeam(db, game.id, 'Canal Rats')).position).toBe(0);
+	});
+});
+
+describe('renameTeam', () => {
+	it('renames a team of this game', async () => {
+		const rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
+
+		expect(await renameTeam(db, game.id, rats.id, 'Sewer Rats')).toBe(true);
+		expect(await names()).toEqual(['0:Sewer Rats']);
+	});
+
+	it('refuses a team of another game', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const elsewhere = await seedTeam(db, other.id, { name: 'Elsewhere' });
+
+		expect(await renameTeam(db, game.id, elsewhere.id, 'Hijacked')).toBe(false);
+		expect(await names(other.id)).toEqual(['0:Elsewhere']);
+	});
+});
+
+describe('moveTeam', () => {
+	beforeEach(async () => {
+		for (const name of ['A', 'B', 'C']) await seedTeam(db, game.id, { name });
+	});
+
+	it('swaps a team with the one above it', async () => {
+		const [, , c] = await listTeamsWithClaimCounts(db, game.id);
+
+		expect(await moveTeam(db, game.id, c.id, -1)).toBe(true);
+		expect(await names()).toEqual(['0:A', '1:C', '2:B']);
+	});
+
+	it('does nothing past either end', async () => {
+		const [a, , c] = await listTeamsWithClaimCounts(db, game.id);
+
+		expect(await moveTeam(db, game.id, a.id, -1)).toBe(false);
+		expect(await moveTeam(db, game.id, c.id, 1)).toBe(false);
+		expect(await names()).toEqual(['0:A', '1:B', '2:C']);
+	});
+
+	it('closes gaps in positions while moving', async () => {
+		const d = await seedTeam(db, game.id, { name: 'D', position: 7 });
+
+		await moveTeam(db, game.id, d.id, -1);
+
+		expect(await names()).toEqual(['0:A', '1:B', '2:D', '3:C']);
+	});
+
+	it('refuses a team of another game', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const elsewhere = await seedTeam(db, other.id);
+
+		expect(await moveTeam(db, game.id, elsewhere.id, -1)).toBe(false);
+	});
+});
+
+describe('deleteTeam', () => {
+	it('deletes a team without claims and closes the gap it leaves', async () => {
+		await seedTeam(db, game.id, { name: 'A' });
+		const b = await seedTeam(db, game.id, { name: 'B' });
+		await seedTeam(db, game.id, { name: 'C' });
+
+		expect(await deleteTeam(db, game.id, b.id)).toBe('deleted');
+		expect(await names()).toEqual(['0:A', '1:C']);
+	});
+
+	it('keeps a team that has any claim, even a rejected one', async () => {
+		const rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
+		await seedClaim(db, rats.id, (await seedChallenge(db, game.id)).id, { status: 'rejected' });
+
+		expect(await deleteTeam(db, game.id, rats.id)).toBe('has-claims');
+		expect(await names()).toEqual(['0:Canal Rats']);
+	});
+
+	it('reports a team of another game as not found', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const elsewhere = await seedTeam(db, other.id);
+
+		expect(await deleteTeam(db, game.id, elsewhere.id)).toBe('not-found');
+		expect(await listTeamsWithClaimCounts(db, other.id)).toHaveLength(1);
 	});
 });
