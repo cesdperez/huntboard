@@ -23,6 +23,11 @@
 <span
 	data-slot="points"
 	class={cn(variant === 'total' ? 'type-score' : 'type-range', 'whitespace-nowrap', className)}
-	aria-label={label}
-	{...restProps}>{text}</span
+	{...restProps}
 >
+	{#if label}
+		<span aria-hidden="true">{text}</span><span class="sr-only">{label}</span>
+	{:else}
+		{text}
+	{/if}
+</span>
