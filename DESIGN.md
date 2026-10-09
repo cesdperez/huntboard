@@ -72,6 +72,7 @@ Rules:
 - Numbers that change (totals, points, countdowns) always use `font-variant-numeric: tabular-nums` so they do not jitter when they update.
 - Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings.
 - Inputs are at least 16px so iOS does not zoom on focus.
+- One exception to the single family: a pasted line quoted back in a parse error uses the system monospace font, so brackets, dashes and indentation read exactly as typed.
 - Body text lines stay under 70 characters. On wide screens the content column is capped, not stretched.
 
 ## Layout
