@@ -27,16 +27,17 @@ CREATE TABLE challenge (
 	id INTEGER PRIMARY KEY,
 	game_id INTEGER NOT NULL REFERENCES game (id) ON DELETE CASCADE,
 	title TEXT NOT NULL,
+	-- titleKey(title) from challenge-parser.ts. SQLite lower() folds only ASCII, so re-import's key must be stored.
+	title_key TEXT NOT NULL,
 	description TEXT,
 	section TEXT,
 	min_points INTEGER NOT NULL CHECK (min_points >= 0),
 	max_points INTEGER NOT NULL,
 	position INTEGER NOT NULL,
-	CHECK (min_points <= max_points)
+	CHECK (min_points <= max_points),
+	-- Re-import matches on title_key, so two challenges sharing one would be ambiguous.
+	UNIQUE (game_id, title_key)
 );
-
--- Re-import matches challenges by title ignoring case, so two titles that differ only in case would be ambiguous.
-CREATE UNIQUE INDEX challenge_game_title ON challenge (game_id, lower(title));
 
 CREATE TABLE claim (
 	id INTEGER PRIMARY KEY,

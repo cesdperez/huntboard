@@ -84,8 +84,8 @@ All times are stored as UTC.
 game        id, name, admin_token, scoreboard_token, starts_at, ends_at,
             late_penalty_per_minute, created_at
 team        id, game_id, name, token, position, arrived_at
-challenge   id, game_id, title, description, section, min_points, max_points, position
-            unique (game_id, lower(title))
+challenge   id, game_id, title, title_key, description, section, min_points, max_points, position
+            unique (game_id, title_key)
 claim       id, team_id, challenge_id, status (pending|scored|rejected), note,
             marked_by, marked_at, points, judged_by, judged_at, judge_note
             unique (team_id, challenge_id) where status in (pending, scored)
