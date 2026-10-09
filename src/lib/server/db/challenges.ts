@@ -75,7 +75,15 @@ export async function applyChallengeImport(
 	gameId: number,
 	plan: ImportPlan
 ): Promise<void> {
-	const deletes = plan.deleteIds.map((id) =>
+	const unclaimedDeletes = plan.deleteIds.map((id) =>
+		db
+			.prepare(
+				`DELETE FROM challenge WHERE id = ? AND game_id = ?
+					AND NOT EXISTS (SELECT 1 FROM claim WHERE claim.challenge_id = challenge.id)`
+			)
+			.bind(id, gameId)
+	);
+	const claimedDeletes = plan.deleteWithClaimsIds.map((id) =>
 		db.prepare('DELETE FROM challenge WHERE id = ? AND game_id = ?').bind(id, gameId)
 	);
 	const updates = plan.updates.flatMap(({ id, ...fields }) => [
@@ -101,7 +109,7 @@ export async function applyChallengeImport(
 			)
 	);
 	// Deletes go first so their title keys are free before anything else is written.
-	const statements = [...deletes, ...updates, ...inserts];
+	const statements = [...unclaimedDeletes, ...claimedDeletes, ...updates, ...inserts];
 	if (statements.length > 0) await db.batch(statements);
 }
 

@@ -28,7 +28,8 @@ describe('buildImportPlan', () => {
 				}
 			],
 			updates: [],
-			deleteIds: []
+			deleteIds: [],
+			deleteWithClaimsIds: []
 		});
 	});
 
@@ -52,7 +53,7 @@ describe('buildImportPlan', () => {
 		expect(plan.inserts.map((c) => c.title)).toEqual(['Run']);
 	});
 
-	it('deletes missing challenges with and without claims', () => {
+	it('keeps missing challenges with claims apart from those without', () => {
 		const existing: ExistingChallenge[] = [
 			{ id: 1, title: 'Gone', claims: [] },
 			{ id: 2, title: 'Claimed', claims: [{ id: 9, team_id: 1, status: 'rejected', points: null }] }
@@ -60,7 +61,8 @@ describe('buildImportPlan', () => {
 
 		const plan = buildImportPlan(diffReimport(existing, []));
 
-		expect(plan.deleteIds).toEqual([1, 2]);
+		expect(plan.deleteIds).toEqual([1]);
+		expect(plan.deleteWithClaimsIds).toEqual([2]);
 	});
 });
 

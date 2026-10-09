@@ -20,8 +20,10 @@ export interface ChallengeFields {
 export interface ImportPlan {
 	inserts: ChallengeFields[];
 	updates: (ChallengeFields & { id: number })[];
-	/** Deleting a challenge cascades to its claims. */
+	/** Unclaimed when previewed. A claim that arrives before the write keeps the challenge. */
 	deleteIds: number[];
+	/** Deletions the admin acknowledged. Deleting a challenge cascades to its claims. */
+	deleteWithClaimsIds: number[];
 }
 
 export interface ImportPreviewRow {
@@ -52,7 +54,8 @@ export function buildImportPlan(diff: ReimportDiff): ImportPlan {
 	return {
 		inserts: diff.added.map(toFields),
 		updates: diff.matched.map(({ id, challenge }) => ({ id, ...toFields(challenge) })),
-		deleteIds: [...diff.deleted, ...diff.deletedWithClaims].map(({ id }) => id)
+		deleteIds: diff.deleted.map(({ id }) => id),
+		deleteWithClaimsIds: diff.deletedWithClaims.map(({ id }) => id)
 	};
 }
 

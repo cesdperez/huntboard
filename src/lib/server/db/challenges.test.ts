@@ -105,7 +105,8 @@ describe('applyChallengeImport', () => {
 		await applyChallengeImport(db, game.id, {
 			inserts: [fields('New one', { position: 0, section: 'Food' })],
 			updates: [{ id: keep.id, ...fields('KEEP', { position: 1, min_points: 1, max_points: 3 }) }],
-			deleteIds: [drop.id]
+			deleteIds: [],
+			deleteWithClaimsIds: [drop.id]
 		});
 
 		const challenges = await listChallengesWithClaimCounts(db, game.id);
@@ -133,11 +134,27 @@ describe('applyChallengeImport', () => {
 		await applyChallengeImport(db, game.id, {
 			inserts: [],
 			updates: [{ id: swim.id, ...fields('Swim', { min_points: 10, max_points: 30 }) }],
-			deleteIds: []
+			deleteIds: [],
+			deleteWithClaimsIds: []
 		});
 
 		expect(await claimPoints(high.id)).toBe(30);
 		expect(await claimPoints(low.id)).toBe(10);
+	});
+
+	it('keeps a challenge that got a claim after it was planned as an unclaimed delete', async () => {
+		const rats = await seedTeam(db, game.id);
+		const late = await seedChallenge(db, game.id, { title: 'Late claim' });
+		await seedClaim(db, rats.id, late.id, { status: 'pending' });
+
+		await applyChallengeImport(db, game.id, {
+			inserts: [],
+			updates: [],
+			deleteIds: [late.id],
+			deleteWithClaimsIds: []
+		});
+
+		expect(await listChallengesWithClaimCounts(db, game.id)).toEqual([{ ...late, claim_count: 1 }]);
 	});
 
 	it('leaves challenges of other games alone', async () => {
@@ -147,7 +164,8 @@ describe('applyChallengeImport', () => {
 		await applyChallengeImport(db, game.id, {
 			inserts: [],
 			updates: [{ id: elsewhere.id, ...fields('Hijacked') }],
-			deleteIds: [elsewhere.id]
+			deleteIds: [elsewhere.id],
+			deleteWithClaimsIds: [elsewhere.id]
 		});
 
 		expect(await listChallengesWithClaimCounts(db, other.id)).toEqual([
