@@ -49,7 +49,8 @@ const UNIT = String.raw`(?:pts?|points?)\.?`;
 const POINTS_PATTERNS = [
 	new RegExp(String.raw`[[(]\s*${RANGE}(?:\s*${UNIT})?\s*[\])]$`, 'i'),
 	new RegExp(String.raw`(?:^|[\s:])${RANGE}\s*${UNIT}$`, 'i'),
-	new RegExp(String.raw`:\s*${RANGE}$`)
+	// A colon between two digits is a clock time (16:00), not points.
+	new RegExp(String.raw`(?:(?<!\d):\s*|:\s+)${RANGE}$`)
 ];
 
 const NOT_UNDER_CHALLENGE =

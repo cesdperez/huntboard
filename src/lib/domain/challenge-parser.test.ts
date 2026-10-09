@@ -157,6 +157,27 @@ describe('parseChallenges', () => {
 			expect(errorsOf('- Drive along Route 66')).toEqual([{ line: 1, message: 'No points found' }]);
 		});
 
+		it('does not read a clock time at the end of the title as points', () => {
+			expect(errorsOf('- Meet at 12:30')).toEqual([{ line: 1, message: 'No points found' }]);
+			expect(errorsOf('- Be at the Dam at 16:00')).toEqual([
+				{ line: 1, message: 'No points found' }
+			]);
+		});
+
+		it('reads colon points after a clock time', () => {
+			expect(only('- Meet at 12:30: 10')).toMatchObject({
+				title: 'Meet at 12:30',
+				min_points: 10,
+				max_points: 10
+			});
+		});
+
+		it('reads colon points with or without spaces', () => {
+			expect(only('- Swim:10')).toMatchObject({ title: 'Swim', min_points: 10 });
+			expect(only('- Swim : 10')).toMatchObject({ title: 'Swim', min_points: 10 });
+			expect(only('- Swim: 5 – 20')).toMatchObject({ min_points: 5, max_points: 20 });
+		});
+
 		it('reports min greater than max', () => {
 			expect(errorsOf('- Swim [20-5]')).toEqual([{ line: 1, message: 'Min is greater than max' }]);
 		});
