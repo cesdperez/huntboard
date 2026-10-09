@@ -102,13 +102,14 @@ describe('applyChallengeImport', () => {
 		const drop = await seedChallenge(db, game.id, { title: 'Drop' });
 		await seedClaim(db, rats.id, drop.id, { status: 'pending' });
 
-		await applyChallengeImport(db, game.id, {
+		const result = await applyChallengeImport(db, game.id, {
 			inserts: [fields('New one', { position: 0, section: 'Food' })],
 			updates: [{ id: keep.id, ...fields('KEEP', { position: 1, min_points: 1, max_points: 3 }) }],
 			deleteIds: [],
 			deleteWithClaimsIds: [drop.id]
 		});
 
+		expect(result).toEqual({ status: 'applied' });
 		const challenges = await listChallengesWithClaimCounts(db, game.id);
 		expect(
 			challenges.map(({ title, section, min_points, max_points }) => ({
@@ -155,6 +156,24 @@ describe('applyChallengeImport', () => {
 		});
 
 		expect(await listChallengesWithClaimCounts(db, game.id)).toEqual([{ ...late, claim_count: 1 }]);
+	});
+
+	it('reports a conflict and writes nothing when a title was taken since the preview', async () => {
+		const keep = await seedChallenge(db, game.id, { title: 'Keep' });
+		const taken = await seedChallenge(db, game.id, { title: 'Taken' });
+
+		const result = await applyChallengeImport(db, game.id, {
+			inserts: [fields('TAKEN', { position: 1 })],
+			updates: [{ id: keep.id, ...fields('Kept', { position: 0 }) }],
+			deleteIds: [],
+			deleteWithClaimsIds: []
+		});
+
+		expect(result).toEqual({ status: 'conflict' });
+		expect(await listChallengesWithClaimCounts(db, game.id)).toEqual([
+			{ ...keep, claim_count: 0 },
+			{ ...taken, claim_count: 0 }
+		]);
 	});
 
 	it('leaves challenges of other games alone', async () => {

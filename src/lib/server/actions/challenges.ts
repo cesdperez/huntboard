@@ -108,7 +108,16 @@ export const challengesActions = {
 			});
 		}
 
-		await applyChallengeImport(env.DB, game.id, buildImportPlan(diff));
+		const result = await applyChallengeImport(env.DB, game.id, buildImportPlan(diff));
+		if (result.status === 'conflict') {
+			const fresh = await getImportSource(env.DB, game.id);
+			return challengesFail(409, {
+				kind: 'preview',
+				text,
+				preview: buildImportPreview(text, fresh.existing, fresh.teamNames),
+				error: 'The challenges changed since the preview. Check the list below and confirm again.'
+			});
+		}
 		return challengesResult({ kind: 'imported', count: challenges.length });
 	},
 

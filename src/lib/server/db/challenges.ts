@@ -69,12 +69,17 @@ export async function getImportSource(db: D1Database, gameId: number): Promise<I
 	return { existing: [...byId.values()], teamNames };
 }
 
-/** Applies a re-import atomically. Every statement is scoped to the game, so foreign ids do nothing. */
+export type ApplyChallengeImportResult = { status: 'applied' } | { status: 'conflict' };
+
+/**
+ * Applies a re-import atomically. Every statement is scoped to the game, so foreign ids do nothing.
+ * A conflict means another write took one of the titles since the plan was made; nothing is written.
+ */
 export async function applyChallengeImport(
 	db: D1Database,
 	gameId: number,
 	plan: ImportPlan
-): Promise<void> {
+): Promise<ApplyChallengeImportResult> {
 	const unclaimedDeletes = plan.deleteIds.map((id) =>
 		db
 			.prepare(
@@ -110,7 +115,14 @@ export async function applyChallengeImport(
 	);
 	// Deletes go first so their title keys are free before anything else is written.
 	const statements = [...unclaimedDeletes, ...claimedDeletes, ...updates, ...inserts];
-	if (statements.length > 0) await db.batch(statements);
+	if (statements.length === 0) return { status: 'applied' };
+	try {
+		await db.batch(statements);
+	} catch (error) {
+		if (isUniqueViolation(error)) return { status: 'conflict' };
+		throw error;
+	}
+	return { status: 'applied' };
 }
 
 export type UpdateChallengeResult =
@@ -131,17 +143,21 @@ export async function updateChallenge(
 		.first<number>('position');
 	if (current === null) return { status: 'not-found' };
 
-	const clash = await db
-		.prepare('SELECT 1 AS clash FROM challenge WHERE game_id = ? AND title_key = ? AND id <> ?')
-		.bind(gameId, fields.title_key, challengeId)
-		.first<number>('clash');
-	if (clash !== null) return { status: 'duplicate-title' };
+	try {
+		const [, clamped] = await db.batch([
+			updateStatement(db, gameId, challengeId, { ...fields, position: current }),
+			clampStatement(db, gameId, challengeId, fields)
+		]);
+		return { status: 'updated', clampedCount: clamped.meta.changes };
+	} catch (error) {
+		if (isUniqueViolation(error)) return { status: 'duplicate-title' };
+		throw error;
+	}
+}
 
-	const [, clamped] = await db.batch([
-		updateStatement(db, gameId, challengeId, { ...fields, position: current }),
-		clampStatement(db, gameId, challengeId, fields)
-	]);
-	return { status: 'updated', clampedCount: clamped.meta.changes };
+// The only UNIQUE constraint a challenge write can break is (game_id, title_key).
+function isUniqueViolation(error: unknown): boolean {
+	return error instanceof Error && error.message.includes('UNIQUE constraint failed');
 }
 
 function updateStatement(
