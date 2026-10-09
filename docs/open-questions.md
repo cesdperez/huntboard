@@ -1,16 +1,15 @@
 # Open questions
 
+Resolved questions move to [decisions](decisions.md).
+
 ## Product
 
-- **Repeatable challenges.** Not in the prototype. If wanted later, a challenge needs a max count, and a claim is no longer unique per team and challenge.
+- **Repeatable challenges.** Not in the prototype. If wanted later, a challenge needs a max count, and the active-claim index has to go.
 - **Scoreboard freeze.** Should the scoreboard hide changes for the last part of the game so the final result is a reveal?
-- **Big-screen view.** A full-screen scoreboard for the final reveal at the meeting point.
-- **Team names.** Does the admin set them, or does each team pick its own on first visit?
-- **Rejection reasons.** Should a rejection carry a short message back to the team?
-- **Late penalty.** Is it linear with no cap? What happens to a team that never arrives?
+- **Team name moderation.** Teams can rename themselves and the name shows on the public scoreboard. The admin can rename it back. Is that enough?
+- **Language.** The prototype is English only. Do Dutch-speaking players need a Dutch UI?
 
 ## Technical
 
-- **Team link leaks.** If a link gets out, anyone can act for that team. Rotating a team's link from the admin page would be a cheap fix.
 - **Free-tier limits.** Confirm the current Workers and D1 free-tier limits before the event. They set the polling interval.
-- **Concurrent judging.** Two admins can judge the same claim at once. Last write wins is probably fine, but the UI should show who judged it.
+- **Re-import after the game starts.** Re-importing deletes claims on challenges that disappear from the list. The preview warns, but a careless confirm mid-game loses scores. If this bites, block destructive re-imports once the game has started.

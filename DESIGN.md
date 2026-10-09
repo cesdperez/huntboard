@@ -1,0 +1,155 @@
+# Design
+
+Huntboard is used on a phone, outdoors, in a hurry, often one-handed while the other hand holds a bike or a drink. The organiser judges between WhatsApp messages. Every screen is designed for a 390px wide phone first and grows from there.
+
+## Direction: the control flag
+
+Orienteering marks each checkpoint with a square flag split diagonally into orange and white. It is the most recognisable object in the world of finding things around a city, and the diagonal split is our one signature. It appears in exactly one place: the claim marker. Everything else stays quiet so the marker and the numbers carry the screen.
+
+The palette is signal orange on a cool white, with deep navy for text. Orange is also the Dutch colour, which suits the reference event without naming it.
+
+## Color
+
+Defined as CSS custom properties on `:root`, with a dark set under `prefers-color-scheme: dark`. The hunt runs from afternoon into evening, so dark mode is a first-class theme, not an afterthought.
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--paper` | `#F5F7FA` | `#0F1A30` | Page background |
+| `--surface` | `#FFFFFF` | `#17233D` | Sheets, rows, inputs |
+| `--ink` | `#14213D` | `#EEF1F6` | Text, outlines, icons |
+| `--muted` | `#5B6578` | `#9AA4B8` | Secondary text, open markers |
+| `--line` | `#DDE2EA` | `#26324D` | Dividers, input borders |
+| `--flag` | `#F25C05` | `#FF7A2E` | Pending and scored markers, primary actions |
+| `--on-flag` | `#FFFFFF` | `#14213D` | Text on flag orange |
+| `--danger` | `#C42847` | `#FF6B85` | Reject, penalties, destructive actions |
+
+Rules:
+
+- Orange means "this is ours, it counts". Use it for markers, the primary action on a screen, and the team's own row on the scoreboard. Nowhere else.
+- No gradients, no tinted washes, no decorative colour.
+- Every pair used for text meets WCAG AA. Check `--flag` with `--on-flag` at the sizes used before changing either.
+- State is never told by colour alone. The marker shape carries it.
+
+## The claim marker
+
+A square, 28px on lists and 40px in the grid on phone. It encodes the claim state by shape first and colour second.
+
+```
+ Open        Pending      Scored       Rejected
+ +----+      +----+       +----+       +----+
+ |    |      |   /|       | 15 |       | \/ |
+ |    |      |  //|       |    |       | /\ |
+ +----+      +----+       +----+       +----+
+ outline     lower-right  full flag,   outline in
+ --muted     half --flag  points in    --danger,
+                          --on-flag    diagonal cross
+```
+
+- Open: 2px `--muted` outline, empty.
+- Pending: `--ink` outline, the lower-right triangle filled with `--flag`. This is the control flag itself.
+- Scored: fully filled `--flag`, awarded points centred in `--on-flag`, tabular figures.
+- Rejected: 2px `--danger` outline with a thin diagonal cross.
+- Corner radius 3px. Markers are the only square-cornered element with this radius, so they read as objects, not buttons.
+- Every marker has an accessible label: "Pending", "Scored 15 points", and so on.
+
+## Typography
+
+One family: **Archivo** (variable, Google Fonts), using its width axis as the active element.
+
+| Role | Setting | Size (phone) |
+|---|---|---|
+| Score totals, ranks | Archivo Expanded (`wdth` 125), weight 800, tabular | 40px, scaling with `clamp()` up to 18vw on the big screen |
+| Screen title | Archivo Expanded, weight 700 | 24px |
+| Section heading | Archivo, weight 700 | 17px |
+| Body, challenge titles | Archivo, weight 450 | 17px, line-height 1.4 |
+| Secondary text | Archivo, weight 450, `--muted` | 15px |
+| Point ranges | Archivo SemiCondensed (`wdth` 87), weight 600, tabular | 15px |
+
+Rules:
+
+- Numbers that change (totals, points, countdowns) always use `font-variant-numeric: tabular-nums` so they do not jitter when they update.
+- Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings.
+- Inputs are at least 16px so iOS does not zoom on focus.
+- Body text lines stay under 70 characters. On wide screens the content column is capped, not stretched.
+
+## Layout
+
+Single column, left aligned, 16px side gutters. Content max width 640px, except the admin grid and the big-screen scoreboard.
+
+The bottom third of the screen is where thumbs reach. Primary actions live there: in bottom sheets and in a bottom bar, never only in a top header.
+
+### Team page
+
+```
++--------------------------------+
+| 2nd   Canal Rats         145    |  sticky strip, tap to expand scoreboard
+| Ends in 1:42:10                |
++--------------------------------+
+| Around town                    |
+| [ ] Make a birthday card  5-20 |
+| [/] Free Marktplaats item 30-100|
+| [15] Swim in a fountain    25  |
+| Food                           |
+| [x] Free dessert         10-15 |
+|   Rejected: no proof received  |
++--------------------------------+
+```
+
+Tapping a row opens a bottom sheet with the description, the note field and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
+
+### Admin
+
+A bottom tab bar with four tabs: Queue, Grid, Teams, Setup. The Queue tab shows a count badge of pending claims.
+
+```
++--------------------------------+
+| Queue                     3    |
++--------------------------------+
+| Canal Rats, 4 min ago          |
+| Make a birthday card    5-20   |
+| "photo at 17:02" marked by Sam |
+|                                |
+| [ 5 ] [ 12 ] [ 20 ]  [ __ ]    |
+| [ Reject ]          [ Score ]  |
++--------------------------------+
+| Queue | Grid | Teams | Setup   |
++--------------------------------+
+```
+
+The points picker buttons are at least 56px tall. Tapping a quick value scores at once. The number field needs "Score" to confirm.
+
+The grid has team names as columns and a sticky first column of challenge titles, so it scrolls horizontally on a phone and fits on a laptop. Each cell is a marker. Tapping a cell opens the same judging sheet as the queue.
+
+### Scoreboard
+
+A ranked list. Rank and total in Archivo Expanded, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and nothing else changes.
+
+## Components
+
+Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs), restyled with the tokens above.
+
+- Touch targets at least 48px. Rows in lists are at least 56px tall.
+- Radii by hierarchy: sheets 16px on the top corners, buttons and inputs 10px, markers 3px, list rows 0 (rows are divided by `--line`, not boxed in cards).
+- No box shadows except on sheets and the sticky strip, where they show something floats above the page.
+- Buttons: one primary (filled `--flag`) per screen or sheet. Secondary buttons are `--ink` outlines. Destructive buttons are `--danger` outlines and confirm before acting.
+
+## Motion
+
+One moment matters: when a poll brings a new score, the scoreboard rows reorder with a 300ms FLIP animation and the changed total counts up. That is the only unprompted motion.
+
+Responses to the user's own actions are welcome and short (under 200ms): sheets slide up, a marker fills when a claim is made. With `prefers-reduced-motion`, all of it becomes an instant change.
+
+## Copy
+
+- Plain verbs that name what happens: "Mark done", "Undo claim", "Score", "Reject", "Record arrival". The toast repeats the verb: "Marked done", "Scored 15".
+- Errors say what happened and what to do. "The game ended at 21:00. Claims are closed." Not "Something went wrong".
+- Empty states invite the next action. Empty queue: "Nothing to judge. New claims show up here."
+- Conflicts name the person: "Sam already scored this: 15 points."
+- Times show in the viewer's time zone, in 24-hour format when the browser locale uses it.
+
+## Accessibility floor
+
+- Visible focus ring: 2px `--ink` outline with 2px offset.
+- All interactive elements reachable by keyboard, in visual order.
+- Live regions announce score changes on the team strip, politely.
+- Test each milestone at 390 × 844 first, then 1280 × 800.
