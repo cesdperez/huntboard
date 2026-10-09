@@ -16,3 +16,19 @@ No accounts. Each team joins through its own secret link, so teams see only thei
 ## Stack
 
 SvelteKit + TypeScript on Cloudflare Workers, D1 for storage, pnpm. Everything fits the Cloudflare free tier.
+
+## Local development
+
+```sh
+pnpm install
+pnpm db:migrate
+pnpm dev
+```
+
+Secrets for `pnpm dev` live in `.dev.vars`, which git ignores. Create it with this content:
+
+```
+CREATE_GAME_CODE=letmein
+```
+
+`CREATE_GAME_CODE` is the code `/new` asks for before it creates a game. After adding or renaming a variable, run `pnpm gen` to update `worker-configuration.d.ts`.
