@@ -6,6 +6,7 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import type { ChallengeEditInput } from '#lib/domain/challenge-edit.js';
+	import { plural } from '#lib/plural.js';
 	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
 	import type { ChallengeWithClaimCount } from '#lib/server/db/types.js';
 	import { groupBySection } from './group-by-section.js';
@@ -45,12 +46,7 @@
 	function savedMessage(id: number) {
 		if (result?.kind !== 'edited' || result.id !== id) return null;
 		if (result.clampedCount === 0) return 'Saved.';
-		const scores = result.clampedCount === 1 ? '1 score' : `${result.clampedCount} scores`;
-		return `Saved. ${scores} moved into the new range.`;
-	}
-
-	function claimsLabel(count: number) {
-		return count === 1 ? '1 claim' : `${count} claims`;
+		return `Saved. ${plural(result.clampedCount, 'score')} moved into the new range.`;
 	}
 </script>
 
@@ -164,7 +160,7 @@
 									</span>
 								{/if}
 								{#if challenge.claim_count > 0}
-									<span class="type-secondary">{claimsLabel(challenge.claim_count)}</span>
+									<span class="type-secondary">{plural(challenge.claim_count, 'claim')}</span>
 								{/if}
 							</div>
 							<Points class="pt-3" min={challenge.min_points} max={challenge.max_points} />

@@ -4,6 +4,7 @@
 	import { Points } from '#lib/components/points/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
+	import { plural } from '#lib/plural.js';
 	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
 	import { groupBySection } from './group-by-section.js';
 
@@ -46,10 +47,6 @@
 		if (deleted > 0) parts.push(plural(deleted, 'delete'));
 		return `${parts.join(', ')}.`;
 	});
-
-	function plural(count: number, one: string, many = `${one}s`) {
-		return `${count} ${count === 1 ? one : many}`;
-	}
 </script>
 
 <form method="POST" action="?/challengesPreview" class="flex flex-col gap-3" use:enhance={submit}>

@@ -6,6 +6,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
+	import { plural } from '#lib/plural.js';
 	import type { TeamsFormResult } from '#lib/server/actions/teams.js';
 	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
 	import { TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
@@ -39,10 +40,6 @@
 
 	function rowError(team: TeamWithClaimCount) {
 		return result?.error && result.teamId === team.id ? result.error : null;
-	}
-
-	function claimsLabel(count: number) {
-		return count === 1 ? '1 claim' : `${count} claims`;
 	}
 </script>
 
@@ -90,7 +87,7 @@
 							</form>
 						{:else}
 							<p class="type-secondary">
-								{team.name} has {claimsLabel(team.claim_count)}, so it cannot be deleted.
+								{team.name} has {plural(team.claim_count, 'claim')}, so it cannot be deleted.
 							</p>
 						{/if}
 					{:else}
@@ -98,7 +95,7 @@
 							<div class="min-w-0 flex-1">
 								<p class="truncate">{team.name}</p>
 								{#if team.claim_count > 0}
-									<p class="type-secondary tabular-nums">{claimsLabel(team.claim_count)}</p>
+									<p class="type-secondary tabular-nums">{plural(team.claim_count, 'claim')}</p>
 								{/if}
 							</div>
 							<form method="POST" action="?/teamsMoveUp" use:enhance={submit}>
