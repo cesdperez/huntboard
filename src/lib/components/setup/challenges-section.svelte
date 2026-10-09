@@ -1,10 +1,19 @@
 <script lang="ts">
 	import type { ChallengeWithClaimCount, GameRow } from '#lib/server/db/types.js';
+	import ChallengeImport from './challenge-import.svelte';
+	import ChallengeList from './challenge-list.svelte';
 
 	let { game, challenges }: { game: GameRow; challenges: ChallengeWithClaimCount[] } = $props();
 </script>
 
-<section aria-labelledby="challenges-heading" class="flex flex-col gap-3">
+<section aria-labelledby="challenges-heading" class="flex flex-col gap-4">
 	<h2 id="challenges-heading" class="type-heading">Challenges</h2>
-	<p class="type-secondary">{challenges.length} challenges in {game.name}.</p>
+
+	{#if challenges.length === 0}
+		<p class="type-secondary">No challenges in {game.name} yet. Paste your list below.</p>
+	{:else}
+		<ChallengeList {challenges} />
+	{/if}
+
+	<ChallengeImport hasChallenges={challenges.length > 0} />
 </section>
