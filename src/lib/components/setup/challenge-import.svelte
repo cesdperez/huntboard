@@ -42,9 +42,12 @@
 	const summary = $derived.by(() => {
 		if (!preview || preview.rows.length === 0) return null;
 		const added = preview.rows.filter((row) => row.change === 'new').length;
-		const deleted = preview.deleted.length + preview.deletedWithClaims.length;
-		const parts = [plural(added, 'new challenge'), plural(preview.rows.length - added, 'update')];
-		if (deleted > 0) parts.push(plural(deleted, 'delete'));
+		const counts: [number, string][] = [
+			[added, 'new challenge'],
+			[preview.rows.length - added, 'update'],
+			[preview.deleted.length + preview.deletedWithClaims.length, 'delete']
+		];
+		const parts = counts.filter(([count]) => count > 0).map(([count, noun]) => plural(count, noun));
 		return `${parts.join(', ')}.`;
 	});
 </script>
