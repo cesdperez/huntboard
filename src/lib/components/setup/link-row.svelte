@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
 
@@ -83,9 +84,21 @@
 				class="flex flex-col gap-3"
 				use:enhance={() => {
 					submitting = true;
-					return async ({ update }) => {
+					return async ({ result, update }) => {
 						confirming = false;
 						submitting = false;
+						// Only the admin rotate redirects: the new page needs to say its own link changed.
+						if (result.type === 'redirect') {
+							// Replace, so Back does not land on the old link, which is now a 404.
+							// The server built the location with resolve().
+							// eslint-disable-next-line svelte/no-navigation-without-resolve
+							await goto(result.location, {
+								replace: true,
+								reset: false,
+								state: { adminLinkRotated: true }
+							});
+							return;
+						}
 						await update();
 					};
 				}}

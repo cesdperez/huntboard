@@ -30,6 +30,7 @@
 			hint="Judge claims and change the game. Keep it to organisers. Rotating moves you to the new link."
 			url={absolute(resolve('/a/[token]', { token: game.admin_token }))}
 			action="linksRotateAdmin"
+			rotated={page.state.adminLinkRotated === true}
 		/>
 		<LinkRow
 			id="link-scoreboard"
