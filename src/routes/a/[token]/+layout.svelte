@@ -7,7 +7,6 @@
 
 	let { data, children }: LayoutProps = $props();
 
-	// Queue, Grid and Teams join this list as their screens are built.
 	const tabs = $derived([
 		{
 			label: 'Setup',
