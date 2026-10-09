@@ -25,7 +25,8 @@
 		{ token: '--line', use: 'Dividers, input borders' },
 		{ token: '--flag', use: 'Markers, primary action' },
 		{ token: '--on-flag', use: 'Text on flag orange' },
-		{ token: '--danger', use: 'Reject, penalties' }
+		{ token: '--danger', use: 'Reject, penalties' },
+		{ token: '--scrim', use: 'Overlay behind sheets' }
 	];
 
 	const radii = [
