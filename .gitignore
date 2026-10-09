@@ -31,3 +31,6 @@ vite.config.ts.timestamp-*
 
 # QA screenshots
 qa/
+
+# playwright-cli snapshots
+.playwright-cli/
