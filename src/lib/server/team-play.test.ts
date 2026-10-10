@@ -3,6 +3,7 @@ import { CLAIM_NOTE_MAX_LENGTH } from '#lib/claim-note.js';
 import { listTeamClaims } from './db/claims.js';
 import { createGame, updateGameSettings } from './db/games.js';
 import { getTeamByToken } from './db/links.js';
+import { deleteTeam } from './db/teams.js';
 import { createTestDb } from './db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from './db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from './db/types.js';
@@ -203,6 +204,20 @@ describe('renameOwnTeam', () => {
 		const outcome = await renameOwnTeam(db, { team: rats, game: ended }, form({ name: 'Kings' }));
 
 		expect(outcome.status).toBe(200);
+	});
+
+	it('reports a team deleted since its link was opened', async () => {
+		await deleteTeam(db, game.id, rats.id);
+
+		const outcome = await renameOwnTeam(db, { team: rats, game }, form({ name: 'Kings' }));
+
+		expect(outcome).toEqual({
+			status: 404,
+			result: {
+				kind: 'error',
+				message: 'This link does not work any more. Ask your organiser for the current link.'
+			}
+		});
 	});
 
 	it('refuses an empty name and keeps the old one', async () => {

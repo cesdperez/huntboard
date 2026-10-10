@@ -1,4 +1,5 @@
 import type { ActionResult } from '$app/forms';
+import { DEAD_LINK_MESSAGE } from '#lib/dead-link.js';
 import type { GamePhase } from '#lib/domain/game-window.js';
 import type { TeamFormResult } from '#lib/server/team-play.js';
 
@@ -14,9 +15,7 @@ export function actionFailureMessage(
 		case 'redirect':
 			return null;
 		case 'error':
-			return result.status === 404
-				? 'This link does not work any more. Ask your organiser for the current link.'
-				: RETRY;
+			return result.status === 404 ? DEAD_LINK_MESSAGE : RETRY;
 		case 'failure': {
 			const team = result.data?.team as TeamFormResult | undefined;
 			if (team?.kind === 'closed') return closedMessage(team.phase);

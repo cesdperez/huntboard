@@ -1,4 +1,5 @@
 import { CLAIM_NOTE_MAX_LENGTH } from '#lib/claim-note.js';
+import { DEAD_LINK_MESSAGE } from '#lib/dead-link.js';
 import { claimConflictMessage } from '#lib/domain/claim-messages.js';
 import { gamePhase, type GamePhase } from '#lib/domain/game-window.js';
 import { normalizeNickname } from '#lib/nickname.js';
@@ -91,7 +92,7 @@ export async function renameOwnTeam(
 ): Promise<TeamActionOutcome> {
 	const name = normalizeTeamName(data.get('name'));
 	if (!name) return error(400, TEAM_NAME_ERROR);
-	await renameTeam(db, game.id, team.id, name);
+	if (!(await renameTeam(db, game.id, team.id, name))) return error(404, DEAD_LINK_MESSAGE);
 	return { status: 200, result: { kind: 'renamed' } };
 }
 
