@@ -52,7 +52,7 @@ QA: create a game with a wrong code (rejected) and the right one. Paste the exam
 - Bottom sheet: description, note, "Mark done". Undo while pending. Claim again after rejection, showing the reason.
 - Rename team.
 - Server enforces the game window and that a token only ever sees its own team's claims.
-- Live updates: invalidate every 15 seconds, pause when hidden, refresh on focus and after actions.
+- Live updates: invalidate on a fixed interval, pause when hidden, refresh on focus and after actions.
 
 QA: two browser contexts on two team links. Mark, undo, and re-mark. Confirm team A's page data never contains team B's claims (inspect the `__data.json` response). Set the game window to the past and the future and confirm marking is refused with a clear message. Check the strip and sheet are usable with a thumb at 390px.
 

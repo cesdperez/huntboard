@@ -1,10 +1,13 @@
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
+import { POLL_INTERVAL_MS } from '../src/lib/live-updates.js';
 
 // A short game played end to end: 4 teams, 10 challenges, every kind of judging, a late arrival
 // and a tie. The final totals are worked out by hand in FINAL_STANDINGS.
 
 const CREATE_GAME_CODE = process.env.CREATE_GAME_CODE ?? 'letmein';
 const PENALTY_PER_MINUTE = 2;
+// The scoreboard has no actions of its own, so it changes only on its next poll.
+const SCOREBOARD_POLL_TIMEOUT = POLL_INTERVAL_MS + 10_000;
 const TEAMS = ['Canal Rats', 'Night Owls', 'Bike Thieves', 'Tulip Squad'] as const;
 type TeamName = (typeof TEAMS)[number];
 
@@ -151,7 +154,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 				rowText('3rd', 'Tulip Squad', '20'),
 				rowText('4th', 'Bike Thieves', '5')
 			],
-			{ timeout: 25_000 }
+			{ timeout: SCOREBOARD_POLL_TIMEOUT }
 		);
 	});
 
@@ -228,7 +231,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 	await test.step('the scoreboard shows the final ranking, with a tie', async () => {
 		await expect(standings(scoreboard)).toHaveText(
 			FINAL_STANDINGS.map(([rank, name, total]) => rowText(rank, name, total)),
-			{ timeout: 25_000 }
+			{ timeout: SCOREBOARD_POLL_TIMEOUT }
 		);
 		await expect(scoreboard.getByText(/^Ended at /)).toBeVisible();
 	});

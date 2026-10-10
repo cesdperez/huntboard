@@ -102,13 +102,47 @@ Challenge choice is the strategy, so every team sees the full list with point ra
 
 ## Live updates by polling
 
-Each page's load function depends on a shared key. Clients invalidate it every 15 seconds, pause while the tab is hidden, and refresh at once on focus and after their own actions.
-
-Free-tier budget: about 40 clients, polling every 15 seconds for 5 hours, is roughly 48,000 Worker requests. The Workers free tier allows 100,000 requests per day. Static assets do not count. Check the current limits before the event, because they decide the polling interval.
+Each page's load function depends on a shared key. Clients invalidate it every 60 seconds, pause while the tab is hidden, and refresh at once on focus and after their own actions. `POLL_INTERVAL_MS` in `src/lib/live-updates.ts` holds the interval.
 
 Before each poll the client fetches a small static file. Static assets never run the Worker, so the check costs nothing from the request budget. When it fails, the poll is skipped and the page shows an offline notice. Without the check, a load that fails offline replaces the whole page with the error page.
 
-If polling ever gets too close to the limit, the upgrade path is a Durable Object per game that pushes changes over WebSockets.
+### Free-tier budget
+
+Free-tier limits, checked October 2026:
+
+| Limit | Free plan | Source |
+|---|---|---|
+| Worker requests | 100,000 per day, reset at 00:00 UTC | [Workers limits](https://developers.cloudflare.com/workers/platform/limits/) |
+| Static asset requests | Free and unlimited | [Static assets billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/) |
+| D1 rows read | 5,000,000 per day, reset at 00:00 UTC | [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/) |
+| D1 rows written | 100,000 per day | [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/) |
+
+D1 rows read decide the interval, not Worker requests. Rows read count every row a query scans, index rows included. Past the daily limit every D1 query fails, so every page load fails until 00:00 UTC. That ends the game, so the estimate keeps about half the limit spare.
+
+Rows read per poll, measured on local D1 (which reports `rows_read` the same way) with 7 teams, 50 challenges, 182 claims and 14 adjustments, and no other game in the database:
+
+| Page | Start of game | End of game | Average |
+|---|---|---|---|
+| Team | 119 | 773 | 446 |
+| Scoreboard | 17 | 490 | 254 |
+| Admin (Queue, Grid or Teams) | 1 to 109 | 444 to 574 | about 300 |
+
+A realistic game: 40 players in 7 teams, 3 admins, one big screen, 5 hours. Phones lock and players switch to WhatsApp, so a team page is visible about one minute in five: about 8 team pages poll at any moment, plus the big screen and 3 admin pages. Each player opens the page about 12 times an hour, and each open loads it once. About 180 claims and 180 judgements each cost a request plus a refresh.
+
+| Interval | Worker requests | D1 rows read | Share of D1 limit |
+|---|---|---|---|
+| 15 s | 17,500 | 7.0 million | 139% |
+| 30 s | 10,300 | 4.1 million | 83% |
+| 45 s | 7,900 | 3.2 million | 64% |
+| 60 s | 6,700 | 2.7 million | 54% |
+
+Opening pages and acting cost about 1.3 million rows at any interval. Polling costs about 4,700 rows per round of 12 clients.
+
+If all 44 clients stayed visible for the whole game, 60 seconds would read about 5.7 million rows (114%) from about 14,000 requests. Requests stay far from their limit even then: at 15 seconds that case is about 54,000.
+
+Rows read also grow with other games in the database. Two queries scan claims of every game: the scored claims behind each scoreboard, and a team's own claims. One more finished game of the same size added about 60% to a team page poll. Delete old games, rehearsal games included, before the event.
+
+If polling ever gets too close to the limit, the cheaper fix is indexes that keep those two queries inside one game, then a cheap check that loads the page only when the game changed. The upgrade path past that is a Durable Object per game that pushes changes over WebSockets.
 
 ## Nothing event-specific in the app
 

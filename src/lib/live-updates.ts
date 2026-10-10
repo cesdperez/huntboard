@@ -1,8 +1,8 @@
 /** Load functions that show live game state call depends(GAME_DATA), so invalidating it refreshes them. */
 export const GAME_DATA = 'huntboard:game';
 
-/** Sets the Worker request budget, see docs/decisions.md "Live updates by polling". */
-export const POLL_INTERVAL_MS = 15_000;
+/** Sets the D1 rows read budget, see docs/decisions.md "Live updates by polling". */
+export const POLL_INTERVAL_MS = 60_000;
 
 export interface PollingOptions {
 	intervalMs?: number;
