@@ -3,7 +3,7 @@
 	import QueueItem from '#lib/components/admin/queue-item.svelte';
 	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { emptyQueueMessage } from '#lib/domain/claim-messages.js';
-	import { GameClock } from '#lib/game-clock.svelte.js';
+	import { getGameClock } from '#lib/game-clock.svelte.js';
 	import { startPolling } from '#lib/live-updates.js';
 	import type { PendingClaimRow } from '#lib/server/db/judging.js';
 	import type { PageProps } from './$types';
@@ -12,10 +12,7 @@
 
 	// A claim judged elsewhere drops out of the data, but its notice says who judged it, so it stays until dismissed.
 	let notices = $state<Record<number, { claim: PendingClaimRow; message: string }>>({});
-	const clock = new GameClock(() => ({
-		startsAt: data.game.starts_at,
-		endsAt: data.game.ends_at
-	}));
+	const clock = getGameClock();
 
 	const liveIds = $derived(new Set(data.claims.map((claim) => claim.id)));
 	const items = $derived(
@@ -27,14 +24,7 @@
 		].sort((a, b) => a.marked_at.localeCompare(b.marked_at) || a.id - b.id)
 	);
 
-	onMount(() => {
-		const stopClock = clock.start();
-		const stopPolling = startPolling(refreshGameData);
-		return () => {
-			stopClock();
-			stopPolling();
-		};
-	});
+	onMount(() => startPolling(refreshGameData));
 
 	function dismiss(id: number) {
 		delete notices[id];

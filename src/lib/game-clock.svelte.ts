@@ -1,3 +1,4 @@
+import { createContext } from 'svelte';
 import { formatClockTime } from '#lib/clock-time.js';
 import { claimsClosedMessage } from '#lib/domain/claim-messages.js';
 import { countdownLine } from '#lib/domain/countdown.js';
@@ -49,3 +50,6 @@ export class GameClock {
 		return () => clearInterval(timer);
 	}
 }
+
+/** A layout's clock, so the pages under it share one tick instead of starting their own. */
+export const [getGameClock, setGameClock] = createContext<GameClock>();

@@ -5,7 +5,7 @@
 	import { OfflineNotice } from '#lib/components/connection/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import { Toast } from '#lib/components/toast/index.js';
-	import { GameClock } from '#lib/game-clock.svelte.js';
+	import { GameClock, setGameClock } from '#lib/game-clock.svelte.js';
 	import { cn } from '#lib/utils.js';
 	import type { LayoutProps } from './$types';
 
@@ -21,10 +21,12 @@
 	// The grid is the one admin screen wider than the content column.
 	const wide = $derived(page.route.id === '/a/[token]/grid');
 
-	const clock = new GameClock(() => ({
-		startsAt: data.game.starts_at,
-		endsAt: data.game.ends_at
-	}));
+	const clock = setGameClock(
+		new GameClock(() => ({
+			startsAt: data.game.starts_at,
+			endsAt: data.game.ends_at
+		}))
+	);
 	onMount(() => clock.start());
 </script>
 
