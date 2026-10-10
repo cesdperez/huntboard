@@ -11,8 +11,11 @@
 	const token = $derived(data.game.admin_token);
 	const tabs = $derived([
 		{ label: 'Queue', routeId: '/a/[token]/queue', href: resolve('/a/[token]/queue', { token }) },
+		{ label: 'Grid', routeId: '/a/[token]/grid', href: resolve('/a/[token]/grid', { token }) },
 		{ label: 'Setup', routeId: '/a/[token]/setup', href: resolve('/a/[token]/setup', { token }) }
 	]);
+	// The grid is the one admin screen wider than the content column.
+	const wide = $derived(page.route.id === '/a/[token]/grid');
 </script>
 
 <svelte:head>
@@ -28,7 +31,7 @@
 		<NicknameButton />
 	</header>
 
-	<main class="mx-auto w-full max-w-content flex-1 px-gutter pt-4 pb-28">
+	<main class={cn('mx-auto w-full flex-1 px-gutter pt-4 pb-28', !wide && 'max-w-content')}>
 		{@render children()}
 	</main>
 
