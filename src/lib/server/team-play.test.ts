@@ -101,7 +101,7 @@ describe('markDone', () => {
 			status: 400,
 			result: {
 				kind: 'error',
-				message: `Keep the note under ${CLAIM_NOTE_MAX_LENGTH} characters.`
+				message: `Keep the note to at most ${CLAIM_NOTE_MAX_LENGTH} characters.`
 			}
 		});
 	});

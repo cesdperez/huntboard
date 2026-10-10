@@ -41,7 +41,7 @@ export async function markDone(
 	if (!markedBy) return error(400, 'Set your nickname first, so the judge knows who marked this.');
 	const note = readString(data, 'note');
 	if (note.length > CLAIM_NOTE_MAX_LENGTH) {
-		return error(400, `Keep the note under ${CLAIM_NOTE_MAX_LENGTH} characters.`);
+		return error(400, `Keep the note to at most ${CLAIM_NOTE_MAX_LENGTH} characters.`);
 	}
 	const challengeId = readId(data, 'challengeId');
 	if (challengeId === null) return error(404, CHALLENGE_GONE);
