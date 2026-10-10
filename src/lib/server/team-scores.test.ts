@@ -136,6 +136,27 @@ describe('recordArrival', () => {
 		expect(await arrivedAt()).toBe('2026-06-01T21:03:12.345Z');
 	});
 
+	it('keeps the arrival another judge recorded first', async () => {
+		await recordArrival(db, game.id, form({ teamId: String(rats.id) }), NOW);
+
+		const outcome = await recordArrival(
+			db,
+			game.id,
+			form({ teamId: String(rats.id) }),
+			new Date('2026-06-01T21:10:00.000Z')
+		);
+
+		expect(outcome).toEqual({
+			status: 409,
+			result: {
+				kind: 'error',
+				teamId: rats.id,
+				message: 'The arrival was already recorded. Correct the time if it is wrong.'
+			}
+		});
+		expect(await arrivedAt()).toBe('2026-06-01T21:03:12.345Z');
+	});
+
 	it('refuses a team that is gone', async () => {
 		const outcome = await recordArrival(db, game.id, form({ teamId: '9999' }), NOW);
 

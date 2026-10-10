@@ -6,6 +6,7 @@ import {
 	listTeamNames,
 	listTeamsWithClaimCounts,
 	moveTeam,
+	recordFirstArrival,
 	renameTeam,
 	setArrival
 } from './teams.js';
@@ -191,5 +192,39 @@ describe('setArrival', () => {
 		const outsider = await seedTeam(db, other.id);
 
 		expect(await setArrival(db, game.id, outsider.id, '2026-06-01T21:03:00.000Z')).toBe(false);
+	});
+});
+
+describe('recordFirstArrival', () => {
+	it('records the arrival of a team that has none', async () => {
+		const rats = await seedTeam(db, game.id);
+
+		expect(await recordFirstArrival(db, game.id, rats.id, '2026-06-01T21:02:00.000Z')).toBe(
+			'recorded'
+		);
+		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBe(
+			'2026-06-01T21:02:00.000Z'
+		);
+	});
+
+	it('keeps the arrival another judge recorded first', async () => {
+		const rats = await seedTeam(db, game.id);
+		await recordFirstArrival(db, game.id, rats.id, '2026-06-01T21:02:00.000Z');
+
+		expect(await recordFirstArrival(db, game.id, rats.id, '2026-06-01T21:10:00.000Z')).toBe(
+			'already-recorded'
+		);
+		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBe(
+			'2026-06-01T21:02:00.000Z'
+		);
+	});
+
+	it('refuses a team of another game', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const outsider = await seedTeam(db, other.id);
+
+		expect(await recordFirstArrival(db, game.id, outsider.id, '2026-06-01T21:02:00.000Z')).toBe(
+			'not-found'
+		);
 	});
 });

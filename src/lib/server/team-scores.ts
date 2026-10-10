@@ -5,7 +5,7 @@ import {
 } from '#lib/domain/adjustment.js';
 import { normalizeNickname } from '#lib/nickname.js';
 import { addAdjustment, deleteAdjustment } from './db/adjustments.js';
-import { setArrival } from './db/teams.js';
+import { recordFirstArrival, setArrival } from './db/teams.js';
 import { readId, readString, readUtcTime } from './form.js';
 
 /** What the Teams tab actions return under `teamScores`. teamId says which team's form an error belongs to. */
@@ -66,14 +66,30 @@ export async function removeAdjustment(
 	return { status: 200, result: { kind: 'adjustment-removed' } };
 }
 
-/** Takes the server clock, so a slow phone clock cannot shift the penalty. */
-export function recordArrival(
+/**
+ * Takes the server clock, so a slow phone clock cannot shift the penalty. A second tap never moves
+ * a recorded arrival: a judge whose page is behind would add minutes of penalty unseen.
+ */
+export async function recordArrival(
 	db: D1Database,
 	gameId: number,
 	data: FormData,
 	now: Date
 ): Promise<TeamScoresOutcome> {
-	return saveArrival(db, gameId, readId(data, 'teamId'), now.toISOString());
+	const teamId = readId(data, 'teamId');
+	if (teamId === null) return error(404, null, TEAM_GONE);
+	switch (await recordFirstArrival(db, gameId, teamId, now.toISOString())) {
+		case 'recorded':
+			return { status: 200, result: { kind: 'arrival', teamId } };
+		case 'already-recorded':
+			return error(
+				409,
+				teamId,
+				'The arrival was already recorded. Correct the time if it is wrong.'
+			);
+		case 'not-found':
+			return error(404, teamId, TEAM_GONE);
+	}
 }
 
 /** The browser sends the corrected time already converted to UTC ISO. */
@@ -96,6 +112,7 @@ export function clearArrival(
 	return saveArrival(db, gameId, readId(data, 'teamId'), null);
 }
 
+// Last write wins: correct and clear act on a time the judge saw.
 async function saveArrival(
 	db: D1Database,
 	gameId: number,

@@ -55,7 +55,7 @@ export async function renameTeam(
 	return renamed !== null;
 }
 
-/** Records, corrects or (with null) clears when the team reached the meeting point. False when it is not in this game. */
+/** Corrects or (with null) clears when the team reached the meeting point. False when it is not in this game. */
 export async function setArrival(
 	db: D1Database,
 	gameId: number,
@@ -67,6 +67,27 @@ export async function setArrival(
 		.bind(arrivedAt, teamId, gameId)
 		.first<number>('id');
 	return updated !== null;
+}
+
+export type RecordArrivalResult = 'recorded' | 'already-recorded' | 'not-found';
+
+/** Records when the team reached the meeting point, only while none is recorded, so the first judge wins. */
+export async function recordFirstArrival(
+	db: D1Database,
+	gameId: number,
+	teamId: number,
+	arrivedAt: string
+): Promise<RecordArrivalResult> {
+	const [recorded, team] = await db.batch([
+		db
+			.prepare(
+				'UPDATE team SET arrived_at = ? WHERE id = ? AND game_id = ? AND arrived_at IS NULL RETURNING id'
+			)
+			.bind(arrivedAt, teamId, gameId),
+		db.prepare('SELECT 1 AS found FROM team WHERE id = ? AND game_id = ?').bind(teamId, gameId)
+	]);
+	if (recorded.results.length > 0) return 'recorded';
+	return team.results.length > 0 ? 'already-recorded' : 'not-found';
 }
 
 /** Moves a team one place up (-1) or down (1). False when it is not in this game or already at that end. */
