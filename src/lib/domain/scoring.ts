@@ -85,6 +85,24 @@ export function computeScoreboard({
 		.map((row) => row.score);
 }
 
+/** A scoreboard row as players and spectators see it: no breakdown of where the points came from. */
+export interface Standing {
+	rank: number;
+	name: string;
+	total: number;
+	/** True on the viewing team's own row. */
+	own: boolean;
+}
+
+export function toStandings(scores: TeamScore[], ownTeamId: number | null): Standing[] {
+	return scores.map((score) => ({
+		rank: score.rank,
+		name: score.name,
+		total: score.total,
+		own: score.teamId === ownTeamId
+	}));
+}
+
 function scoreTeam(
 	team: ScoringTeam,
 	game: ScoringGame,

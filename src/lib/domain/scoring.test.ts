@@ -3,6 +3,7 @@ import {
 	computeScoreboard,
 	minutesLate,
 	rankByTotal,
+	toStandings,
 	type ScoringClaim,
 	type ScoringTeam
 } from './scoring.js';
@@ -252,5 +253,34 @@ describe('computeScoreboard', () => {
 
 	it('returns no rows for a game without teams', () => {
 		expect(computeScoreboard({ game, teams: [], claims: [], adjustments: [] })).toEqual([]);
+	});
+});
+
+describe('toStandings', () => {
+	const game = { endsAt: ENDS_AT, latePenaltyPerMinute: 2 };
+
+	it('keeps only rank, name and total, in scoreboard order', () => {
+		const scores = computeScoreboard({
+			game,
+			teams: [team(1, { arrivedAt: '2026-06-01T19:02:00.000Z' }), team(2)],
+			claims: [scored(1, 20), scored(2, 30)],
+			adjustments: [{ teamId: 1, points: 4 }]
+		});
+
+		expect(toStandings(scores, null)).toEqual([
+			{ rank: 1, name: 'Team 2', total: 30, own: false },
+			{ rank: 2, name: 'Team 1', total: 20, own: false }
+		]);
+	});
+
+	it('marks the row of the viewing team', () => {
+		const scores = computeScoreboard({
+			game,
+			teams: [team(1), team(2)],
+			claims: [],
+			adjustments: []
+		});
+
+		expect(toStandings(scores, 2).map((row) => row.own)).toEqual([false, true]);
 	});
 });
