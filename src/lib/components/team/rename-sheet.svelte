@@ -15,7 +15,7 @@
 	const action = new TeamAction(() => clock);
 
 	function close() {
-		action.error = null;
+		action.clearError();
 		onclose();
 	}
 </script>

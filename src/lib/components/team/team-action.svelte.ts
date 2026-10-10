@@ -8,24 +8,39 @@ import type { GameClock } from './game-clock.svelte.js';
 /** Busy and error state of a team sheet's forms, and the enhance callback they share. */
 export class TeamAction {
 	busy = $state(false);
-	error = $state<string | null>(null);
+	#failure = $state<{ message: string; subject: unknown } | null>(null);
 	readonly #clock: () => GameClock;
+	readonly #subject: () => unknown;
 
-	constructor(clock: () => GameClock) {
+	/** subject is what the form acts on. An error hides once a poll changes it, so it never describes a stale state. */
+	constructor(clock: () => GameClock, subject: () => unknown = () => null) {
 		this.#clock = clock;
+		this.#subject = subject;
+	}
+
+	get error(): string | null {
+		const failure = this.#failure;
+		return failure && failure.subject === this.#subject() ? failure.message : null;
+	}
+
+	clearError() {
+		this.#failure = null;
 	}
 
 	/** On success, runs onsuccess with the sent form and shows `done` as a toast. */
 	submit(done: string, onsuccess: (formData: FormData) => void): SubmitFunction {
 		return ({ formData }) => {
 			this.busy = true;
-			this.error = null;
+			this.#failure = null;
 			return async ({ result }) => {
 				// Refresh either way: a failure usually means someone else changed this claim.
 				await invalidate(GAME_DATA).catch(() => {});
 				this.busy = false;
-				this.error = actionFailureMessage(result, this.#clock().closedMessageFor);
-				if (this.error) return;
+				const message = actionFailureMessage(result, this.#clock().closedMessageFor);
+				if (message) {
+					this.#failure = { message, subject: this.#subject() };
+					return;
+				}
 				onsuccess(formData);
 				toast.show(done);
 			};

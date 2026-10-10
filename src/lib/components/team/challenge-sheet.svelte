@@ -24,13 +24,16 @@
 
 	let content = $state<HTMLElement | null>(null);
 	let drafts = $state<Record<number, string>>({});
-	const action = new TeamAction(() => clock);
+	const action = new TeamAction(
+		() => clock,
+		() => `${challenge?.id}:${challenge?.claim?.id}:${challenge?.claim?.status}`
+	);
 
 	const claim = $derived(challenge?.claim ?? null);
 	const canMark = $derived(!claim || claim.status === 'rejected');
 
 	function close() {
-		action.error = null;
+		action.clearError();
 		onclose();
 	}
 
