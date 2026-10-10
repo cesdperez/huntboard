@@ -32,3 +32,20 @@ CREATE_GAME_CODE=letmein
 ```
 
 `CREATE_GAME_CODE` is the code `/new` asks for before it creates a game. After adding or renaming a variable, run `pnpm gen` to update `worker-configuration.d.ts`.
+
+## Rehearsal
+
+`pnpm rehearsal` plays a short game end to end in a browser: 4 teams, 10 challenges, judging from the queue and the grid, adjustments, a late arrival and a tie. It runs against the local dev server, and starts one if none is running.
+
+```sh
+pnpm exec playwright install chromium   # once
+pnpm rehearsal
+```
+
+To rehearse against another deployment, set `HUNTBOARD_URL` and that deployment's `CREATE_GAME_CODE`:
+
+```sh
+HUNTBOARD_URL=https://huntboard.example.workers.dev CREATE_GAME_CODE=... pnpm rehearsal
+```
+
+Each run creates a new game.

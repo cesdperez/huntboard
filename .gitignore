@@ -34,3 +34,7 @@ qa/
 
 # playwright-cli snapshots
 .playwright-cli/
+
+# Playwright rehearsal output
+/test-results/
+/playwright-report/
