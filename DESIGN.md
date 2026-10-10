@@ -100,6 +100,12 @@ The bottom third of the screen is where thumbs reach. Primary actions live there
 
 Tapping a row opens a bottom sheet with the description, the note field and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
 
+- The strip shows the rank in Archivo Expanded at 28px and the total at the full 40px, so the team name keeps room at 390px. Tapping it expands the scoreboard in place, with the team's own row marked by a flag-orange bar on its left edge. "Rename team" sits under that list.
+- A pending row reads "Waiting for a judge" under its title. A rejected row shows the reason in `--danger`.
+- The sheet moves focus to itself, not to the note field, so the phone keyboard opens only when the player taps the field.
+- Outside the game window the sheet keeps "Mark done" visible but disabled, with the closed message above it.
+- A confirmation shows as a toast: a `--ink` pill above the bottom edge for three seconds.
+
 ### Admin
 
 A bottom tab bar with four tabs: Queue, Grid, Teams, Setup. The Queue tab shows a count badge of pending claims.
