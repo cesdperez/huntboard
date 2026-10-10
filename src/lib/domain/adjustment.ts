@@ -1,5 +1,4 @@
-import { REASON_MAX_LENGTH } from '../reason.js';
-import { collapseSpaces } from '../text.js';
+import { normalizeReason, REASON_MAX_LENGTH, REASON_TOO_LONG } from '../reason.js';
 import { parsePoints } from './points.js';
 
 // Keeps any realistic sum of adjustments far below Number.MAX_SAFE_INTEGER.
@@ -32,11 +31,9 @@ export function validateAdjustment(input: AdjustmentInput): AdjustmentResult {
 		errors.points = `Keep it within ${ADJUSTMENT_MAX_POINTS} points either way.`;
 	}
 
-	const reason = collapseSpaces(input.reason);
+	const reason = normalizeReason(input.reason);
 	if (!reason) errors.reason = 'Say why, so other judges know what it was for.';
-	else if (reason.length > REASON_MAX_LENGTH) {
-		errors.reason = `Keep the reason to at most ${REASON_MAX_LENGTH} characters.`;
-	}
+	else if (reason.length > REASON_MAX_LENGTH) errors.reason = REASON_TOO_LONG;
 
 	if (points === null || Object.keys(errors).length > 0) return { ok: false, errors };
 	return { ok: true, adjustment: { points, reason } };

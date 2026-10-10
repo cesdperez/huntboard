@@ -184,6 +184,23 @@ describe('rejectClaim', () => {
 		});
 	});
 
+	it('collapses runs of spaces in the reason, as for adjustments', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id);
+
+		await rejectClaim(
+			db,
+			game.id,
+			form({
+				claimId: String(claim.id),
+				from: 'pending',
+				reason: 'No   proof\nseen',
+				nickname: 'Alex'
+			})
+		);
+
+		expect((await listTeamClaims(db, rats.id))[0].judge_note).toBe('No proof seen');
+	});
+
 	it('stores an empty reason as no reason', async () => {
 		const claim = await seedClaim(db, rats.id, swim.id);
 

@@ -1,6 +1,6 @@
 import { parsePoints } from '#lib/domain/points.js';
 import { normalizeNickname } from '#lib/nickname.js';
-import { REASON_MAX_LENGTH } from '#lib/reason.js';
+import { normalizeReason, REASON_MAX_LENGTH, REASON_TOO_LONG } from '#lib/reason.js';
 import { conflictMessage } from './conflict-message.js';
 import { judgeClaim, scoreWithoutClaim, type JudgeResult, type Verdict } from './db/judging.js';
 import { readId, readString } from './form.js';
@@ -37,10 +37,8 @@ export async function rejectClaim(
 ): Promise<JudgeActionOutcome> {
 	const judgedBy = normalizeNickname(data.get('nickname'));
 	if (!judgedBy) return error(400, NO_NICKNAME);
-	const reason = readString(data, 'reason');
-	if (reason.length > REASON_MAX_LENGTH) {
-		return error(400, `Keep the reason to at most ${REASON_MAX_LENGTH} characters.`);
-	}
+	const reason = normalizeReason(readString(data, 'reason'));
+	if (reason.length > REASON_MAX_LENGTH) return error(400, REASON_TOO_LONG);
 	return judge(db, gameId, data, judgedBy, { status: 'rejected', reason: reason || null });
 }
 
