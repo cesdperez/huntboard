@@ -1,6 +1,6 @@
 import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/game-settings.js';
 import type { GameSettings } from './db/games.js';
-import { readString } from './form.js';
+import { readString, readUtcTime } from './form.js';
 
 export type GameSettingsErrors = Partial<Record<keyof GameSettings, string>>;
 
@@ -53,13 +53,4 @@ export function parseGameSettings(data: FormData): GameSettingsResult {
 		settings.ends_at = endsAt ?? null;
 	}
 	return { ok: true, settings };
-}
-
-/** null for an empty field, undefined for one that is not in toISOString() format. */
-function readUtcTime(data: FormData, key: string): string | null | undefined {
-	const value = readString(data, key);
-	if (!value) return null;
-	const date = new Date(value);
-	// Comparing as strings in the schema CHECK and in endsAt <= startsAt only holds for this exact format.
-	return !Number.isNaN(date.getTime()) && date.toISOString() === value ? value : undefined;
 }

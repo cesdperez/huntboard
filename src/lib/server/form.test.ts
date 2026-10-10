@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readId, readString } from './form.js';
+import { readId, readString, readUtcTime } from './form.js';
 
 function formData(entries: Record<string, string>) {
 	const data = new FormData();
@@ -29,4 +29,24 @@ describe('readId', () => {
 	it('reads a missing field as no id', () => {
 		expect(readId(formData({}), 'teamId')).toBeNull();
 	});
+});
+
+describe('readUtcTime', () => {
+	it('reads a time in toISOString() format', () => {
+		expect(readUtcTime(formData({ at: '2026-06-01T21:03:00.000Z' }), 'at')).toBe(
+			'2026-06-01T21:03:00.000Z'
+		);
+	});
+
+	it('reads an empty or missing field as null', () => {
+		expect(readUtcTime(formData({ at: ' ' }), 'at')).toBeNull();
+		expect(readUtcTime(formData({}), 'at')).toBeNull();
+	});
+
+	it.each(['tomorrow', '2026-06-01T21:03', '2026-06-01T21:03:00Z'])(
+		'reads %j as undefined, because stored times compare as strings',
+		(value) => {
+			expect(readUtcTime(formData({ at: value }), 'at')).toBeUndefined();
+		}
+	);
 });
