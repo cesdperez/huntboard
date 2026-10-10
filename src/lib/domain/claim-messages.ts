@@ -54,6 +54,18 @@ export function claimLine(
 	}
 }
 
+/** The empty admin queue, by game phase. Null while the browser clock has not started. */
+export function emptyQueueMessage(phase: GamePhase | null): string {
+	switch (phase) {
+		case 'before':
+			return 'Nothing to judge yet. Claims show up here once the game starts.';
+		case 'after':
+			return 'Nothing left to judge. The game has ended, so no new claims come in.';
+		default:
+			return 'Nothing to judge. New claims show up here.';
+	}
+}
+
 function judgeName(judgedBy: string | null): string {
 	return judgedBy ?? 'A judge';
 }

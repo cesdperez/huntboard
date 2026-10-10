@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { claimConflictMessage, claimLine, claimsClosedMessage } from './claim-messages.js';
+import {
+	claimConflictMessage,
+	claimLine,
+	claimsClosedMessage,
+	emptyQueueMessage
+} from './claim-messages.js';
 
 describe('claimConflictMessage', () => {
 	it('names the teammate who already marked it', () => {
@@ -95,5 +100,27 @@ describe('claimLine', () => {
 		expect(claimLine({ ...claim, status: 'rejected' }, formatTime)).toBe(
 			'A judge rejected this. You can mark it done again.'
 		);
+	});
+});
+
+describe('emptyQueueMessage', () => {
+	it('says claims arrive once the game starts', () => {
+		expect(emptyQueueMessage('before')).toBe(
+			'Nothing to judge yet. Claims show up here once the game starts.'
+		);
+	});
+
+	it('invites the next claim while the game runs', () => {
+		expect(emptyQueueMessage('during')).toBe('Nothing to judge. New claims show up here.');
+	});
+
+	it('says no claims come in after the end', () => {
+		expect(emptyQueueMessage('after')).toBe(
+			'Nothing left to judge. The game has ended, so no new claims come in.'
+		);
+	});
+
+	it('invites the next claim while the browser clock has not started', () => {
+		expect(emptyQueueMessage(null)).toBe('Nothing to judge. New claims show up here.');
 	});
 });

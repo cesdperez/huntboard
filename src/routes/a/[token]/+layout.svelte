@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import { Toast } from '#lib/components/toast/index.js';
+	import { GameClock } from '#lib/game-clock.svelte.js';
 	import { cn } from '#lib/utils.js';
 	import type { LayoutProps } from './$types';
 
@@ -17,6 +19,12 @@
 	]);
 	// The grid is the one admin screen wider than the content column.
 	const wide = $derived(page.route.id === '/a/[token]/grid');
+
+	const clock = new GameClock(() => ({
+		startsAt: data.game.starts_at,
+		endsAt: data.game.ends_at
+	}));
+	onMount(() => clock.start());
 </script>
 
 <svelte:head>
@@ -28,7 +36,10 @@
 	<header
 		class="mx-auto flex w-full max-w-content items-center justify-between gap-3 px-gutter pt-4"
 	>
-		<p class="truncate type-secondary">{data.game.name}</p>
+		<div class="flex min-w-0 flex-col">
+			<p class="truncate type-secondary">{data.game.name}</p>
+			<p class="type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
+		</div>
 		<NicknameButton />
 	</header>
 
