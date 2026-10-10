@@ -1,12 +1,11 @@
 import { CLAIM_NOTE_MAX_LENGTH } from '#lib/claim-note.js';
 import { DEAD_LINK_MESSAGE } from '#lib/dead-link.js';
-import { claimConflictMessage } from '#lib/domain/claim-messages.js';
 import { gamePhase, type GamePhase } from '#lib/domain/game-window.js';
 import { normalizeNickname } from '#lib/nickname.js';
 import { TEAM_NAME_ERROR, normalizeTeamName } from '#lib/team-name.js';
 import { markClaim, undoClaim } from './db/claims.js';
 import { renameTeam } from './db/teams.js';
-import type { ClaimRow } from './db/types.js';
+import { conflictMessage } from './conflict-message.js';
 import { readId, readString } from './form.js';
 import type { TeamLink } from './team-page.js';
 
@@ -99,15 +98,6 @@ export async function renameOwnTeam(
 function closedOutcome(game: TeamLink['game'], now: Date): TeamActionOutcome | null {
 	const phase = gamePhase({ startsAt: game.starts_at, endsAt: game.ends_at }, now);
 	return phase === 'during' ? null : { status: 403, result: { kind: 'closed', phase } };
-}
-
-function conflictMessage(claim: ClaimRow): string {
-	return claimConflictMessage({
-		status: claim.status,
-		markedBy: claim.marked_by,
-		judgedBy: claim.judged_by,
-		points: claim.points
-	});
 }
 
 function error(status: number, message: string): TeamActionOutcome {
