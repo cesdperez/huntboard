@@ -60,7 +60,7 @@ One family: **Archivo** (variable, Google Fonts), using its width axis as the ac
 
 | Role | Setting | Size (phone) |
 |---|---|---|
-| Score totals, ranks | Archivo Expanded (`wdth` 125), weight 800, tabular | 40px, scaling with `clamp()` up to 18vw on the big screen |
+| Score totals, ranks | Archivo Expanded (`wdth` 125), weight 800, tabular | 40px, scaling with `clamp()` up to 8vw on the big screen |
 | Screen title | Archivo Expanded, weight 700 | 24px |
 | Section heading | Archivo, weight 700 | 17px |
 | Body, challenge titles | Archivo, weight 450 | 17px, line-height 1.4 |
@@ -157,7 +157,7 @@ A ranked list. Rank and total in Archivo Expanded, team name in body weight. On 
 
 - Under the game name, one status line: "Starts in 0:42:10", "Ends in 1:42:10" or "Ended at 21:00". The scoreboard keeps updating after the end, because judging goes on at the meeting point.
 - Tied teams show the same rank and keep their setup order.
-- On the big screen every size follows one total size: the viewport height shared by the teams, between 40px and 18vw. Ranks are 0.6 of it, names 0.45, the title 0.45 and the status line 0.25, so 4 teams and 7 teams both fill a 1080px screen.
+- On the big screen every size follows one total size: 55% of the viewport height shared by the teams, counting at least 3, between 40px and 8vw. The 8vw cap keeps a name in view beside a four-digit total on a narrow or portrait screen, and the 3-team floor stops one or two teams from filling the screen with digits. Ranks are 0.6 of it, names 0.45, the title 0.45 and the status line 0.25, so 4 teams and 7 teams both fill a 1080px screen.
 - With no teams yet: "No teams yet. They show up here once the organiser adds them."
 
 ## Components

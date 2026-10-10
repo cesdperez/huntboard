@@ -62,7 +62,7 @@
 	/* The big-screen view for the final reveal: same page, the list fills the height and centres. */
 	@media (min-width: 1024px) {
 		.scoreboard {
-			--score-size: clamp(40px, min(8vw, calc(55dvh / var(--teams))), 18vw);
+			--score-size: clamp(40px, calc(55dvh / var(--teams)), 8vw);
 			max-width: none;
 			justify-content: center;
 			padding-inline: 6vw;
