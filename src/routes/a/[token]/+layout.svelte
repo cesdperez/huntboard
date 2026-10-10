@@ -50,6 +50,7 @@
 	</main>
 
 	<nav
+		data-bottom-bar
 		aria-label="Admin"
 		class="fixed inset-x-0 bottom-0 z-40 border-t bg-surface pb-[env(safe-area-inset-bottom)]"
 	>

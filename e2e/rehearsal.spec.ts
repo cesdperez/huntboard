@@ -280,8 +280,11 @@ function toast(page: Page): Locator {
 }
 
 async function openChallenge(page: Page, title: string) {
-	await page.getByRole('button', { name: new RegExp(title) }).click();
-	await expect(page.getByRole('dialog')).toContainText(title);
+	// A tap before the page hydrates does nothing, so tap again until the sheet opens.
+	await expect(async () => {
+		await page.getByRole('button', { name: new RegExp(title) }).click();
+		await expect(page.getByRole('dialog')).toContainText(title, { timeout: 1000 });
+	}).toPass();
 }
 
 async function markDone(page: Page, title: string, note?: string) {
@@ -312,14 +315,14 @@ async function scoreQuick(page: Page, team: string, challenge: string, points: n
 async function scoreTyped(page: Page, team: string, challenge: string, points: number) {
 	const item = queueItem(page, team, challenge);
 	await item.getByLabel(`Other points for ${team}, ${challenge}`).fill(String(points));
-	await item.getByRole('button', { name: 'Score', exact: true }).click();
+	await item.getByRole('button', { name: `Score ${team}, ${challenge}`, exact: true }).click();
 	await expect(toast(page)).toHaveText(`Scored ${points}`);
 	await expect(item).toHaveCount(0);
 }
 
 async function reject(page: Page, team: string, challenge: string, reason: string) {
 	const item = queueItem(page, team, challenge);
-	await item.getByRole('button', { name: 'Reject', exact: true }).click();
+	await item.getByRole('button', { name: `Reject ${team}, ${challenge}`, exact: true }).click();
 	await item.getByLabel(/^Reason/).fill(reason);
 	await item.getByRole('button', { name: 'Reject claim' }).click();
 	await expect(toast(page)).toHaveText('Rejected');

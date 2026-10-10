@@ -188,6 +188,13 @@
 		outline: 2px solid var(--ink);
 		outline-offset: 2px;
 	}
+	/* Moving focus scrolls controls clear of the fixed admin tab bar and the sticky team strip. */
+	:root:has([data-bottom-bar]) {
+		scroll-padding-bottom: calc(var(--spacing-row) + env(safe-area-inset-bottom) + 16px);
+	}
+	:root:has([data-sticky-strip]) {
+		scroll-padding-top: 128px;
+	}
 	input,
 	select,
 	textarea {

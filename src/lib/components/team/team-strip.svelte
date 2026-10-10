@@ -24,7 +24,7 @@
 	const own = $derived(standings.find((row) => row.own));
 </script>
 
-<header class="sticky top-0 z-30 border-b bg-surface shadow-strip">
+<header data-sticky-strip class="sticky top-0 z-30 border-b bg-surface shadow-strip">
 	<div class="mx-auto max-w-content">
 		<button
 			type="button"

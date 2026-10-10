@@ -103,7 +103,7 @@
 			<div class="flex gap-3">
 				<Button variant="ghost" class="flex-1" onclick={() => (rejecting = false)}>Cancel</Button>
 				<Button type="submit" variant="destructive" class="flex-1" disabled={action.busy}>
-					Reject claim
+					Reject claim<span class="sr-only">{` ${label}`}</span>
 				</Button>
 			</div>
 		</form>
@@ -157,7 +157,7 @@
 					disabled={action.busy}
 					onclick={() => (rejecting = true)}
 				>
-					Reject
+					Reject<span class="sr-only">{` ${label}`}</span>
 				</Button>
 			{/if}
 			<Button
@@ -166,7 +166,7 @@
 				class="flex-1"
 				disabled={action.busy}
 			>
-				Score
+				Score<span class="sr-only">{` ${label}`}</span>
 			</Button>
 		</form>
 		{#if !onfailure && action.error}

@@ -42,7 +42,7 @@
 	</p>
 {:else}
 	<div
-		class="-mx-gutter mt-4 max-h-[calc(100dvh-13rem)] overflow-auto overscroll-x-contain border-y lg:mx-auto lg:w-fit lg:max-w-full lg:border-x"
+		class="-mx-gutter mt-4 max-h-[calc(100dvh-13rem)] scroll-pt-16 scroll-pl-40 overflow-auto overscroll-x-contain border-y sm:scroll-pl-64 lg:mx-auto lg:w-fit lg:max-w-full lg:border-x"
 	>
 		<table class="border-separate border-spacing-0">
 			<thead>

@@ -125,7 +125,9 @@
 		{:else}
 			<div class="flex gap-3">
 				{#if team.arrivedAt}
-					<Button class="flex-1" onclick={() => (correcting = true)}>Correct</Button>
+					<Button class="flex-1" onclick={() => (correcting = true)}>
+						Correct<span class="sr-only"> the arrival of {team.name}</span>
+					</Button>
 					<form
 						method="POST"
 						action="?/arrivalClear"
@@ -137,17 +139,19 @@
 					>
 						<input type="hidden" name="teamId" value={team.id} />
 						<Button type="submit" variant="destructive" class="flex-1" disabled={arrival.busy}>
-							Clear
+							Clear<span class="sr-only"> the arrival of {team.name}</span>
 						</Button>
 					</form>
 				{:else}
 					<form method="POST" action="?/arrivalRecord" class="flex flex-1" use:enhance={record}>
 						<input type="hidden" name="teamId" value={team.id} />
 						<Button type="submit" size="lg" class="flex-1" disabled={arrival.busy}>
-							Record arrival
+							Record arrival<span class="sr-only"> of {team.name}</span>
 						</Button>
 					</form>
-					<Button variant="ghost" onclick={() => (correcting = true)}>Enter time</Button>
+					<Button variant="ghost" onclick={() => (correcting = true)}>
+						Enter time<span class="sr-only"> of arrival for {team.name}</span>
+					</Button>
 				{/if}
 			</div>
 		{/if}
@@ -265,7 +269,7 @@
 			</form>
 		{:else}
 			<Button variant="ghost" class="-ml-4 self-start" onclick={() => (adding = true)}>
-				Add adjustment
+				Add adjustment<span class="sr-only"> for {team.name}</span>
 			</Button>
 		{/if}
 		{#if adjusting.error}
