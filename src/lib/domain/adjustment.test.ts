@@ -17,10 +17,17 @@ describe('validateAdjustment', () => {
 		});
 	});
 
-	it.each(['', 'ten', '2.5', '0'])('refuses %j points', (points) => {
+	it.each(['', 'ten', '2.5', '0', '-0'])('refuses %j points', (points) => {
 		expect(validateAdjustment({ points, reason: 'Bonus' })).toEqual({
 			ok: false,
 			errors: { points: 'Enter a whole number of points, like 10 or -5. Not 0.' }
+		});
+	});
+
+	it.each([ADJUSTMENT_MAX_POINTS, -ADJUSTMENT_MAX_POINTS])('accepts %i, the limit', (points) => {
+		expect(validateAdjustment({ points: String(points), reason: 'Bonus' })).toEqual({
+			ok: true,
+			adjustment: { points, reason: 'Bonus' }
 		});
 	});
 
@@ -42,6 +49,15 @@ describe('validateAdjustment', () => {
 		expect(validateAdjustment({ points: '5', reason: '   ' })).toEqual({
 			ok: false,
 			errors: { reason: 'Say why, so other judges know what it was for.' }
+		});
+	});
+
+	it('accepts a reason of exactly the longest length', () => {
+		const reason = 'x'.repeat(REASON_MAX_LENGTH);
+
+		expect(validateAdjustment({ points: '5', reason })).toEqual({
+			ok: true,
+			adjustment: { points: 5, reason }
 		});
 	});
 
