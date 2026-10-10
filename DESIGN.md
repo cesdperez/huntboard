@@ -126,9 +126,26 @@ A bottom tab bar with four tabs: Queue, Grid, Teams, Setup. The Queue tab shows 
 +--------------------------------+
 ```
 
-The points picker buttons are at least 56px tall. Tapping a quick value scores at once. The number field needs "Score" to confirm.
+The points picker buttons are at least 56px tall. Tapping a quick value scores at once. The number field needs "Score" to confirm. A typed value outside the range moves to the nearest end when the field loses focus, so the judge sees what will be scored.
 
-The grid has team names as columns and a sticky first column of challenge titles, so it scrolls horizontally on a phone and fits on a laptop. Each cell is a marker. Tapping a cell opens the same judging sheet as the queue.
+- The admin link opens on Queue once the game has teams and challenges, and on Setup before that.
+- The Queue badge is `--flag` with `--on-flag` text: pending claims are what counts next.
+- Queue items have no primary button. Every item carries the same actions, so a column of orange buttons would say nothing. Score is the primary action in the grid sheet.
+- "Reject" opens an optional reason field and a "Reject claim" button. That second tap is the confirmation.
+- A claim judged or undone elsewhere stays in the queue where it was, showing the conflict ("Sam already scored this: 15 points.") and an "OK" button, until the judge dismisses it. It never just vanishes under a thumb.
+- An earlier rejection of the same team and challenge shows under the note in `--danger`, so the judge knows what failed before.
+- On admin pages the toast sits above the tab bar.
+
+The grid has team names as columns and a sticky first column of challenge titles, so it scrolls horizontally on a phone and fits on a laptop. Each cell is a marker. Tapping a cell opens the same judging panel as the queue, in a sheet.
+
+- The grid is the one admin screen wider than the content column. It scrolls inside its own box, so the header row and the challenge column both stay in view.
+- The sheet says what a tap does in each state: score an open or rejected cell without a team claim, judge a pending one, fix or reject a scored one.
+- A conflict shows under the refreshed state of the cell, the same way the team sheet does.
+
+The Teams tab lists teams in their setup order, not by rank, so a row does not move while the judge taps it. Each team shows its rank and total, then the breakdown: scored claims, adjustments, and the late penalty with its minutes.
+
+- "Record arrival" takes the server's clock. "Correct" and "Enter time" take a time in the viewer's time zone. "Clear" confirms first.
+- Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
 
 ### Scoreboard
 
