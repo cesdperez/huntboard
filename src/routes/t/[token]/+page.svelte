@@ -1,7 +1,40 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { invalidate } from '$app/navigation';
+	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
+	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
+	import ChallengeSheet from '#lib/components/team/challenge-sheet.svelte';
+	import { GameClock } from '#lib/components/team/game-clock.svelte.js';
+	import RenameSheet from '#lib/components/team/rename-sheet.svelte';
+	import TeamStrip from '#lib/components/team/team-strip.svelte';
+	import { Toast } from '#lib/components/toast/index.js';
+	import { groupBySection } from '#lib/group-by-section.js';
+	import { GAME_DATA, startPolling } from '#lib/live-updates.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+
+	const clock = new GameClock(() => data.game);
+
+	// The id outlives the open flag, so the sheet keeps its content while it slides away.
+	let selectedId = $state<number | null>(null);
+	let sheetOpen = $state(false);
+	let renaming = $state(false);
+	const selected = $derived(data.challenges.find((c) => c.id === selectedId) ?? null);
+
+	onMount(() => {
+		const stopClock = clock.start();
+		const stopPolling = startPolling(() => invalidate(GAME_DATA));
+		return () => {
+			stopClock();
+			stopPolling();
+		};
+	});
+
+	function select(id: number) {
+		selectedId = id;
+		sheetOpen = true;
+	}
 </script>
 
 <svelte:head>
@@ -9,7 +42,41 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
-<main class="mx-auto flex max-w-content flex-col gap-3 px-gutter py-10">
-	<h1 class="type-title">{data.team.name}</h1>
-	<p class="type-secondary">Challenges show up here once the game is ready.</p>
-</main>
+<div class="min-h-dvh">
+	<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
+		<p class="truncate type-secondary">{data.game.name}</p>
+		<NicknameButton />
+	</div>
+
+	<TeamStrip
+		teamName={data.team.name}
+		standings={data.standings}
+		countdown={clock.countdown}
+		onrename={() => (renaming = true)}
+	/>
+
+	<main class="mx-auto max-w-content px-gutter pt-2 pb-24">
+		<h1 class="sr-only">{data.team.name} challenges</h1>
+		{#if data.challenges.length === 0}
+			<p class="py-6 type-secondary">Challenges show up here once the game is ready.</p>
+		{:else}
+			{#each groupBySection(data.challenges) as group, groupIndex (groupIndex)}
+				<section class="flex flex-col">
+					{#if group.section}
+						<h2 class="pt-5 pb-1 type-heading">{group.section}</h2>
+					{/if}
+					<ul class="flex flex-col border-t">
+						{#each group.items as challenge (challenge.id)}
+							<ChallengeRow {challenge} onselect={() => select(challenge.id)} />
+						{/each}
+					</ul>
+				</section>
+			{/each}
+		{/if}
+	</main>
+</div>
+
+<ChallengeSheet challenge={selected} open={sheetOpen} {clock} onclose={() => (sheetOpen = false)} />
+<RenameSheet open={renaming} name={data.team.name} {clock} onclose={() => (renaming = false)} />
+<NicknamePrompt />
+<Toast />
