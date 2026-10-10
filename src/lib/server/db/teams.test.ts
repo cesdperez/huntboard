@@ -3,6 +3,7 @@ import { createGame } from './games.js';
 import {
 	addTeam,
 	deleteTeam,
+	listTeamNames,
 	listTeamsWithClaimCounts,
 	moveTeam,
 	renameTeam,
@@ -46,6 +47,19 @@ describe('listTeamsWithClaimCounts', () => {
 		expect(teams).toEqual([
 			{ ...rats, claim_count: 3 },
 			{ ...owls, claim_count: 0 }
+		]);
+	});
+});
+
+describe('listTeamNames', () => {
+	it('lists id and name of this game teams in position order', async () => {
+		const second = await seedTeam(db, game.id, { name: 'Second', position: 1 });
+		const first = await seedTeam(db, game.id, { name: 'First', position: 0 });
+		await seedTeam(db, (await createGame(db, 'Other hunt')).id);
+
+		expect(await listTeamNames(db, game.id)).toEqual([
+			{ id: first.id, name: 'First' },
+			{ id: second.id, name: 'Second' }
 		]);
 	});
 });

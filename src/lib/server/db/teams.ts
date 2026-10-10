@@ -16,6 +16,17 @@ export async function listTeamsWithClaimCounts(
 	return results;
 }
 
+export async function listTeamNames(
+	db: D1Database,
+	gameId: number
+): Promise<Pick<TeamRow, 'id' | 'name'>[]> {
+	const { results } = await db
+		.prepare('SELECT id, name FROM team WHERE game_id = ? ORDER BY position, id')
+		.bind(gameId)
+		.all<Pick<TeamRow, 'id' | 'name'>>();
+	return results;
+}
+
 /** Adds a team after the last one, with a fresh link token. */
 export async function addTeam(db: D1Database, gameId: number, name: string): Promise<TeamRow> {
 	const team = await db
