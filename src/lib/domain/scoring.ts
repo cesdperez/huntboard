@@ -87,6 +87,8 @@ export function computeScoreboard({
 
 /** A scoreboard row as players and spectators see it: no breakdown of where the points came from. */
 export interface Standing {
+	/** Keeps a row's identity while it moves, since team names need not be unique. */
+	teamId: number;
 	rank: number;
 	name: string;
 	total: number;
@@ -96,6 +98,7 @@ export interface Standing {
 
 export function toStandings(scores: TeamScore[], ownTeamId: number | null): Standing[] {
 	return scores.map((score) => ({
+		teamId: score.teamId,
 		rank: score.rank,
 		name: score.name,
 		total: score.total,

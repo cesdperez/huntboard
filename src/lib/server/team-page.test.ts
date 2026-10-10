@@ -61,8 +61,8 @@ describe('getTeamPage', () => {
 		const page = await getTeamPage(db, rats, game);
 
 		expect(page.standings).toEqual([
-			{ rank: 1, name: 'Night Owls', total: 9, own: false },
-			{ rank: 2, name: 'Canal Rats', total: 4, own: true }
+			{ teamId: owls.id, rank: 1, name: 'Night Owls', total: 9, own: false },
+			{ teamId: rats.id, rank: 2, name: 'Canal Rats', total: 4, own: true }
 		]);
 	});
 

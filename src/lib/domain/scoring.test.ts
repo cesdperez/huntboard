@@ -259,7 +259,7 @@ describe('computeScoreboard', () => {
 describe('toStandings', () => {
 	const game = { endsAt: ENDS_AT, latePenaltyPerMinute: 2 };
 
-	it('keeps only rank, name and total, in scoreboard order', () => {
+	it('keeps only the team id, rank, name and total, in scoreboard order', () => {
 		const scores = computeScoreboard({
 			game,
 			teams: [team(1, { arrivedAt: '2026-06-01T19:02:00.000Z' }), team(2)],
@@ -268,8 +268,8 @@ describe('toStandings', () => {
 		});
 
 		expect(toStandings(scores, null)).toEqual([
-			{ rank: 1, name: 'Team 2', total: 30, own: false },
-			{ rank: 2, name: 'Team 1', total: 20, own: false }
+			{ teamId: 2, rank: 1, name: 'Team 2', total: 30, own: false },
+			{ teamId: 1, rank: 2, name: 'Team 1', total: 20, own: false }
 		]);
 	});
 
