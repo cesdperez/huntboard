@@ -2,6 +2,7 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import { browser } from '$app/env';
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import { InPlaceForm } from '#lib/components/in-place-form.svelte.js';
 	import { Points } from '#lib/components/points/index.js';
 	import { toast } from '#lib/components/toast/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -27,8 +28,8 @@
 	const arrival = new AdminAction<TeamScoresFormResult>('teamScores');
 	const adjusting = new AdminAction<TeamScoresFormResult>('teamScores');
 
-	let correcting = $state(false);
-	let adding = $state(false);
+	const correcting = new InPlaceForm();
+	const adding = new InPlaceForm();
 
 	const invalid = $derived(
 		adjusting.failed?.kind === 'adjustment-invalid' ? adjusting.failed : null
@@ -62,7 +63,7 @@
 		const local = input.formData.get('arrivedAtLocal');
 		input.formData.set('arrivedAt', localInputToUtc(typeof local === 'string' ? local : '') ?? '');
 		return arrival.submit(() => {
-			correcting = false;
+			void correcting.hide();
 			toast.show('Arrival corrected');
 		})(input);
 	};
@@ -72,7 +73,7 @@
 		const penalty = input.formData.get('sign') === 'penalty';
 		input.formData.set('points', penalty && points ? `-${points}` : points);
 		return adjusting.submit(() => {
-			adding = false;
+			void adding.hide();
 			toast.show('Adjustment added');
 		})(input);
 	};
@@ -100,11 +101,14 @@
 
 	<section class="flex flex-col gap-2" aria-label="Arrival of {team.name}">
 		<p>{lateLine}</p>
-		{#if correcting}
+		{#if correcting.open}
 			<form
+				bind:this={correcting.form}
 				method="POST"
 				action="?/arrivalCorrect"
-				class="flex flex-col gap-2"
+				tabindex="-1"
+				aria-label="Arrival time of {team.name}"
+				class="flex flex-col gap-2 outline-none"
 				use:enhance={correct}
 			>
 				<input type="hidden" name="teamId" value={team.id} />
@@ -117,15 +121,14 @@
 					value={utcToLocalInput(team.arrivedAt ?? endsAt ?? new Date().toISOString())}
 				/>
 				<div class="flex gap-3">
-					<Button variant="ghost" class="flex-1" onclick={() => (correcting = false)}>Cancel</Button
-					>
+					<Button variant="ghost" class="flex-1" onclick={correcting.hide}>Cancel</Button>
 					<Button type="submit" class="flex-1" disabled={arrival.busy}>Save time</Button>
 				</div>
 			</form>
 		{:else}
 			<div class="flex gap-3">
 				{#if team.arrivedAt}
-					<Button class="flex-1" onclick={() => (correcting = true)}>
+					<Button bind:ref={correcting.opener} class="flex-1" onclick={correcting.show}>
 						Correct<span class="sr-only"> the arrival of {team.name}</span>
 					</Button>
 					<form
@@ -149,7 +152,7 @@
 							Record arrival<span class="sr-only"> of {team.name}</span>
 						</Button>
 					</form>
-					<Button variant="ghost" onclick={() => (correcting = true)}>
+					<Button bind:ref={correcting.opener} variant="ghost" onclick={correcting.show}>
 						Enter time<span class="sr-only"> of arrival for {team.name}</span>
 					</Button>
 				{/if}
@@ -201,8 +204,16 @@
 			</ul>
 		{/if}
 
-		{#if adding}
-			<form method="POST" action="?/adjustmentAdd" class="flex flex-col gap-3" use:enhance={add}>
+		{#if adding.open}
+			<form
+				bind:this={adding.form}
+				method="POST"
+				action="?/adjustmentAdd"
+				tabindex="-1"
+				aria-label="Adjustment for {team.name}"
+				class="flex flex-col gap-3 outline-none"
+				use:enhance={add}
+			>
 				<input type="hidden" name="teamId" value={team.id} />
 				<fieldset class="flex gap-3">
 					<legend class="sr-only">Bonus or penalty</legend>
@@ -258,7 +269,7 @@
 						variant="ghost"
 						class="flex-1"
 						onclick={() => {
-							adding = false;
+							void adding.hide();
 							adjusting.clearError();
 						}}
 					>
@@ -268,7 +279,12 @@
 				</div>
 			</form>
 		{:else}
-			<Button variant="ghost" class="-ml-4 self-start" onclick={() => (adding = true)}>
+			<Button
+				bind:ref={adding.opener}
+				variant="ghost"
+				class="-ml-4 self-start"
+				onclick={adding.show}
+			>
 				Add adjustment<span class="sr-only"> for {team.name}</span>
 			</Button>
 		{/if}

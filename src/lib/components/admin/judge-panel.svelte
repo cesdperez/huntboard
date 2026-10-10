@@ -7,6 +7,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import { InPlaceForm } from '#lib/components/in-place-form.svelte.js';
 	import { toast } from '#lib/components/toast/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -43,13 +44,13 @@
 	let mounted = true;
 	$effect(() => () => (mounted = false));
 
-	let rejecting = $state(false);
+	const rejecting = new InPlaceForm();
 
 	function submit(): SubmitFunction {
 		const send = action.submit(
 			(result) => {
 				toast.show(result.kind === 'scored' ? `Scored ${result.points}` : 'Rejected');
-				rejecting = false;
+				void rejecting.hide();
 				ondone?.();
 			},
 			(message) => onfailure?.(message)
@@ -82,8 +83,16 @@
 {/snippet}
 
 <div class="flex flex-col gap-3">
-	{#if rejecting && claimTarget}
-		<form method="POST" action="?/judgeReject" class="flex flex-col gap-3" use:enhance={submit()}>
+	{#if rejecting.open && claimTarget}
+		<form
+			bind:this={rejecting.form}
+			method="POST"
+			action="?/judgeReject"
+			tabindex="-1"
+			aria-label="Reject {label}"
+			class="flex flex-col gap-3 outline-none"
+			use:enhance={submit()}
+		>
 			{@render targetFields()}
 			<div class="flex flex-col gap-2">
 				<Label for="{id}-reason">
@@ -101,7 +110,7 @@
 				<p class="text-[15px] text-danger" role="alert">{action.error}</p>
 			{/if}
 			<div class="flex gap-3">
-				<Button variant="ghost" class="flex-1" onclick={() => (rejecting = false)}>Cancel</Button>
+				<Button variant="ghost" class="flex-1" onclick={rejecting.hide}>Cancel</Button>
 				<Button type="submit" variant="destructive" class="flex-1" disabled={action.busy}>
 					Reject claim<span class="sr-only">{` ${label}`}</span>
 				</Button>
@@ -152,10 +161,11 @@
 			{@render targetFields()}
 			{#if claimTarget}
 				<Button
+					bind:ref={rejecting.opener}
 					variant="destructive"
 					class="flex-1"
 					disabled={action.busy}
-					onclick={() => (rejecting = true)}
+					onclick={rejecting.show}
 				>
 					Reject<span class="sr-only">{` ${label}`}</span>
 				</Button>

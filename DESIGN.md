@@ -196,5 +196,6 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - All interactive elements reachable by keyboard, in visual order.
 - Live regions announce score changes on the team strip, politely.
 - A button repeated in every item ("Score", "Reject", "Record arrival", "Add adjustment") carries the team and challenge in a visually hidden label, so a screen reader list of buttons tells them apart.
+- A form that opens in place of its button (Reject, Correct, Enter time, Add adjustment) takes focus itself, not its first field, so the phone keyboard stays closed. Closing it returns focus to that button.
 - Moving focus scrolls controls clear of the admin tab bar, the sticky team strip and the grid's sticky header and challenge column.
 - Test each milestone at 390 × 844 first, then 1280 × 800.
