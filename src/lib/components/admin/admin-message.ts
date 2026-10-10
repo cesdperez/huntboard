@@ -22,3 +22,11 @@ export function adminFailureMessage(result: ActionResult, key: string): string |
 		}
 	}
 }
+
+/**
+ * Whether a request got no answer the page understands, so a form keeps what was typed for a
+ * retry. A 404 is an answer: the admin link itself stopped working.
+ */
+export function needsRetry(result: ActionResult): boolean {
+	return result.type === 'error' && result.status !== 404;
+}

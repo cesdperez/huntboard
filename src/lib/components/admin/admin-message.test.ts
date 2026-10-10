@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adminFailureMessage } from './admin-message.js';
+import { adminFailureMessage, needsRetry } from './admin-message.js';
 
 describe('adminFailureMessage', () => {
 	it('is null when the action succeeded', () => {
@@ -58,5 +58,31 @@ describe('adminFailureMessage', () => {
 		expect(
 			adminFailureMessage({ type: 'failure', status: 500, location: '/a/x', data: {} }, 'judge')
 		).toBe('This did not go through. Check your connection and try again.');
+	});
+});
+
+describe('needsRetry', () => {
+	it('is true for a request that got no answer', () => {
+		expect(needsRetry({ type: 'error', error: { message: 'fetch failed', status: 500 } })).toBe(
+			true
+		);
+	});
+
+	it('is false when the admin link stopped working', () => {
+		expect(
+			needsRetry({ type: 'error', status: 404, error: { message: 'Not found', status: 404 } })
+		).toBe(false);
+	});
+
+	it('is false for an answer the form shows', () => {
+		expect(needsRetry({ type: 'success', status: 200, location: '/a/x', data: {} })).toBe(false);
+		expect(
+			needsRetry({
+				type: 'failure',
+				status: 400,
+				location: '/a/x',
+				data: { settings: { kind: 'invalid', errors: {} } }
+			})
+		).toBe(false);
 	});
 });
