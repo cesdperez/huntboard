@@ -163,6 +163,9 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await markDone(rats, 'Get a free dessert from a restaurant', 'receipt photo');
 
 		await admin.reload();
+		// The countdown shows only once the page hydrates. A tap before that posts the form without
+		// the nickname, and the server refuses it.
+		await expect(admin.getByText(/^Ends in /)).toBeVisible();
 		await scoreQuick(admin, 'Canal Rats', 'Get a free dessert from a restaurant', 15);
 	});
 
