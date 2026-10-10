@@ -1,4 +1,4 @@
-const MS_PER_MINUTE = 60_000;
+import { MS_PER_MINUTE } from './duration.js';
 
 /** "4 min ago", "2 h 5 min ago". A time ahead of this clock reads as just now, since clocks drift. */
 export function timeAgo(iso: string, now: Date): string {

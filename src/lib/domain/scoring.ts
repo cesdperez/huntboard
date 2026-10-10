@@ -1,3 +1,5 @@
+import { MS_PER_MINUTE } from '../duration.js';
+
 export type ClaimStatus = 'pending' | 'scored' | 'rejected';
 
 export interface ScoringGame {
@@ -46,8 +48,6 @@ export interface ScoreboardInput {
 	claims: ScoringClaim[];
 	adjustments: ScoringAdjustment[];
 }
-
-const MS_PER_MINUTE = 60_000;
 
 /** Whole minutes between the end time and the arrival, rounded down. 0 without both times or when on time. */
 export function minutesLate(endsAt: string | null, arrivedAt: string | null): number {
