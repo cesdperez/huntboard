@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createGame, getGameByAdminToken, updateGameSettings } from './games.js';
+import { createGame, getGameByAdminToken, getGameById, updateGameSettings } from './games.js';
 import { createTestDb } from './testing/test-db.js';
 
 let db: D1Database;
@@ -42,6 +42,18 @@ describe('getGameByAdminToken', () => {
 		const created = await createGame(db, 'Canal hunt');
 
 		expect(await getGameByAdminToken(db, created.scoreboard_token)).toBeNull();
+	});
+});
+
+describe('getGameById', () => {
+	it('finds a game by its id', async () => {
+		const created = await createGame(db, 'Canal hunt');
+
+		expect(await getGameById(db, created.id)).toEqual(created);
+	});
+
+	it('returns null for an unknown id', async () => {
+		expect(await getGameById(db, 9999)).toBeNull();
 	});
 });
 

@@ -47,6 +47,16 @@ export interface ClaimRow {
 	judge_note: string | null;
 }
 
+export interface AdjustmentRow {
+	id: number;
+	team_id: number;
+	/** Signed: positive for a bonus, negative for a penalty. */
+	points: number;
+	reason: string;
+	created_by: string;
+	created_at: string;
+}
+
 /** Counts every claim, rejected history included, because deleting cascades to all of them. */
 export interface WithClaimCount {
 	claim_count: number;

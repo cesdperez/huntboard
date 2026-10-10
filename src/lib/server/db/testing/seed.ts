@@ -1,5 +1,5 @@
 import { titleKey } from '#lib/domain/challenge-parser.js';
-import type { ChallengeRow, ClaimRow, TeamRow } from '../types.js';
+import type { AdjustmentRow, ChallengeRow, ClaimRow, TeamRow } from '../types.js';
 
 /** Raw inserts for test setup, so a test does not depend on the query module it is testing. */
 export async function seedTeam(
@@ -52,6 +52,19 @@ export function seedClaim(
 		judged_by: fields.judged_by ?? null,
 		judged_at: fields.judged_at ?? null,
 		judge_note: fields.judge_note ?? null
+	});
+}
+
+export function seedAdjustment(
+	db: D1Database,
+	teamId: number,
+	fields: Partial<Omit<AdjustmentRow, 'id' | 'team_id'>> = {}
+): Promise<AdjustmentRow> {
+	return insert<AdjustmentRow>(db, 'adjustment', {
+		team_id: teamId,
+		points: fields.points ?? 5,
+		reason: fields.reason ?? 'Bonus',
+		created_by: fields.created_by ?? 'Alex'
 	});
 }
 

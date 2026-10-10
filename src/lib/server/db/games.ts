@@ -14,6 +14,10 @@ export function getGameByAdminToken(db: D1Database, token: string): Promise<Game
 	return db.prepare('SELECT * FROM game WHERE admin_token = ?').bind(token).first<GameRow>();
 }
 
+export function getGameById(db: D1Database, id: number): Promise<GameRow | null> {
+	return db.prepare('SELECT * FROM game WHERE id = ?').bind(id).first<GameRow>();
+}
+
 export type GameSettings = Pick<
 	GameRow,
 	'name' | 'starts_at' | 'ends_at' | 'late_penalty_per_minute'

@@ -4,6 +4,7 @@ import { titleKey } from '#lib/domain/challenge-parser.js';
 import {
 	applyChallengeImport,
 	getImportSource,
+	listChallenges,
 	listChallengesWithClaimCounts,
 	updateChallenge
 } from './challenges.js';
@@ -46,6 +47,19 @@ describe('listChallengesWithClaimCounts', () => {
 			{ ...swim, claim_count: 2 },
 			{ ...cake, claim_count: 0 }
 		]);
+	});
+});
+
+describe('listChallenges', () => {
+	it('lists only this game challenges in position order, without claim counts', async () => {
+		const second = await seedChallenge(db, game.id, { title: 'Second', position: 1 });
+		const first = await seedChallenge(db, game.id, { title: 'First', position: 0 });
+		const team = await seedTeam(db, game.id);
+		await seedClaim(db, team.id, first.id);
+		const other = await createGame(db, 'Other hunt');
+		await seedChallenge(db, other.id, { title: 'Elsewhere' });
+
+		expect(await listChallenges(db, game.id)).toEqual([first, second]);
 	});
 });
 

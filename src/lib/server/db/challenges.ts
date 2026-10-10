@@ -1,7 +1,16 @@
 import type { ChallengeFields, ImportPlan } from '#lib/domain/challenge-import.js';
 import type { ChallengeEditFields } from '#lib/domain/challenge-edit.js';
 import type { ExistingChallenge, ExistingClaim } from '#lib/domain/reimport-diff.js';
-import type { ChallengeWithClaimCount } from './types.js';
+import type { ChallengeRow, ChallengeWithClaimCount } from './types.js';
+
+/** The challenge list as teams see it. No claim counts, because those would show other teams' progress. */
+export async function listChallenges(db: D1Database, gameId: number): Promise<ChallengeRow[]> {
+	const { results } = await db
+		.prepare('SELECT * FROM challenge WHERE game_id = ? ORDER BY position, id')
+		.bind(gameId)
+		.all<ChallengeRow>();
+	return results;
+}
 
 export async function listChallengesWithClaimCounts(
 	db: D1Database,
