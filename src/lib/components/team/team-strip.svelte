@@ -50,13 +50,15 @@
 		{#if expanded}
 			<div id="team-standings" class="flex flex-col gap-3 px-gutter pb-4">
 				<ol class="flex max-h-[50dvh] flex-col overflow-y-auto border-t" aria-label="Scoreboard">
-					{#each standings as row (row.teamId)}
+					{#each standings as row, index (row.teamId)}
+						<!-- Higher ranks paint on top, so a climbing team slides over the rows it passes. -->
 						<li
 							class={cn(
 								'relative flex min-h-touch items-center gap-3 border-b border-l-4 border-l-transparent bg-surface pl-2',
 								row.own && 'border-l-flag font-semibold'
 							)}
 							animate:flip={{ duration: motionMs(REORDER_MS) }}
+							style:z-index={standings.length - index}
 						>
 							<span class="w-10 shrink-0 tabular-nums">{ordinal(row.rank)}</span>
 							<span class="min-w-0 flex-1 truncate">

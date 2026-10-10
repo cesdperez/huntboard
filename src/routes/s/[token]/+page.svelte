@@ -42,10 +42,12 @@
 		<p class="mt-6 type-secondary">No teams yet. They show up here once the organiser adds them.</p>
 	{:else}
 		<ol class="mt-4 flex flex-col border-t" aria-label="Scoreboard">
-			{#each data.standings as row (row.teamId)}
+			{#each data.standings as row, index (row.teamId)}
+				<!-- Higher ranks paint on top, so a climbing team slides over the rows it passes. -->
 				<li
 					class="scoreboard-row relative flex min-h-row items-center gap-3 border-b bg-paper py-2"
 					animate:flip={{ duration: motionMs(REORDER_MS) }}
+					style:z-index={data.standings.length - index}
 				>
 					<span class="scoreboard-rank w-16 shrink-0 type-score text-[28px]"
 						>{ordinal(row.rank)}</span
