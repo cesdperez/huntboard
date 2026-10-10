@@ -124,6 +124,7 @@
 	--container-content: 640px;
 
 	--shadow-float: 0 -4px 24px rgb(5 10 20 / 0.18);
+	--shadow-strip: 0 4px 24px rgb(5 10 20 / 0.12);
 }
 
 @utility tabular {
