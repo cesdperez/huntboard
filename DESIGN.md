@@ -104,6 +104,7 @@ Tapping a row opens a bottom sheet with the description, the note field and one 
 - A pending row reads "Waiting for a judge" under its title. A rejected row shows the reason in `--danger`.
 - The sheet moves focus to itself, not to the note field, so the phone keyboard opens only when the player taps the field.
 - Outside the game window the sheet keeps "Mark done" visible but disabled, with the closed message above it.
+- An error in the sheet stays only while the claim it is about is unchanged. Once a poll shows a new state, the error goes, so it never contradicts the button under it.
 - A confirmation shows as a toast: a `--ink` pill above the bottom edge for three seconds.
 
 ### Admin
