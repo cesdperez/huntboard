@@ -23,11 +23,9 @@ export async function scoreClaim(
 	gameId: number,
 	data: FormData
 ): Promise<JudgeActionOutcome> {
-	const judgedBy = normalizeNickname(data.get('nickname'));
-	if (!judgedBy) return error(400, NO_NICKNAME);
-	const points = parsePoints(readString(data, 'points'));
-	if (points === null) return error(400, NOT_POINTS);
-	return judge(db, gameId, data, judgedBy, { status: 'scored', points });
+	const score = readScore(data);
+	if (isRefusal(score)) return score;
+	return judge(db, gameId, data, score.judgedBy, { status: 'scored', points: score.points });
 }
 
 export async function rejectClaim(
@@ -35,12 +33,17 @@ export async function rejectClaim(
 	gameId: number,
 	data: FormData
 ): Promise<JudgeActionOutcome> {
-	const judgedBy = normalizeNickname(data.get('nickname'));
-	if (!judgedBy) return error(400, NO_NICKNAME);
+	const judgeName = readJudge(data);
+	if (isRefusal(judgeName)) return judgeName;
 	const reason = normalizeReason(readString(data, 'reason'));
 	if (reason.length > REASON_MAX_LENGTH) return error(400, REASON_TOO_LONG);
-	return judge(db, gameId, data, judgedBy, { status: 'rejected', reason: reason || null });
+	return judge(db, gameId, data, judgeName.judgedBy, {
+		status: 'rejected',
+		reason: reason || null
+	});
 }
+
+const OPEN_CELL_GONE = 'That team or challenge is not in this game any more. Reload the page.';
 
 /** Scores a challenge for a team that never marked it, for proof that arrived in person. */
 export async function scoreOpenCell(
@@ -48,22 +51,13 @@ export async function scoreOpenCell(
 	gameId: number,
 	data: FormData
 ): Promise<JudgeActionOutcome> {
-	const judgedBy = normalizeNickname(data.get('nickname'));
-	if (!judgedBy) return error(400, NO_NICKNAME);
-	const points = parsePoints(readString(data, 'points'));
-	if (points === null) return error(400, NOT_POINTS);
+	const score = readScore(data);
+	if (isRefusal(score)) return score;
 	const teamId = readId(data, 'teamId');
 	const challengeId = readId(data, 'challengeId');
-	const result =
-		teamId === null || challengeId === null
-			? ({ status: 'not-found' } as const)
-			: await scoreWithoutClaim(db, gameId, {
-					teamId,
-					challengeId,
-					points,
-					judgedBy
-				});
-	return respond(result, 'That team or challenge is not in this game any more. Reload the page.');
+	if (teamId === null || challengeId === null) return error(404, OPEN_CELL_GONE);
+	const result = await scoreWithoutClaim(db, gameId, { teamId, challengeId, ...score });
+	return respond(result, OPEN_CELL_GONE);
 }
 
 async function judge(
@@ -73,19 +67,33 @@ async function judge(
 	judgedBy: string,
 	verdict: Verdict
 ): Promise<JudgeActionOutcome> {
-	const claimId = readId(data, 'claimId');
 	const from = data.get('from') === 'scored' ? 'scored' : 'pending';
-	const result =
-		claimId === null
-			? ({ status: 'not-found' } as const)
-			: await judgeClaim(db, gameId, { claimId, from, verdict, judgedBy });
 	// A team can undo only a pending claim. A scored one goes only with its challenge on re-import.
-	return respond(
-		result,
+	const notFound =
 		from === 'pending'
 			? 'The team undid this claim before it was judged.'
-			: 'This claim is not in this game any more. Reload the page.'
-	);
+			: 'This claim is not in this game any more. Reload the page.';
+	const claimId = readId(data, 'claimId');
+	if (claimId === null) return error(404, notFound);
+	return respond(await judgeClaim(db, gameId, { claimId, from, verdict, judgedBy }), notFound);
+}
+
+type Refusal = JudgeActionOutcome;
+
+function isRefusal<T extends object>(read: T | Refusal): read is Refusal {
+	return 'status' in read;
+}
+
+function readJudge(data: FormData): { judgedBy: string } | Refusal {
+	const judgedBy = normalizeNickname(data.get('nickname'));
+	return judgedBy ? { judgedBy } : error(400, NO_NICKNAME);
+}
+
+function readScore(data: FormData): { judgedBy: string; points: number } | Refusal {
+	const judgeName = readJudge(data);
+	if (isRefusal(judgeName)) return judgeName;
+	const points = parsePoints(readString(data, 'points'));
+	return points === null ? error(400, NOT_POINTS) : { judgedBy: judgeName.judgedBy, points };
 }
 
 function respond(result: JudgeResult, notFound: string): JudgeActionOutcome {
