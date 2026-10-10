@@ -2,17 +2,16 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
+	import { Toast } from '#lib/components/toast/index.js';
 	import { cn } from '#lib/utils.js';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
 
+	const token = $derived(data.game.admin_token);
 	const tabs = $derived([
-		{
-			label: 'Setup',
-			routeId: '/a/[token]/setup',
-			href: resolve('/a/[token]/setup', { token: data.game.admin_token })
-		}
+		{ label: 'Queue', routeId: '/a/[token]/queue', href: resolve('/a/[token]/queue', { token }) },
+		{ label: 'Setup', routeId: '/a/[token]/setup', href: resolve('/a/[token]/setup', { token }) }
 	]);
 </script>
 
@@ -45,11 +44,18 @@
 						href={tab.href}
 						aria-current={current ? 'page' : undefined}
 						class={cn(
-							'flex min-h-row items-center justify-center font-semibold',
+							'flex min-h-row items-center justify-center gap-1.5 font-semibold',
 							current ? 'text-ink' : 'text-muted'
 						)}
 					>
 						{tab.label}
+						{#if tab.label === 'Queue' && data.pendingCount > 0}
+							<span
+								class="min-w-6 rounded-full bg-flag px-1.5 text-center text-[13px] leading-6 text-on-flag tabular-nums"
+							>
+								{data.pendingCount}<span class="sr-only"> to judge</span>
+							</span>
+						{/if}
 					</a>
 				</li>
 			{/each}
@@ -58,3 +64,4 @@
 </div>
 
 <NicknamePrompt />
+<Toast class="bottom-[calc(var(--spacing-row)+max(1rem,env(safe-area-inset-bottom)))]" />
