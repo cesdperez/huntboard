@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampPoints, quickPointValues } from './points.js';
+import { clampPoints, parsePoints, quickPointValues } from './points.js';
 
 describe('clampPoints', () => {
 	const range = { min: 5, max: 20 };
@@ -64,5 +64,24 @@ describe('quickPointValues', () => {
 
 	it('rejects a range where min is greater than max', () => {
 		expect(() => quickPointValues({ min: 20, max: 5 })).toThrow(RangeError);
+	});
+});
+
+describe('parsePoints', () => {
+	it('reads a whole number, ignoring surrounding spaces', () => {
+		expect(parsePoints(' 15 ')).toBe(15);
+	});
+
+	it('reads zero and negative numbers, so clamping can raise them', () => {
+		expect(parsePoints('0')).toBe(0);
+		expect(parsePoints('-3')).toBe(-3);
+	});
+
+	it.each(['', '  ', '7.5', '1e3', 'ten', '12abc', '+'])('refuses %j', (value) => {
+		expect(parsePoints(value)).toBeNull();
+	});
+
+	it('refuses a number too large to be exact', () => {
+		expect(parsePoints('99999999999999999999')).toBeNull();
 	});
 });

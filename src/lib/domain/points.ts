@@ -17,6 +17,14 @@ export function quickPointValues(range: PointsRange): number[] {
 	return [...new Set([range.min, middle, range.max])];
 }
 
+/** A typed whole number of points, possibly outside any range, or null when it is not one. */
+export function parsePoints(value: string): number | null {
+	const trimmed = value.trim();
+	if (!/^-?\d+$/.test(trimmed)) return null;
+	const points = Number(trimmed);
+	return Number.isSafeInteger(points) ? points : null;
+}
+
 function assertValidRange({ min, max }: PointsRange): void {
 	if (!Number.isInteger(min) || !Number.isInteger(max) || min > max) {
 		throw new RangeError(`Invalid points range ${min}-${max}`);
