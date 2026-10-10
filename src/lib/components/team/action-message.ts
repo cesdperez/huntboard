@@ -3,7 +3,8 @@ import { DEAD_LINK_MESSAGE } from '#lib/dead-link.js';
 import type { GamePhase } from '#lib/domain/game-window.js';
 import type { TeamFormResult } from '#lib/server/team-play.js';
 
-const RETRY = 'This did not go through. Check your connection and try again.';
+/** For a request that never got an answer the page understands. */
+export const RETRY = 'This did not go through. Check your connection and try again.';
 
 /** What to show after a team action, or null when it went through. */
 export function actionFailureMessage(
