@@ -48,6 +48,7 @@ export function seedClaim(
 		status: fields.status ?? 'pending',
 		note: fields.note ?? null,
 		marked_by: fields.marked_by ?? 'Sam',
+		...(fields.marked_at && { marked_at: fields.marked_at }),
 		points: fields.points ?? null,
 		judged_by: fields.judged_by ?? null,
 		judged_at: fields.judged_at ?? null,
