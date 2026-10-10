@@ -8,18 +8,13 @@ import { addAdjustment, deleteAdjustment } from './db/adjustments.js';
 import { recordFirstArrival, setArrival } from './db/teams.js';
 import { readId, readString, readUtcTime } from './form.js';
 
-/** What the Teams tab actions return under `teamScores`. teamId says which team's form an error belongs to. */
+/** What the Teams tab actions return under `teamScores`. */
 export type TeamScoresFormResult =
-	| { kind: 'adjusted'; teamId: number }
-	| {
-			kind: 'adjustment-invalid';
-			teamId: number;
-			values: AdjustmentInput;
-			errors: AdjustmentErrors;
-	  }
+	| { kind: 'adjusted' }
+	| { kind: 'adjustment-invalid'; values: AdjustmentInput; errors: AdjustmentErrors }
 	| { kind: 'adjustment-removed' }
-	| { kind: 'arrival'; teamId: number }
-	| { kind: 'error'; teamId: number | null; message: string };
+	| { kind: 'arrival' }
+	| { kind: 'error'; message: string };
 
 export interface TeamScoresOutcome {
 	status: number;
@@ -34,10 +29,10 @@ export async function addTeamAdjustment(
 	data: FormData
 ): Promise<TeamScoresOutcome> {
 	const teamId = readId(data, 'teamId');
-	if (teamId === null) return error(404, null, TEAM_GONE);
+	if (teamId === null) return error(404, TEAM_GONE);
 	const createdBy = normalizeNickname(data.get('nickname'));
 	if (!createdBy) {
-		return error(400, teamId, 'Set your nickname first, so everyone knows who added this.');
+		return error(400, 'Set your nickname first, so everyone knows who added this.');
 	}
 
 	const values = { points: readString(data, 'points'), reason: readString(data, 'reason') };
@@ -45,13 +40,13 @@ export async function addTeamAdjustment(
 	if (!validated.ok) {
 		return {
 			status: 400,
-			result: { kind: 'adjustment-invalid', teamId, values, errors: validated.errors }
+			result: { kind: 'adjustment-invalid', values, errors: validated.errors }
 		};
 	}
 
 	const added = await addAdjustment(db, gameId, teamId, { ...validated.adjustment, createdBy });
-	if (!added) return error(404, teamId, TEAM_GONE);
-	return { status: 200, result: { kind: 'adjusted', teamId } };
+	if (!added) return error(404, TEAM_GONE);
+	return { status: 200, result: { kind: 'adjusted' } };
 }
 
 export async function removeAdjustment(
@@ -61,7 +56,7 @@ export async function removeAdjustment(
 ): Promise<TeamScoresOutcome> {
 	const adjustmentId = readId(data, 'adjustmentId');
 	if (adjustmentId === null || !(await deleteAdjustment(db, gameId, adjustmentId))) {
-		return error(404, null, 'This adjustment was already removed.');
+		return error(404, 'This adjustment was already removed.');
 	}
 	return { status: 200, result: { kind: 'adjustment-removed' } };
 }
@@ -77,18 +72,14 @@ export async function recordArrival(
 	now: Date
 ): Promise<TeamScoresOutcome> {
 	const teamId = readId(data, 'teamId');
-	if (teamId === null) return error(404, null, TEAM_GONE);
+	if (teamId === null) return error(404, TEAM_GONE);
 	switch (await recordFirstArrival(db, gameId, teamId, now.toISOString())) {
 		case 'recorded':
-			return { status: 200, result: { kind: 'arrival', teamId } };
+			return { status: 200, result: { kind: 'arrival' } };
 		case 'already-recorded':
-			return error(
-				409,
-				teamId,
-				'The arrival was already recorded. Correct the time if it is wrong.'
-			);
+			return error(409, 'The arrival was already recorded. Correct the time if it is wrong.');
 		case 'not-found':
-			return error(404, teamId, TEAM_GONE);
+			return error(404, TEAM_GONE);
 	}
 }
 
@@ -100,7 +91,7 @@ export async function correctArrival(
 ): Promise<TeamScoresOutcome> {
 	const teamId = readId(data, 'teamId');
 	const arrivedAt = readUtcTime(data, 'arrivedAt');
-	if (!arrivedAt) return error(400, teamId, 'Enter the time the team arrived.');
+	if (!arrivedAt) return error(400, 'Enter the time the team arrived.');
 	return saveArrival(db, gameId, teamId, arrivedAt);
 }
 
@@ -120,11 +111,11 @@ async function saveArrival(
 	arrivedAt: string | null
 ): Promise<TeamScoresOutcome> {
 	if (teamId === null || !(await setArrival(db, gameId, teamId, arrivedAt))) {
-		return error(404, teamId, TEAM_GONE);
+		return error(404, TEAM_GONE);
 	}
-	return { status: 200, result: { kind: 'arrival', teamId } };
+	return { status: 200, result: { kind: 'arrival' } };
 }
 
-function error(status: number, teamId: number | null, message: string): TeamScoresOutcome {
-	return { status, result: { kind: 'error', teamId, message } };
+function error(status: number, message: string): TeamScoresOutcome {
+	return { status, result: { kind: 'error', message } };
 }

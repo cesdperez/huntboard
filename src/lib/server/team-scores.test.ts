@@ -45,7 +45,7 @@ describe('addTeamAdjustment', () => {
 			form({ ...fields, teamId: String(rats.id) })
 		);
 
-		expect(outcome).toEqual({ status: 200, result: { kind: 'adjusted', teamId: rats.id } });
+		expect(outcome).toEqual({ status: 200, result: { kind: 'adjusted' } });
 		expect(await listAdjustments(db, game.id)).toEqual([
 			expect.objectContaining({ points: -10, reason: 'Never showed up', created_by: 'Alex' })
 		]);
@@ -62,7 +62,6 @@ describe('addTeamAdjustment', () => {
 			status: 400,
 			result: {
 				kind: 'adjustment-invalid',
-				teamId: rats.id,
 				values: { points: '0', reason: '' },
 				errors: {
 					points: 'Enter a whole number of points, like 10 or -5. Not 0.',
@@ -84,7 +83,6 @@ describe('addTeamAdjustment', () => {
 			status: 400,
 			result: {
 				kind: 'error',
-				teamId: rats.id,
 				message: 'Set your nickname first, so everyone knows who added this.'
 			}
 		});
@@ -97,7 +95,6 @@ describe('addTeamAdjustment', () => {
 			status: 404,
 			result: {
 				kind: 'error',
-				teamId: 9999,
 				message: 'That team is not in this game any more. Reload the page.'
 			}
 		});
@@ -123,7 +120,7 @@ describe('removeAdjustment', () => {
 
 		expect(outcome).toEqual({
 			status: 404,
-			result: { kind: 'error', teamId: null, message: 'This adjustment was already removed.' }
+			result: { kind: 'error', message: 'This adjustment was already removed.' }
 		});
 	});
 });
@@ -132,7 +129,7 @@ describe('recordArrival', () => {
 	it('records the arrival at the server time', async () => {
 		const outcome = await recordArrival(db, game.id, form({ teamId: String(rats.id) }), NOW);
 
-		expect(outcome).toEqual({ status: 200, result: { kind: 'arrival', teamId: rats.id } });
+		expect(outcome).toEqual({ status: 200, result: { kind: 'arrival' } });
 		expect(await arrivedAt()).toBe('2026-06-01T21:03:12.345Z');
 	});
 
@@ -150,7 +147,6 @@ describe('recordArrival', () => {
 			status: 409,
 			result: {
 				kind: 'error',
-				teamId: rats.id,
 				message: 'The arrival was already recorded. Correct the time if it is wrong.'
 			}
 		});
@@ -187,7 +183,7 @@ describe('correctArrival', () => {
 
 		expect(outcome).toEqual({
 			status: 400,
-			result: { kind: 'error', teamId: rats.id, message: 'Enter the time the team arrived.' }
+			result: { kind: 'error', message: 'Enter the time the team arrived.' }
 		});
 		expect(await arrivedAt()).toBe('2026-06-01T21:03:12.345Z');
 	});
