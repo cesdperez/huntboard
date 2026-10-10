@@ -97,6 +97,15 @@ describe('teamBoard', () => {
 		expect(row.claim).toMatchObject({ id: 9, status: 'pending' });
 	});
 
+	it('prefers the active claim over a later rejection', () => {
+		const [row] = teamBoard(
+			[challenge(1)],
+			[claim(7, 1, { status: 'scored', points: 8 }), claim(9, 1, { status: 'rejected' })]
+		);
+
+		expect(row.claim).toMatchObject({ id: 7, status: 'scored' });
+	});
+
 	it('shows the latest rejection when a challenge was rejected more than once', () => {
 		const [row] = teamBoard(
 			[challenge(1)],
