@@ -40,6 +40,8 @@
 	// on one a poll swapped in meanwhile. A change in between gets the server's conflict message.
 	let seen = $state(untrack(() => target));
 	const claimTarget = $derived('claimId' in seen ? seen : null);
+	let mounted = true;
+	$effect(() => () => (mounted = false));
 
 	let rejecting = $state(false);
 
@@ -56,7 +58,8 @@
 			const settle = await send(input);
 			return async (options) => {
 				await settle?.(options);
-				seen = target;
+				// The refresh can remove this panel, and reading its props then warns of stale values.
+				if (mounted) seen = target;
 			};
 		};
 	}
