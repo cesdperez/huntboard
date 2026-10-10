@@ -129,6 +129,8 @@ A bottom tab bar with four tabs: Queue, Grid, Teams, Setup. The Queue tab shows 
 The points picker buttons are at least 56px tall. Tapping a quick value scores at once. The number field needs "Score" to confirm. A typed value outside the range moves to the nearest end when the field loses focus, so the judge sees what will be scored.
 
 - The admin link opens on Queue once the game has teams and challenges, and on Setup before that.
+- The header shows the game name with the same status line as the scoreboard, so every tab says whether the game has started or ended.
+- The empty queue follows the game: "Nothing to judge yet. Claims show up here once the game starts." before, "Nothing to judge. New claims show up here." while it runs, "Nothing left to judge. The game has ended, so no new claims come in." after.
 - The Queue badge is `--flag` with `--on-flag` text: pending claims are what counts next.
 - Queue items have no primary button. Every item carries the same actions, so a column of orange buttons would say nothing. Score is the primary action in the grid sheet.
 - "Reject" opens an optional reason field and a "Reject claim" button. That second tap is the confirmation.
@@ -153,6 +155,11 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 
 A ranked list. Rank and total in Archivo Expanded, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and nothing else changes.
 
+- Under the game name, one status line: "Starts in 0:42:10", "Ends in 1:42:10" or "Ended at 21:00". The scoreboard keeps updating after the end, because judging goes on at the meeting point.
+- Tied teams show the same rank and keep their setup order.
+- On the big screen every size follows one total size: the viewport height shared by the teams, between 40px and 18vw. Ranks are 0.6 of it, names 0.45, the title 0.45 and the status line 0.25, so 4 teams and 7 teams both fill a 1080px screen.
+- With no teams yet: "No teams yet. They show up here once the organiser adds them."
+
 ## Components
 
 Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs), restyled with the tokens above.
@@ -164,7 +171,7 @@ Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs),
 
 ## Motion
 
-One moment matters: when a poll brings a new score, the scoreboard rows reorder with a 300ms FLIP animation and the changed total counts up. That is the only unprompted motion.
+One moment matters: when a poll brings a new score, the scoreboard rows reorder with a 300ms FLIP animation and the changed total counts up over 600ms, easing out. That is the only unprompted motion. It runs on the public scoreboard and on the team strip, both its total and its expanded list. A total counts from the value it showed, never from 0 on page load. Screen readers get only the final total.
 
 Responses to the user's own actions are welcome and short (under 200ms): sheets slide up, a marker fills when a claim is made. With `prefers-reduced-motion`, all of it becomes an instant change.
 
@@ -176,9 +183,18 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - Conflicts name the person: "Sam already scored this: 15 points."
 - Times show in the viewer's time zone, in 24-hour format when the browser locale uses it.
 
+### Offline and errors
+
+- When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. Polls run again at once when the browser comes back online.
+- A page that cannot load at all says so plainly. Offline: "You are offline" with "This page loads again once you reconnect." Otherwise: "This page did not load" with "It tries again by itself. If it keeps happening, reload the page or tell your organiser." Both reload by themselves on the polling schedule once the server answers.
+- A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
+- An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast, the one toast that is not a confirmation.
+
 ## Accessibility floor
 
 - Visible focus ring: 2px `--ink` outline with 2px offset.
 - All interactive elements reachable by keyboard, in visual order.
 - Live regions announce score changes on the team strip, politely.
+- A button repeated in every item ("Score", "Reject", "Record arrival", "Add adjustment") carries the team and challenge in a visually hidden label, so a screen reader list of buttons tells them apart.
+- Moving focus scrolls controls clear of the admin tab bar, the sticky team strip and the grid's sticky header and challenge column.
 - Test each milestone at 390 × 844 first, then 1280 × 800.

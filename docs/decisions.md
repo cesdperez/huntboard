@@ -106,6 +106,8 @@ Each page's load function depends on a shared key. Clients invalidate it every 1
 
 Free-tier budget: about 40 clients, polling every 15 seconds for 5 hours, is roughly 48,000 Worker requests. The Workers free tier allows 100,000 requests per day. Static assets do not count. Check the current limits before the event, because they decide the polling interval.
 
+Before each poll the client fetches a small static file. Static assets never run the Worker, so the check costs nothing from the request budget. When it fails, the poll is skipped and the page shows an offline notice. Without the check, a load that fails offline replaces the whole page with the error page.
+
 If polling ever gets too close to the limit, the upgrade path is a Durable Object per game that pushes changes over WebSockets.
 
 ## Nothing event-specific in the app
