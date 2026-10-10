@@ -76,16 +76,18 @@ async function judge(
 	verdict: Verdict
 ): Promise<JudgeActionOutcome> {
 	const claimId = readId(data, 'claimId');
+	const from = data.get('from') === 'scored' ? 'scored' : 'pending';
 	const result =
 		claimId === null
 			? ({ status: 'not-found' } as const)
-			: await judgeClaim(db, gameId, {
-					claimId,
-					from: data.get('from') === 'scored' ? 'scored' : 'pending',
-					verdict,
-					judgedBy
-				});
-	return respond(result, 'The team undid this claim before it was judged.');
+			: await judgeClaim(db, gameId, { claimId, from, verdict, judgedBy });
+	// A team can undo only a pending claim. A scored one goes only with its challenge on re-import.
+	return respond(
+		result,
+		from === 'pending'
+			? 'The team undid this claim before it was judged.'
+			: 'This claim is not in this game any more. Reload the page.'
+	);
 }
 
 function respond(result: JudgeResult, notFound: string): JudgeActionOutcome {

@@ -115,6 +115,22 @@ describe('scoreClaim', () => {
 		});
 	});
 
+	it('says a scored claim that is gone left the game, since a team cannot undo it', async () => {
+		const outcome = await scoreClaim(
+			db,
+			game.id,
+			form({ claimId: '9999', from: 'scored', points: '8', nickname: 'Alex' })
+		);
+
+		expect(outcome).toEqual({
+			status: 404,
+			result: {
+				kind: 'error',
+				message: 'This claim is not in this game any more. Reload the page.'
+			}
+		});
+	});
+
 	it('asks for a nickname when there is none', async () => {
 		const claim = await seedClaim(db, rats.id, swim.id);
 
