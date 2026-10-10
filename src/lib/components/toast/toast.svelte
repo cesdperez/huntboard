@@ -11,7 +11,7 @@
 	{#if toast.message}
 		{#key toast.id}
 			<p
-				class="animate-in rounded-control bg-ink px-4 py-3 font-semibold text-paper duration-150 fade-in slide-in-from-bottom-2"
+				class="animate-in rounded-full bg-ink px-4 py-3 font-semibold text-paper duration-150 fade-in slide-in-from-bottom-2"
 			>
 				{toast.message}
 			</p>
