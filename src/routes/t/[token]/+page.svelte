@@ -4,7 +4,7 @@
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
 	import ChallengeSheet from '#lib/components/team/challenge-sheet.svelte';
-	import { GameClock } from '#lib/components/team/game-clock.svelte.js';
+	import { GameClock } from '#lib/game-clock.svelte.js';
 	import RenameSheet from '#lib/components/team/rename-sheet.svelte';
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
 	import { Toast } from '#lib/components/toast/index.js';

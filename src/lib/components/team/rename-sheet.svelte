@@ -5,7 +5,7 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
-	import type { GameClock } from './game-clock.svelte.js';
+	import type { GameClock } from '#lib/game-clock.svelte.js';
 	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = { open: boolean; name: string; clock: GameClock; onclose: () => void };

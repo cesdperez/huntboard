@@ -10,7 +10,7 @@
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { claimLine } from '#lib/domain/claim-messages.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
-	import type { GameClock } from './game-clock.svelte.js';
+	import type { GameClock } from '#lib/game-clock.svelte.js';
 	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = {

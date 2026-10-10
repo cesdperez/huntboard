@@ -3,7 +3,7 @@ import { invalidate } from '$app/navigation';
 import { toast } from '#lib/components/toast/index.js';
 import { GAME_DATA } from '#lib/live-updates.js';
 import { actionFailureMessage } from './action-message.js';
-import type { GameClock } from './game-clock.svelte.js';
+import type { GameClock } from '#lib/game-clock.svelte.js';
 
 /** Busy and error state of a team sheet's forms, and the enhance callback they share. */
 export class TeamAction {
