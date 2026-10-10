@@ -20,7 +20,10 @@ describe('countdown', () => {
 	});
 
 	it('has ended at the exact end time', () => {
-		expect(countdown(window, at('2026-06-01T21:00:00.000Z'))).toEqual({ kind: 'ended' });
+		expect(countdown(window, at('2026-06-01T21:00:00.000Z'))).toEqual({
+			kind: 'ended',
+			endsAt: window.endsAt
+		});
 	});
 
 	it('is unscheduled while either time is missing', () => {

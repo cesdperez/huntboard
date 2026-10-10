@@ -4,7 +4,7 @@ export type Countdown =
 	| { kind: 'unscheduled' }
 	| { kind: 'starts'; ms: number }
 	| { kind: 'ends'; ms: number }
-	| { kind: 'ended' };
+	| { kind: 'ended'; endsAt: string };
 
 /** What the team strip counts down to: the start before the game, the end while it runs. */
 export function countdown(window: GameWindow, now: Date): Countdown {
@@ -15,7 +15,7 @@ export function countdown(window: GameWindow, now: Date): Countdown {
 		case 'during':
 			return { kind: 'ends', ms: Date.parse(window.endsAt) - now.getTime() };
 		case 'after':
-			return { kind: 'ended' };
+			return { kind: 'ended', endsAt: window.endsAt };
 	}
 }
 
@@ -41,6 +41,6 @@ export function countdownLine(
 		case 'ends':
 			return `Ends in ${formatCountdown(status.ms)}`;
 		case 'ended':
-			return `Ended at ${formatTime(window.endsAt ?? '')}`;
+			return `Ended at ${formatTime(status.endsAt)}`;
 	}
 }
