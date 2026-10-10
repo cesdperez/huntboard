@@ -10,6 +10,7 @@
 	import type { TeamsFormResult } from '#lib/server/actions/teams.js';
 	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
 	import { TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
+	import { updateOrRetry } from './update-or-retry.js';
 
 	let { game, teams }: { game: GameRow; teams: TeamWithClaimCount[] } = $props();
 
@@ -21,8 +22,9 @@
 
 	const submit: SubmitFunction = () => {
 		pending = true;
-		return async ({ result, update }) => {
-			await update();
+		return async (settled) => {
+			const { result } = settled;
+			await updateOrRetry(settled);
 			pending = false;
 			if (result.type === 'success') editingId = null;
 		};

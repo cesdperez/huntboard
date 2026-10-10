@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
+	import { updateOrRetry } from './update-or-retry.js';
 
 	let {
 		id,
@@ -84,7 +85,8 @@
 				class="flex flex-col gap-3"
 				use:enhance={() => {
 					submitting = true;
-					return async ({ result, update }) => {
+					return async (settled) => {
+						const { result } = settled;
 						confirming = false;
 						submitting = false;
 						// Only the admin rotate redirects: the new page needs to say its own link changed.
@@ -99,7 +101,7 @@
 							});
 							return;
 						}
-						await update();
+						await updateOrRetry(settled);
 					};
 				}}
 			>

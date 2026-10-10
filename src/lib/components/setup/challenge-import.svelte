@@ -7,6 +7,7 @@
 	import { plural } from '#lib/plural.js';
 	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
 	import { groupBySection } from '#lib/group-by-section.js';
+	import { updateOrRetry } from './update-or-retry.js';
 
 	const PLACEHOLDER =
 		'# Around town\n- Make a birthday card [5-20]\n  Judged on effort.\n- Swim in a fountain [25]';
@@ -32,8 +33,9 @@
 
 	const submit: SubmitFunction = () => {
 		pending = true;
-		return async ({ result, update }) => {
-			await update({ reset: false });
+		return async (settled) => {
+			const { result } = settled;
+			await updateOrRetry(settled, { reset: false });
 			pending = false;
 			if (result.type === 'success' && result.data?.challenges?.kind === 'imported') text = '';
 		};

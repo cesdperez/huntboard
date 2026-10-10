@@ -10,6 +10,7 @@
 	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
 	import type { ChallengeWithClaimCount } from '#lib/server/db/types.js';
 	import { groupBySection } from '#lib/group-by-section.js';
+	import { updateOrRetry } from './update-or-retry.js';
 
 	let { challenges }: { challenges: ChallengeWithClaimCount[] } = $props();
 
@@ -20,8 +21,9 @@
 
 	const submit: SubmitFunction = () => {
 		pending = true;
-		return async ({ result, update }) => {
-			await update();
+		return async (settled) => {
+			const { result } = settled;
+			await updateOrRetry(settled);
 			pending = false;
 			if (result.type === 'success') editingId = null;
 		};

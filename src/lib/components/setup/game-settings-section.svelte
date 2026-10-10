@@ -9,6 +9,7 @@
 	import type { GameSettingsFormData } from '#lib/server/actions/game-settings.js';
 	import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/game-settings.js';
 	import type { GameRow } from '#lib/server/db/types.js';
+	import { updateOrRetry } from './update-or-retry.js';
 
 	let { game }: { game: GameRow } = $props();
 
@@ -41,8 +42,8 @@
 		class="flex flex-col gap-5"
 		use:enhance={() => {
 			submitting = true;
-			return async ({ update }) => {
-				await update({ reset: false });
+			return async (settled) => {
+				await updateOrRetry(settled, { reset: false });
 				submitting = false;
 			};
 		}}
