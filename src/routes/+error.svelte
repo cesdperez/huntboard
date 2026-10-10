@@ -5,6 +5,13 @@
 	import { startPolling } from '#lib/live-updates.js';
 
 	const notFound = $derived(page.status === 404);
+	const heading = $derived(
+		notFound
+			? 'This link does not work'
+			: connection.online
+				? 'This page did not load'
+				: 'You are offline'
+	);
 
 	onMount(() => {
 		if (notFound) return;
@@ -16,20 +23,18 @@
 </script>
 
 <svelte:head>
-	<title>{notFound ? 'Link not found' : 'Page did not load'} · Huntboard</title>
+	<title>{heading} · Huntboard</title>
 </svelte:head>
 
 <main class="mx-auto flex max-w-content flex-col gap-3 px-gutter py-10">
+	<h1 class="type-title">{heading}</h1>
 	{#if notFound}
-		<h1 class="type-title">This link does not work</h1>
 		<p class="type-secondary">
 			It may have been replaced with a new one. Ask your organiser for the current link.
 		</p>
 	{:else if !connection.online}
-		<h1 class="type-title">You are offline</h1>
 		<p class="type-secondary">This page loads again once you reconnect.</p>
 	{:else}
-		<h1 class="type-title">This page did not load</h1>
 		<p class="type-secondary">
 			It tries again by itself. If it keeps happening, reload the page or tell your organiser.
 		</p>
