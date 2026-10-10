@@ -54,4 +54,10 @@ describe('claimsClosedMessage', () => {
 			'The game has no start time yet. Claims open once it starts.'
 		);
 	});
+
+	it('says the end time is missing when only the start is set', () => {
+		expect(claimsClosedMessage('before', { ...window, endsAt: null }, formatTime)).toBe(
+			'The game has no end time yet. Claims open once the organiser sets it.'
+		);
+	});
 });

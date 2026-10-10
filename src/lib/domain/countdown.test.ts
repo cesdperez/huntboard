@@ -81,4 +81,10 @@ describe('countdownLine', () => {
 			countdownLine({ startsAt: null, endsAt: null }, at('2026-06-01T22:00:00.000Z'), formatTime)
 		).toBe('Start time not set yet');
 	});
+
+	it('says the end time is not set when only the start is set', () => {
+		expect(
+			countdownLine({ ...window, endsAt: null }, at('2026-06-01T22:00:00.000Z'), formatTime)
+		).toBe('End time not set yet');
+	});
 });

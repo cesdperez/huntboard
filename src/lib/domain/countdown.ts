@@ -35,7 +35,7 @@ export function countdownLine(
 	const status = countdown(window, now);
 	switch (status.kind) {
 		case 'unscheduled':
-			return 'Start time not set yet';
+			return window.startsAt ? 'End time not set yet' : 'Start time not set yet';
 		case 'starts':
 			return `Starts in ${formatCountdown(status.ms)}`;
 		case 'ends':

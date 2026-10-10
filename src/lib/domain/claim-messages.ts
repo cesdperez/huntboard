@@ -31,8 +31,9 @@ export function claimsClosedMessage(
 	if (phase === 'after' && window.endsAt) {
 		return `The game ended at ${formatTime(window.endsAt)}. Claims are closed.`;
 	}
-	if (phase === 'before' && window.startsAt && window.endsAt) {
-		return `The game starts at ${formatTime(window.startsAt)}. Claims open then.`;
+	if (!window.startsAt) return 'The game has no start time yet. Claims open once it starts.';
+	if (!window.endsAt) {
+		return 'The game has no end time yet. Claims open once the organiser sets it.';
 	}
-	return 'The game has no start time yet. Claims open once it starts.';
+	return `The game starts at ${formatTime(window.startsAt)}. Claims open then.`;
 }
