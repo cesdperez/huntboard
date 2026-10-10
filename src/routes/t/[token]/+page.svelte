@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { invalidate } from '$app/navigation';
+	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
 	import ChallengeSheet from '#lib/components/team/challenge-sheet.svelte';
-	import { GameClock } from '#lib/game-clock.svelte.js';
 	import RenameSheet from '#lib/components/team/rename-sheet.svelte';
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
 	import { Toast } from '#lib/components/toast/index.js';
+	import { GameClock } from '#lib/game-clock.svelte.js';
 	import { groupBySection } from '#lib/group-by-section.js';
-	import { GAME_DATA, startPolling } from '#lib/live-updates.js';
+	import { startPolling } from '#lib/live-updates.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -24,7 +24,7 @@
 
 	onMount(() => {
 		const stopClock = clock.start();
-		const stopPolling = startPolling(() => invalidate(GAME_DATA));
+		const stopPolling = startPolling(refreshGameData);
 		return () => {
 			stopClock();
 			stopPolling();

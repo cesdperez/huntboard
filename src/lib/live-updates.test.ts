@@ -86,6 +86,16 @@ describe('startPolling', () => {
 		expect(refresh).toHaveBeenCalledTimes(1);
 	});
 
+	it('refreshes at once when the connection comes back', async () => {
+		start();
+		await vi.advanceTimersByTimeAsync(10_000);
+
+		win.dispatchEvent(new Event('online'));
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(refresh).toHaveBeenCalledTimes(1);
+	});
+
 	it('skips a refresh while the previous one is still running', async () => {
 		let finish = () => {};
 		refresh.mockImplementation(() => new Promise<void>((resolve) => (finish = resolve)));
@@ -116,6 +126,7 @@ describe('startPolling', () => {
 
 		await vi.advanceTimersByTimeAsync(60_000);
 		win.dispatchEvent(new Event('focus'));
+		win.dispatchEvent(new Event('online'));
 		doc.set('visible');
 		await vi.advanceTimersByTimeAsync(0);
 

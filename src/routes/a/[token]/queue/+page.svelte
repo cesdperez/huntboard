@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { invalidate } from '$app/navigation';
 	import QueueItem from '#lib/components/admin/queue-item.svelte';
+	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { emptyQueueMessage } from '#lib/domain/claim-messages.js';
 	import { GameClock } from '#lib/game-clock.svelte.js';
-	import { GAME_DATA, startPolling } from '#lib/live-updates.js';
+	import { startPolling } from '#lib/live-updates.js';
 	import type { PendingClaimRow } from '#lib/server/db/judging.js';
 	import type { PageProps } from './$types';
 
@@ -29,7 +29,7 @@
 
 	onMount(() => {
 		const stopClock = clock.start();
-		const stopPolling = startPolling(() => invalidate(GAME_DATA));
+		const stopPolling = startPolling(refreshGameData);
 		return () => {
 			stopClock();
 			stopPolling();

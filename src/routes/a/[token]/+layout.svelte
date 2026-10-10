@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { OfflineNotice } from '#lib/components/connection/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import { Toast } from '#lib/components/toast/index.js';
 	import { GameClock } from '#lib/game-clock.svelte.js';
@@ -42,6 +43,7 @@
 		</div>
 		<NicknameButton />
 	</header>
+	<OfflineNotice class="mx-auto w-full max-w-content px-gutter pt-2" />
 
 	<main class={cn('mx-auto w-full flex-1 px-gutter pt-4 pb-28', !wide && 'max-w-content')}>
 		{@render children()}

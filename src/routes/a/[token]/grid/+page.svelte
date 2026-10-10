@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import GridSheet from '#lib/components/admin/grid-sheet.svelte';
+	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { Marker, markerLabel } from '#lib/components/marker/index.js';
 	import { Points } from '#lib/components/points/index.js';
 	import { groupBySection } from '#lib/group-by-section.js';
-	import { GAME_DATA, startPolling } from '#lib/live-updates.js';
+	import { startPolling } from '#lib/live-updates.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -17,7 +17,7 @@
 	const selectedRow = $derived(data.rows.find((row) => row.id === selected?.challengeId) ?? null);
 	const selectedTeam = $derived(data.teams.find((team) => team.id === selected?.teamId) ?? null);
 
-	onMount(() => startPolling(() => invalidate(GAME_DATA)));
+	onMount(() => startPolling(refreshGameData));
 
 	function select(teamId: number, challengeId: number) {
 		selected = { teamId, challengeId };

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { flip } from 'svelte/animate';
-	import { invalidate } from '$app/navigation';
+	import { OfflineNotice, refreshGameData } from '#lib/components/connection/index.js';
 	import { CountingPoints } from '#lib/components/points/index.js';
 	import { GameClock } from '#lib/game-clock.svelte.js';
-	import { GAME_DATA, startPolling } from '#lib/live-updates.js';
+	import { startPolling } from '#lib/live-updates.js';
 	import { ordinal } from '#lib/ordinal.js';
 	import { REORDER_MS, motionMs } from '#lib/score-motion.js';
 	import type { PageProps } from './$types';
@@ -15,7 +15,7 @@
 
 	onMount(() => {
 		const stopClock = clock.start();
-		const stopPolling = startPolling(() => invalidate(GAME_DATA));
+		const stopPolling = startPolling(refreshGameData);
 		return () => {
 			stopClock();
 			stopPolling();
@@ -35,6 +35,7 @@
 	<header class="flex flex-col gap-1">
 		<h1 class="scoreboard-title type-title">{data.game.name}</h1>
 		<p class="scoreboard-status type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
+		<OfflineNotice />
 	</header>
 
 	{#if data.standings.length === 0}

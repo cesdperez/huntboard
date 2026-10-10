@@ -1,7 +1,6 @@
 import { applyAction, type SubmitFunction } from '$app/forms';
-import { invalidate } from '$app/navigation';
+import { refreshGameData } from '#lib/components/connection/index.js';
 import { nickname } from '#lib/components/nickname/index.js';
-import { GAME_DATA } from '#lib/live-updates.js';
 import { adminFailureMessage } from './admin-message.js';
 
 interface Failure<T> {
@@ -59,7 +58,7 @@ export class AdminAction<T> {
 				// Before the refresh, so a parent can keep in view an item the refresh removes.
 				if (message) onfailure?.(message);
 				// Refresh either way: a failure usually means someone else changed the same thing.
-				await invalidate(GAME_DATA).catch(() => {});
+				await refreshGameData().catch(() => {});
 				this.busy = false;
 				if (result.type === 'success') {
 					onsuccess(result.data?.[this.#key] as T, formData);

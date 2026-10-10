@@ -1,9 +1,8 @@
 import type { SubmitFunction } from '$app/forms';
-import { invalidate } from '$app/navigation';
+import { refreshGameData } from '#lib/components/connection/index.js';
 import { toast } from '#lib/components/toast/index.js';
-import { GAME_DATA } from '#lib/live-updates.js';
-import { actionFailureMessage } from './action-message.js';
 import type { GameClock } from '#lib/game-clock.svelte.js';
+import { actionFailureMessage } from './action-message.js';
 
 /** Busy and error state of a team sheet's forms, and the enhance callback they share. */
 export class TeamAction {
@@ -34,7 +33,7 @@ export class TeamAction {
 			this.#failure = null;
 			return async ({ result }) => {
 				// Refresh either way: a failure usually means someone else changed this claim.
-				await invalidate(GAME_DATA).catch(() => {});
+				await refreshGameData().catch(() => {});
 				this.busy = false;
 				const message = actionFailureMessage(result, this.#clock().closedMessageFor);
 				if (message) {

@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/env';
-	import { invalidate } from '$app/navigation';
-	import TeamScoresItem from '#lib/components/admin/team-scores-item.svelte';
 	import { formatClockTime } from '#lib/clock-time.js';
-	import { GAME_DATA, startPolling } from '#lib/live-updates.js';
+	import TeamScoresItem from '#lib/components/admin/team-scores-item.svelte';
+	import { refreshGameData } from '#lib/components/connection/index.js';
+	import { startPolling } from '#lib/live-updates.js';
 	import { plural } from '#lib/plural.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
-	onMount(() => startPolling(() => invalidate(GAME_DATA)));
+	onMount(() => startPolling(refreshGameData));
 
 	const penaltyLine = $derived.by(() => {
 		const { endsAt, latePenaltyPerMinute } = data.game;

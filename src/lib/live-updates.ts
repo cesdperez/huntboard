@@ -11,8 +11,8 @@ export interface PollingOptions {
 }
 
 /**
- * Calls refresh every interval while the page is visible, and at once when it shows again or
- * gets focus. Never runs two refreshes at a time. Returns a function that stops it.
+ * Calls refresh every interval while the page is visible, and at once when it shows again, gets
+ * focus or comes back online. Never runs two refreshes at a time. Returns a function that stops it.
  */
 export function startPolling(
 	refresh: () => Promise<unknown>,
@@ -49,11 +49,13 @@ export function startPolling(
 
 	doc.addEventListener('visibilitychange', refreshNow);
 	win.addEventListener('focus', refreshNow);
+	win.addEventListener('online', refreshNow);
 	schedule();
 
 	return () => {
 		clearInterval(timer);
 		doc.removeEventListener('visibilitychange', refreshNow);
 		win.removeEventListener('focus', refreshNow);
+		win.removeEventListener('online', refreshNow);
 	};
 }

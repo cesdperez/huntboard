@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import { flip } from 'svelte/animate';
+	import { OfflineNotice } from '#lib/components/connection/index.js';
 	import { CountingPoints, Points } from '#lib/components/points/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { Standing } from '#lib/domain/scoring.js';
@@ -44,6 +45,7 @@
 			<span class="sr-only">{expanded ? 'Hide' : 'Show'} the scoreboard</span>
 		</button>
 		<p class="px-gutter pb-2 type-secondary tabular-nums">{countdown ?? ' '}</p>
+		<OfflineNotice class="px-gutter pb-2" />
 
 		{#if expanded}
 			<div id="team-standings" class="flex flex-col gap-3 px-gutter pb-4">
