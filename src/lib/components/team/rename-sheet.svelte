@@ -1,25 +1,21 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
-	import { toast } from '#lib/components/toast/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
-	import { GAME_DATA } from '#lib/live-updates.js';
 	import { TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
-	import { actionFailureMessage } from './action-message.js';
 	import type { GameClock } from './game-clock.svelte.js';
+	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = { open: boolean; name: string; clock: GameClock; onclose: () => void };
 
 	let { open, name, clock, onclose }: Props = $props();
 
-	let busy = $state(false);
-	let error = $state<string | null>(null);
+	const action = new TeamAction(() => clock);
 
 	function close() {
-		error = null;
+		action.error = null;
 		onclose();
 	}
 </script>
@@ -35,18 +31,7 @@
 				method="POST"
 				action="?/rename"
 				class="flex flex-col gap-4"
-				use:enhance={() => {
-					busy = true;
-					error = null;
-					return async ({ result }) => {
-						await invalidate(GAME_DATA).catch(() => {});
-						busy = false;
-						error = actionFailureMessage(result, clock.closedMessageFor);
-						if (error) return;
-						close();
-						toast.show('Renamed');
-					};
-				}}
+				use:enhance={action.submit('Renamed', close)}
 			>
 				<div class="flex flex-col gap-2">
 					<Label for="team-name">Team name</Label>
@@ -56,14 +41,16 @@
 						required
 						maxlength={TEAM_NAME_MAX_LENGTH}
 						value={name}
-						aria-invalid={error ? true : undefined}
-						aria-describedby={error ? 'team-name-error' : undefined}
+						aria-invalid={action.error ? true : undefined}
+						aria-describedby={action.error ? 'team-name-error' : undefined}
 					/>
-					{#if error}
-						<p id="team-name-error" class="text-[15px] text-danger" role="alert">{error}</p>
+					{#if action.error}
+						<p id="team-name-error" class="text-[15px] text-danger" role="alert">
+							{action.error}
+						</p>
 					{/if}
 				</div>
-				<Button type="submit" variant="primary" size="lg" disabled={busy}>Save name</Button>
+				<Button type="submit" variant="primary" size="lg" disabled={action.busy}>Save name</Button>
 			</form>
 		{/key}
 	</Sheet.Content>

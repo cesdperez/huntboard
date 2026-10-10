@@ -1,19 +1,16 @@
 <script lang="ts">
-	import { enhance, type SubmitFunction } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { enhance } from '$app/forms';
 	import { CLAIM_NOTE_MAX_LENGTH } from '#lib/claim-note.js';
 	import { Marker, markerLabel } from '#lib/components/marker/index.js';
 	import { nickname } from '#lib/components/nickname/index.js';
 	import { Points } from '#lib/components/points/index.js';
-	import { toast } from '#lib/components/toast/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import type { TeamChallenge, TeamClaim } from '#lib/domain/team-board.js';
-	import { GAME_DATA } from '#lib/live-updates.js';
-	import { actionFailureMessage } from './action-message.js';
 	import type { GameClock } from './game-clock.svelte.js';
+	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = {
 		/** Kept while the sheet closes, so the content does not vanish mid-animation. */
@@ -27,33 +24,19 @@
 
 	let content = $state<HTMLElement | null>(null);
 	let drafts = $state<Record<number, string>>({});
-	let busy = $state(false);
-	let error = $state<string | null>(null);
+	const action = new TeamAction(() => clock);
 
 	const claim = $derived(challenge?.claim ?? null);
 	const canMark = $derived(!claim || claim.status === 'rejected');
 
 	function close() {
-		error = null;
+		action.error = null;
 		onclose();
 	}
 
-	function submit(done: string): SubmitFunction {
-		return () => {
-			busy = true;
-			error = null;
-			const id = challenge?.id;
-			return async ({ result }) => {
-				// Refresh either way: a failure usually means someone else changed this claim.
-				await invalidate(GAME_DATA).catch(() => {});
-				busy = false;
-				error = actionFailureMessage(result, clock.closedMessageFor);
-				if (error) return;
-				if (id !== undefined) delete drafts[id];
-				close();
-				toast.show(done);
-			};
-		};
+	function marked(formData: FormData) {
+		delete drafts[Number(formData.get('challengeId'))];
+		close();
 	}
 
 	function claimLine(claim: TeamClaim): string {
@@ -113,8 +96,8 @@
 			{/if}
 
 			{#snippet message()}
-				{#if error}
-					<p class="text-[15px] text-danger" role="alert">{error}</p>
+				{#if action.error}
+					<p class="text-[15px] text-danger" role="alert">{action.error}</p>
 				{:else if clock.closedMessage}
 					<p class="type-secondary">{clock.closedMessage}</p>
 				{/if}
@@ -125,11 +108,11 @@
 					method="POST"
 					action="?/undo"
 					class="flex flex-col gap-4"
-					use:enhance={submit('Claim undone')}
+					use:enhance={action.submit('Claim undone', close)}
 				>
 					<input type="hidden" name="claimId" value={claim.id} />
 					{@render message()}
-					<Button type="submit" size="lg" disabled={busy || clock.closedMessage !== null}>
+					<Button type="submit" size="lg" disabled={action.busy || clock.closedMessage !== null}>
 						Undo claim
 					</Button>
 				</form>
@@ -138,7 +121,7 @@
 					method="POST"
 					action="?/mark"
 					class="flex flex-col gap-4"
-					use:enhance={submit('Marked done')}
+					use:enhance={action.submit('Marked done', marked)}
 				>
 					<input type="hidden" name="challengeId" value={challenge.id} />
 					<input type="hidden" name="nickname" value={nickname.value ?? ''} />
@@ -160,7 +143,7 @@
 						type="submit"
 						variant="primary"
 						size="lg"
-						disabled={busy || clock.closedMessage !== null}
+						disabled={action.busy || clock.closedMessage !== null}
 					>
 						Mark done
 					</Button>
