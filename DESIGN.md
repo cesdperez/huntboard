@@ -171,7 +171,7 @@ Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs),
 
 ## Motion
 
-One moment matters: when a poll brings a new score, the scoreboard rows reorder with a 300ms FLIP animation and the changed total counts up over 600ms, easing out. That is the only unprompted motion. It runs on the public scoreboard and on the team strip, both its total and its expanded list. A total counts from the value it showed, never from 0 on page load. Screen readers get only the final total.
+One moment matters: when a poll brings a new score, the scoreboard rows reorder with a 300ms FLIP animation, a climbing team sliding over the rows it passes, and the changed total counts up over 600ms, easing out. That is the only unprompted motion. It runs on the public scoreboard and on the team strip, both its total and its expanded list. A total counts from the value it showed, never from 0 on page load. Screen readers get only the final total.
 
 Responses to the user's own actions are welcome and short (under 200ms): sheets slide up, a marker fills when a claim is made. With `prefers-reduced-motion`, all of it becomes an instant change.
 
