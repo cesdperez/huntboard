@@ -25,25 +25,28 @@ export type MarkClaimResult =
 
 /** Adds a pending claim, unless the team already has an active one on that challenge. */
 export async function markClaim(db: D1Database, claim: NewClaim): Promise<MarkClaimResult> {
-	// The only conflict possible is the one active claim per team and challenge.
-	const marked = await db
-		.prepare(
-			`INSERT INTO claim (team_id, challenge_id, status, note, marked_by)
-			SELECT ?, id, 'pending', ?, ? FROM challenge WHERE id = ? AND game_id = ?
-			ON CONFLICT DO NOTHING
-			RETURNING *`
-		)
-		.bind(claim.teamId, claim.note, claim.markedBy, claim.challengeId, claim.gameId)
-		.first<ClaimRow>();
-	if (marked) return { status: 'marked', claim: marked };
-
-	const active = await db
-		.prepare(
-			`SELECT * FROM claim WHERE team_id = ? AND challenge_id = ? AND status IN ('pending', 'scored')`
-		)
-		.bind(claim.teamId, claim.challengeId)
-		.first<ClaimRow>();
-	return active ? { status: 'conflict', claim: active } : { status: 'not-found' };
+	// One batch is one transaction: the SELECT must see the claim the INSERT ran into, even if
+	// a teammate undoes it or a judge rejects it a moment later.
+	const [marked, active] = await db.batch<ClaimRow>([
+		// The only conflict possible is the one active claim per team and challenge.
+		db
+			.prepare(
+				`INSERT INTO claim (team_id, challenge_id, status, note, marked_by)
+				SELECT ?, id, 'pending', ?, ? FROM challenge WHERE id = ? AND game_id = ?
+				ON CONFLICT DO NOTHING
+				RETURNING *`
+			)
+			.bind(claim.teamId, claim.note, claim.markedBy, claim.challengeId, claim.gameId),
+		db
+			.prepare(
+				`SELECT * FROM claim WHERE team_id = ? AND challenge_id = ? AND status IN ('pending', 'scored')`
+			)
+			.bind(claim.teamId, claim.challengeId)
+	]);
+	if (marked.results[0]) return { status: 'marked', claim: marked.results[0] };
+	return active.results[0]
+		? { status: 'conflict', claim: active.results[0] }
+		: { status: 'not-found' };
 }
 
 export type UndoClaimResult =

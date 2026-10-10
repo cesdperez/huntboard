@@ -107,7 +107,55 @@ describe('markClaim', () => {
 	it('refuses a challenge that does not exist', async () => {
 		expect(await mark(rats.id, 9999)).toEqual({ status: 'not-found' });
 	});
+
+	it('returns the claim it ran into even when another request removes it right after', async () => {
+		const existing = await seedClaim(db, rats.id, swim.id, { marked_by: 'Kim' });
+		const racing = afterEachStatement(db, () =>
+			db.prepare('DELETE FROM claim WHERE id = ?').bind(existing.id).run()
+		);
+
+		const result = await markClaim(racing, {
+			gameId: game.id,
+			teamId: rats.id,
+			challengeId: swim.id,
+			note: null,
+			markedBy: 'Sam'
+		});
+
+		expect(result).toEqual({
+			status: 'conflict',
+			claim: expect.objectContaining({ id: existing.id, marked_by: 'Kim' })
+		});
+	});
 });
+
+/** Runs `change` after every statement that runs on its own, as a concurrent request could. A batch runs as one. */
+function afterEachStatement(db: D1Database, change: () => Promise<unknown>): D1Database {
+	const hook = (statement: D1PreparedStatement): D1PreparedStatement =>
+		new Proxy(statement, {
+			get(target, key) {
+				const value = Reflect.get(target, key) as unknown;
+				if (key === 'bind') return (...values: unknown[]) => hook(target.bind(...values));
+				if (key === 'first' || key === 'all' || key === 'run') {
+					return async (...args: unknown[]) => {
+						const result = await (value as (...args: unknown[]) => Promise<unknown>).apply(
+							target,
+							args
+						);
+						await change();
+						return result;
+					};
+				}
+				return typeof value === 'function' ? value.bind(target) : value;
+			}
+		});
+	return new Proxy(db, {
+		get(target, key) {
+			if (key === 'prepare') return (sql: string) => hook(target.prepare(sql));
+			return Reflect.get(target, key);
+		}
+	});
+}
 
 describe('undoClaim', () => {
 	it('removes a pending claim of the team', async () => {
