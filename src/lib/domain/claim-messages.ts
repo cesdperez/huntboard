@@ -1,6 +1,7 @@
 import { plural } from '../plural.js';
 import type { GamePhase, GameWindow } from './game-window.js';
 import type { ClaimStatus } from './scoring.js';
+import type { TeamClaim } from './team-board.js';
 
 export interface ConflictingClaim {
 	status: ClaimStatus;
@@ -11,7 +12,7 @@ export interface ConflictingClaim {
 
 /** Why a claim could not be marked or undone, naming the person who got there first. */
 export function claimConflictMessage(claim: ConflictingClaim): string {
-	const judge = claim.judgedBy ?? 'A judge';
+	const judge = judgeName(claim.judgedBy);
 	switch (claim.status) {
 		case 'pending':
 			return `${claim.markedBy} already marked this done.`;
@@ -36,4 +37,23 @@ export function claimsClosedMessage(
 		return 'The game has no end time yet. Claims open once the organiser sets it.';
 	}
 	return `The game starts at ${formatTime(window.startsAt)}. Claims open then.`;
+}
+
+/** Who handled a claim, under its state in the team sheet, or null when there is nothing to say. */
+export function claimLine(
+	claim: Pick<TeamClaim, 'status' | 'markedBy' | 'markedAt' | 'judgedBy'>,
+	formatTime: (iso: string) => string
+): string | null {
+	switch (claim.status) {
+		case 'pending':
+			return `Marked done by ${claim.markedBy} at ${formatTime(claim.markedAt)}.`;
+		case 'scored':
+			return claim.judgedBy ? `Judged by ${claim.judgedBy}.` : null;
+		case 'rejected':
+			return `${judgeName(claim.judgedBy)} rejected this. You can mark it done again.`;
+	}
+}
+
+function judgeName(judgedBy: string | null): string {
+	return judgedBy ?? 'A judge';
 }

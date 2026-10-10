@@ -8,7 +8,8 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
-	import type { TeamChallenge, TeamClaim } from '#lib/domain/team-board.js';
+	import { claimLine } from '#lib/domain/claim-messages.js';
+	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import type { GameClock } from './game-clock.svelte.js';
 	import { TeamAction } from './team-action.svelte.js';
 
@@ -38,17 +39,6 @@
 		delete drafts[Number(formData.get('challengeId'))];
 		close();
 	}
-
-	function claimLine(claim: TeamClaim): string {
-		switch (claim.status) {
-			case 'pending':
-				return `Marked done by ${claim.markedBy} at ${clock.formatTime(claim.markedAt)}.`;
-			case 'scored':
-				return claim.judgedBy ? `Judged by ${claim.judgedBy}.` : '';
-			case 'rejected':
-				return `${claim.judgedBy ?? 'A judge'} rejected this. You can mark it done again.`;
-		}
-	}
 </script>
 
 <Sheet.Root open={open && challenge !== null} onOpenChange={(isOpen) => !isOpen && close()}>
@@ -76,6 +66,7 @@
 			{/if}
 
 			{#if claim}
+				{@const line = claimLine(claim, clock.formatTime)}
 				<div class="flex items-start gap-3 border-y py-3">
 					<Marker state={claim.status} points={claim.points ?? undefined} />
 					<div class="flex min-w-0 flex-col gap-1">
@@ -87,7 +78,7 @@
 						{#if claim.status === 'rejected' && claim.judgeNote}
 							<p class="text-danger">{claim.judgeNote}</p>
 						{/if}
-						<p class="type-secondary">{claimLine(claim)}</p>
+						{#if line}<p class="type-secondary">{line}</p>{/if}
 						{#if claim.note}
 							<p class="type-secondary break-words">Note: {claim.note}</p>
 						{/if}

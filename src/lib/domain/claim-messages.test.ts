@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { claimConflictMessage, claimsClosedMessage } from './claim-messages.js';
+import { claimConflictMessage, claimLine, claimsClosedMessage } from './claim-messages.js';
 
 describe('claimConflictMessage', () => {
 	it('names the teammate who already marked it', () => {
@@ -58,6 +58,42 @@ describe('claimsClosedMessage', () => {
 	it('says the end time is missing when only the start is set', () => {
 		expect(claimsClosedMessage('before', { ...window, endsAt: null }, formatTime)).toBe(
 			'The game has no end time yet. Claims open once the organiser sets it.'
+		);
+	});
+});
+
+describe('claimLine', () => {
+	const formatTime = (iso: string) => `<${iso.slice(11, 16)}>`;
+	const claim = {
+		status: 'pending' as const,
+		markedBy: 'Sam',
+		markedAt: '2026-06-01T17:02:00.000Z',
+		judgedBy: null
+	};
+
+	it('says who marked a pending claim and when', () => {
+		expect(claimLine(claim, formatTime)).toBe('Marked done by Sam at <17:02>.');
+	});
+
+	it('names the judge of a scored claim', () => {
+		expect(claimLine({ ...claim, status: 'scored', judgedBy: 'Alex' }, formatTime)).toBe(
+			'Judged by Alex.'
+		);
+	});
+
+	it('has no line for a scored claim without a judge name', () => {
+		expect(claimLine({ ...claim, status: 'scored' }, formatTime)).toBeNull();
+	});
+
+	it('names the judge of a rejected claim and says it can be marked again', () => {
+		expect(claimLine({ ...claim, status: 'rejected', judgedBy: 'Alex' }, formatTime)).toBe(
+			'Alex rejected this. You can mark it done again.'
+		);
+	});
+
+	it('falls back to "A judge" on a rejected claim without a judge name', () => {
+		expect(claimLine({ ...claim, status: 'rejected' }, formatTime)).toBe(
+			'A judge rejected this. You can mark it done again.'
 		);
 	});
 });
