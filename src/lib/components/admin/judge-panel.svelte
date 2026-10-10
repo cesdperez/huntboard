@@ -5,7 +5,8 @@
 </script>
 
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { untrack } from 'svelte';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { toast } from '#lib/components/toast/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -16,6 +17,7 @@
 	import { AdminAction } from './admin-action.svelte.js';
 
 	type Props = {
+		/** The claim as the last refresh shows it. An error shows only while it stays the same. */
 		target: JudgeTarget;
 		min: number;
 		max: number;
@@ -32,13 +34,17 @@
 
 	const id = $props.id();
 	const range = $derived({ min, max });
-	const claimTarget = $derived('claimId' in target ? target : null);
 	const action = new AdminAction<JudgeFormResult>('judge', () => JSON.stringify(target));
+
+	// A tap acts on the state the judge saw when the panel opened or the last answer came, never
+	// on one a poll swapped in meanwhile. A change in between gets the server's conflict message.
+	let seen = $state(untrack(() => target));
+	const claimTarget = $derived('claimId' in seen ? seen : null);
 
 	let rejecting = $state(false);
 
-	const submit = () =>
-		action.submit(
+	function submit(): SubmitFunction {
+		const send = action.submit(
 			(result) => {
 				toast.show(result.kind === 'scored' ? `Scored ${result.points}` : 'Rejected');
 				rejecting = false;
@@ -46,6 +52,14 @@
 			},
 			(message) => onfailure?.(message)
 		);
+		return async (input) => {
+			const settle = await send(input);
+			return async (options) => {
+				await settle?.(options);
+				seen = target;
+			};
+		};
+	}
 
 	function clampTyped(event: Event) {
 		const input = event.currentTarget as HTMLInputElement;
@@ -58,9 +72,9 @@
 	{#if claimTarget}
 		<input type="hidden" name="claimId" value={claimTarget.claimId} />
 		<input type="hidden" name="from" value={claimTarget.from} />
-	{:else if 'teamId' in target}
-		<input type="hidden" name="teamId" value={target.teamId} />
-		<input type="hidden" name="challengeId" value={target.challengeId} />
+	{:else if 'teamId' in seen}
+		<input type="hidden" name="teamId" value={seen.teamId} />
+		<input type="hidden" name="challengeId" value={seen.challengeId} />
 	{/if}
 {/snippet}
 

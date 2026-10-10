@@ -141,6 +141,7 @@ The grid has team names as columns and a sticky first column of challenge titles
 - The grid is the one admin screen wider than the content column. It scrolls inside its own box, so the header row and the challenge column both stay in view.
 - The sheet says what a tap does in each state: score an open or rejected cell without a team claim, judge a pending one, fix or reject a scored one.
 - A conflict shows under the refreshed state of the cell, the same way the team sheet does.
+- A tap acts on the state the sheet showed when it opened or after its last answer. If a poll changed the cell in between, the tap gets the conflict message instead of quietly doing something else.
 
 The Teams tab lists teams in their setup order, not by rank, so a row does not move while the judge taps it. Each team shows its rank and total, then the breakdown: scored claims, adjustments, and the late penalty with its minutes.
 
