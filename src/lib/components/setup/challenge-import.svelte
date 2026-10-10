@@ -6,7 +6,7 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/plural.js';
 	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
-	import { groupBySection } from './group-by-section.js';
+	import { groupBySection } from '#lib/group-by-section.js';
 
 	const PLACEHOLDER =
 		'# Around town\n- Make a birthday card [5-20]\n  Judged on effort.\n- Swim in a fountain [25]';

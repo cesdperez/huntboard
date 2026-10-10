@@ -9,7 +9,7 @@
 	import { plural } from '#lib/plural.js';
 	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
 	import type { ChallengeWithClaimCount } from '#lib/server/db/types.js';
-	import { groupBySection } from './group-by-section.js';
+	import { groupBySection } from '#lib/group-by-section.js';
 
 	let { challenges }: { challenges: ChallengeWithClaimCount[] } = $props();
 
