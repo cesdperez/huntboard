@@ -25,3 +25,22 @@ export function formatCountdown(ms: number): string {
 	const pad = (n: number) => String(n).padStart(2, '0');
 	return `${Math.floor(total / 3600)}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)}`;
 }
+
+/** The countdown line on the team strip. formatTime shows a UTC ISO time to the viewer. */
+export function countdownLine(
+	window: GameWindow,
+	now: Date,
+	formatTime: (iso: string) => string
+): string {
+	const status = countdown(window, now);
+	switch (status.kind) {
+		case 'unscheduled':
+			return 'Start time not set yet';
+		case 'starts':
+			return `Starts in ${formatCountdown(status.ms)}`;
+		case 'ends':
+			return `Ends in ${formatCountdown(status.ms)}`;
+		case 'ended':
+			return `Ended at ${formatTime(window.endsAt ?? '')}`;
+	}
+}

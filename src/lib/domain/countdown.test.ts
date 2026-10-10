@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countdown, formatCountdown } from './countdown.js';
+import { countdown, countdownLine, formatCountdown } from './countdown.js';
 
 const window = { startsAt: '2026-06-01T16:00:00.000Z', endsAt: '2026-06-01T21:00:00.000Z' };
 const at = (iso: string) => new Date(iso);
@@ -52,5 +52,33 @@ describe('formatCountdown', () => {
 	it('never goes below zero', () => {
 		expect(formatCountdown(0)).toBe('0:00:00');
 		expect(formatCountdown(-5000)).toBe('0:00:00');
+	});
+});
+
+describe('countdownLine', () => {
+	const formatTime = (iso: string) => `<${iso.slice(11, 16)}>`;
+
+	it('counts down to the start', () => {
+		expect(countdownLine(window, at('2026-06-01T15:00:00.000Z'), formatTime)).toBe(
+			'Starts in 1:00:00'
+		);
+	});
+
+	it('counts down to the end', () => {
+		expect(countdownLine(window, at('2026-06-01T19:17:50.000Z'), formatTime)).toBe(
+			'Ends in 1:42:10'
+		);
+	});
+
+	it('says when the game ended', () => {
+		expect(countdownLine(window, at('2026-06-01T22:00:00.000Z'), formatTime)).toBe(
+			'Ended at <21:00>'
+		);
+	});
+
+	it('says the start time is not set', () => {
+		expect(
+			countdownLine({ startsAt: null, endsAt: null }, at('2026-06-01T22:00:00.000Z'), formatTime)
+		).toBe('Start time not set yet');
 	});
 });
