@@ -44,6 +44,20 @@ export async function renameTeam(
 	return renamed !== null;
 }
 
+/** Records, corrects or (with null) clears when the team reached the meeting point. False when it is not in this game. */
+export async function setArrival(
+	db: D1Database,
+	gameId: number,
+	teamId: number,
+	arrivedAt: string | null
+): Promise<boolean> {
+	const updated = await db
+		.prepare('UPDATE team SET arrived_at = ? WHERE id = ? AND game_id = ? RETURNING id')
+		.bind(arrivedAt, teamId, gameId)
+		.first<number>('id');
+	return updated !== null;
+}
+
 /** Moves a team one place up (-1) or down (1). False when it is not in this game or already at that end. */
 export async function moveTeam(
 	db: D1Database,

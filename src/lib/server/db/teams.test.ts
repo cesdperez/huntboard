@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createGame } from './games.js';
-import { addTeam, deleteTeam, listTeamsWithClaimCounts, moveTeam, renameTeam } from './teams.js';
+import {
+	addTeam,
+	deleteTeam,
+	listTeamsWithClaimCounts,
+	moveTeam,
+	renameTeam,
+	setArrival
+} from './teams.js';
 import { createTestDb } from './testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import type { GameRow } from './types.js';
@@ -144,5 +151,31 @@ describe('deleteTeam', () => {
 
 		expect(await deleteTeam(db, game.id, elsewhere.id)).toBe('not-found');
 		expect(await listTeamsWithClaimCounts(db, other.id)).toHaveLength(1);
+	});
+});
+
+describe('setArrival', () => {
+	it('records, corrects and clears the arrival time', async () => {
+		const rats = await seedTeam(db, game.id);
+
+		expect(await setArrival(db, game.id, rats.id, '2026-06-01T21:03:00.000Z')).toBe(true);
+		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBe(
+			'2026-06-01T21:03:00.000Z'
+		);
+
+		await setArrival(db, game.id, rats.id, '2026-06-01T20:58:00.000Z');
+		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBe(
+			'2026-06-01T20:58:00.000Z'
+		);
+
+		await setArrival(db, game.id, rats.id, null);
+		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBeNull();
+	});
+
+	it('refuses a team of another game', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const outsider = await seedTeam(db, other.id);
+
+		expect(await setArrival(db, game.id, outsider.id, '2026-06-01T21:03:00.000Z')).toBe(false);
 	});
 });
