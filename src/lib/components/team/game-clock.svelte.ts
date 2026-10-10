@@ -1,4 +1,3 @@
-import { SvelteDate } from 'svelte/reactivity';
 import { formatClockTime } from '#lib/clock-time.js';
 import { claimsClosedMessage } from '#lib/domain/claim-messages.js';
 import { countdownLine } from '#lib/domain/countdown.js';
@@ -9,8 +8,9 @@ import { gamePhase, type GamePhase, type GameWindow } from '#lib/domain/game-win
  * start() runs in the browser, because the server runs in UTC and must not guess the viewer's time.
  */
 export class GameClock {
-	readonly #now = new SvelteDate();
-	#started = $state(false);
+	// A plain number, not a SvelteDate: its lazy deriveds belong to whichever effect read them
+	// first, and the sheet's claim block that reads them is destroyed on every mark and undo.
+	#nowMs = $state<number | null>(null);
 	readonly #window: () => GameWindow;
 
 	constructor(window: () => GameWindow) {
@@ -18,10 +18,13 @@ export class GameClock {
 	}
 
 	get now(): Date | null {
-		return this.#started ? this.#now : null;
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- a fresh snapshot per read, never mutated
+		return this.#nowMs === null ? null : new Date(this.#nowMs);
 	}
 
-	formatTime = (iso: string): string => formatClockTime(iso, this.#now);
+	formatTime = (iso: string): string =>
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- a fresh snapshot per read, never mutated
+		formatClockTime(iso, new Date(this.#nowMs ?? Date.now()));
 
 	closedMessageFor = (phase: Exclude<GamePhase, 'during'>): string =>
 		claimsClosedMessage(phase, this.#window(), this.formatTime);
@@ -41,9 +44,8 @@ export class GameClock {
 	}
 
 	start(): () => void {
-		this.#now.setTime(Date.now());
-		this.#started = true;
-		const timer = setInterval(() => this.#now.setTime(Date.now()), 1000);
+		this.#nowMs = Date.now();
+		const timer = setInterval(() => (this.#nowMs = Date.now()), 1000);
 		return () => clearInterval(timer);
 	}
 }
