@@ -107,7 +107,7 @@
 				method="POST"
 				action="?/arrivalCorrect"
 				tabindex="-1"
-				aria-label="Arrival time of {team.name}"
+				aria-label="Set the arrival of {team.name}"
 				class="flex flex-col gap-2 outline-none"
 				use:enhance={correct}
 			>
