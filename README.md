@@ -49,3 +49,34 @@ HUNTBOARD_URL=https://huntboard.example.workers.dev CREATE_GAME_CODE=... pnpm re
 ```
 
 Each run creates a new game.
+
+## Deploy
+
+The app runs on the Cloudflare free tier. A human runs these commands once, from the repo root:
+
+```sh
+pnpm exec wrangler login
+pnpm exec wrangler d1 create huntboard
+```
+
+Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, in place of the zeros, and commit it. Then:
+
+```sh
+pnpm db:migrate:remote
+pnpm exec wrangler secret put CREATE_GAME_CODE
+pnpm run deploy
+```
+
+Use `pnpm run deploy`: plain `pnpm deploy` is a pnpm command, not this script. `pnpm db:migrate:remote` applies new migrations on later deploys too.
+
+Rehearse against the URL that `deploy` prints, with the code you just set:
+
+```sh
+HUNTBOARD_URL=https://huntboard.<your-subdomain>.workers.dev CREATE_GAME_CODE=... pnpm rehearsal
+```
+
+Rehearsal games stay in the database and make every poll read more rows (see [decisions](docs/decisions.md#live-updates-by-polling)). Delete them before the event:
+
+```sh
+pnpm exec wrangler d1 execute huntboard --remote --command "DELETE FROM game WHERE name LIKE 'Rehearsal %'"
+```
