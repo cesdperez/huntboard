@@ -1,3 +1,5 @@
+import { collapseSpaces } from '../text.js';
+
 export interface ParsedChallenge {
 	title: string;
 	description: string | null;
@@ -208,8 +210,4 @@ function stripCheckbox(content: string): string {
 
 function indentWidth(whitespace: string): number {
 	return whitespace.replace(/\t/g, '    ').length;
-}
-
-function collapseSpaces(text: string): string {
-	return text.trim().replace(/\s+/g, ' ');
 }

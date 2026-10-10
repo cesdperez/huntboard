@@ -1,3 +1,4 @@
+import { collapseSpaces } from '../text.js';
 import type { ChallengeFields } from './challenge-import.js';
 import { titleKey } from './challenge-parser.js';
 
@@ -52,8 +53,4 @@ function wholeNumber(text: string): number | null {
 	if (!/^\d+$/.test(trimmed)) return null;
 	const value = Number(trimmed);
 	return Number.isSafeInteger(value) ? value : null;
-}
-
-function collapseSpaces(text: string): string {
-	return text.trim().replace(/\s+/g, ' ');
 }
