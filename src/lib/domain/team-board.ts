@@ -54,16 +54,21 @@ export function teamBoard(challenges: BoardChallenge[], claims: BoardClaim[]): T
 
 	return challenges.map((challenge) => {
 		const claim = shown.get(challenge.id);
-		return {
-			id: challenge.id,
-			title: challenge.title,
-			description: challenge.description,
-			section: challenge.section,
-			minPoints: challenge.min_points,
-			maxPoints: challenge.max_points,
-			claim: claim ? toTeamClaim(claim) : null
-		};
+		return { ...challengeFields(challenge), claim: claim ? toTeamClaim(claim) : null };
 	});
+}
+
+export type ChallengeFields = Omit<TeamChallenge, 'claim'>;
+
+export function challengeFields(challenge: BoardChallenge): ChallengeFields {
+	return {
+		id: challenge.id,
+		title: challenge.title,
+		description: challenge.description,
+		section: challenge.section,
+		minPoints: challenge.min_points,
+		maxPoints: challenge.max_points
+	};
 }
 
 // At most one claim per challenge is active, so between rejections the higher (later) id wins.
