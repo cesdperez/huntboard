@@ -14,7 +14,6 @@
 	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = {
-		/** Kept while the sheet closes, so the content does not vanish mid-animation. */
 		challenge: TeamChallenge | null;
 		open: boolean;
 		clock: GameClock;
