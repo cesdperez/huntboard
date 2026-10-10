@@ -1,9 +1,9 @@
 import { env } from 'cloudflare:workers';
 import { fail } from '@sveltejs/kit';
-import { TEAM_NAME_MAX_LENGTH, normalizeTeamName } from '#lib/team-name.js';
+import { TEAM_NAME_ERROR, normalizeTeamName } from '#lib/team-name.js';
 import { requireAdminGame } from '#lib/server/admin-game.js';
 import { addTeam, deleteTeam, moveTeam, renameTeam } from '#lib/server/db/teams.js';
-import { readString } from '#lib/server/form.js';
+import { readId, readString } from '#lib/server/form.js';
 import type { AdminAction, AdminActions } from './types.js';
 
 /** What the teams actions return under `page.form.teams`. Errors without a teamId belong to the add form. */
@@ -13,22 +13,16 @@ export interface TeamsFormResult {
 	name?: string;
 }
 
-const NAME_ERROR = `Give the team a name of at most ${TEAM_NAME_MAX_LENGTH} characters.`;
 const MISSING_ERROR = 'That team is not in this game any more. Reload the page.';
 
 function teamsFail(status: number, result: TeamsFormResult) {
 	return fail(status, { teams: result });
 }
 
-function readTeamId(data: FormData): number | null {
-	const id = Number(readString(data, 'teamId'));
-	return Number.isInteger(id) && id > 0 ? id : null;
-}
-
 function move(offset: -1 | 1): AdminAction {
 	return async ({ params, request }) => {
 		const game = await requireAdminGame(params.token);
-		const teamId = readTeamId(await request.formData());
+		const teamId = readId(await request.formData(), 'teamId');
 		if (teamId === null) return teamsFail(400, { error: MISSING_ERROR });
 		// Already at the end is a no-op, not an error: the button is disabled there anyway.
 		await moveTeam(env.DB, game.id, teamId, offset);
@@ -42,7 +36,7 @@ export const teamsActions = {
 		const game = await requireAdminGame(params.token);
 		const data = await request.formData();
 		const name = normalizeTeamName(data.get('name'));
-		if (!name) return teamsFail(400, { error: NAME_ERROR, name: readString(data, 'name') });
+		if (!name) return teamsFail(400, { error: TEAM_NAME_ERROR, name: readString(data, 'name') });
 
 		const team = await addTeam(env.DB, game.id, name);
 		return { teams: { teamId: team.id } satisfies TeamsFormResult };
@@ -51,11 +45,11 @@ export const teamsActions = {
 	teamsRename: async ({ params, request }) => {
 		const game = await requireAdminGame(params.token);
 		const data = await request.formData();
-		const teamId = readTeamId(data);
+		const teamId = readId(data, 'teamId');
 		if (teamId === null) return teamsFail(400, { error: MISSING_ERROR });
 		const name = normalizeTeamName(data.get('name'));
 		if (!name) {
-			return teamsFail(400, { error: NAME_ERROR, teamId, name: readString(data, 'name') });
+			return teamsFail(400, { error: TEAM_NAME_ERROR, teamId, name: readString(data, 'name') });
 		}
 
 		if (!(await renameTeam(env.DB, game.id, teamId, name))) {
@@ -69,7 +63,7 @@ export const teamsActions = {
 
 	teamsDelete: async ({ params, request }) => {
 		const game = await requireAdminGame(params.token);
-		const teamId = readTeamId(await request.formData());
+		const teamId = readId(await request.formData(), 'teamId');
 		if (teamId === null) return teamsFail(400, { error: MISSING_ERROR });
 
 		const result = await deleteTeam(env.DB, game.id, teamId);
