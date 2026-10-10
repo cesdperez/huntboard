@@ -1,6 +1,6 @@
 import { prefersReducedMotion } from 'svelte/motion';
 
-/** The only unprompted motion: scoreboard rows sliding to their new rank after a poll. */
+/** Durations of the one unprompted motion, a poll bringing a new score: rows slide, totals count up. */
 export const REORDER_MS = 300;
 export const COUNT_UP_MS = 600;
 
