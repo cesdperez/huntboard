@@ -44,3 +44,21 @@ export async function updateGameSettings(
 	if (!game) throw new Error(`No game with id ${gameId}`);
 	return game;
 }
+
+/** Returns the game to how /new created it: same name and links, nothing else. */
+export async function resetGame(db: D1Database, gameId: number): Promise<GameRow> {
+	// Claims, adjustments and arrivals go with their team through ON DELETE CASCADE.
+	const [, , reset] = await db.batch<GameRow>([
+		db.prepare('DELETE FROM team WHERE game_id = ?').bind(gameId),
+		db.prepare('DELETE FROM challenge WHERE game_id = ?').bind(gameId),
+		db
+			.prepare(
+				`UPDATE game SET starts_at = NULL, ends_at = NULL, late_penalty_per_minute = 0
+				WHERE id = ? RETURNING *`
+			)
+			.bind(gameId)
+	]);
+	const game = reset.results[0];
+	if (!game) throw new Error(`No game with id ${gameId}`);
+	return game;
+}

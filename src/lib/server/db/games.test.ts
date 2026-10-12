@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createGame, getGameByAdminToken, getGameById, updateGameSettings } from './games.js';
+import {
+	createGame,
+	getGameByAdminToken,
+	getGameById,
+	resetGame,
+	updateGameSettings
+} from './games.js';
+import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import { createTestDb } from './testing/test-db.js';
 
 let db: D1Database;
@@ -94,5 +101,53 @@ describe('updateGameSettings', () => {
 		await updateGameSettings(db, game.id, settings);
 
 		expect(await getGameByAdminToken(db, other.admin_token)).toEqual(other);
+	});
+});
+
+describe('resetGame', () => {
+	const count = async (table: string) =>
+		(await db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first<{ n: number }>())?.n;
+
+	async function seedPlayedGame(name: string) {
+		const game = await createGame(db, name);
+		await updateGameSettings(db, game.id, {
+			name,
+			starts_at: '2026-06-01T10:00:00.000Z',
+			ends_at: '2026-06-01T15:00:00.000Z',
+			late_penalty_per_minute: 2
+		});
+		const team = await seedTeam(db, game.id, { arrived_at: '2026-06-01T15:05:00.000Z' });
+		const challenge = await seedChallenge(db, game.id);
+		await seedClaim(db, team.id, challenge.id, { status: 'scored', points: 8 });
+		await seedAdjustment(db, team.id);
+		return game;
+	}
+
+	it('removes teams, challenges, claims and adjustments and clears the schedule', async () => {
+		const game = await seedPlayedGame('Canal hunt');
+
+		const reset = await resetGame(db, game.id);
+
+		expect(reset).toEqual({
+			...game,
+			starts_at: null,
+			ends_at: null,
+			late_penalty_per_minute: 0
+		});
+		for (const table of ['team', 'challenge', 'claim', 'adjustment']) {
+			expect(await count(table)).toBe(0);
+		}
+	});
+
+	it('leaves other games alone', async () => {
+		const game = await seedPlayedGame('Canal hunt');
+		const other = await seedPlayedGame('Other hunt');
+
+		await resetGame(db, game.id);
+
+		expect(await getGameById(db, other.id)).toMatchObject({ late_penalty_per_minute: 2 });
+		for (const table of ['team', 'challenge', 'claim', 'adjustment']) {
+			expect(await count(table)).toBe(1);
+		}
 	});
 });
