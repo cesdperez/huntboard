@@ -17,18 +17,18 @@ const CHALLENGES = `# Around town
   Judged on effort. A napkin counts, but barely.
 - Deliver a free Marktplaats item by bike [30-100]
 - Swim in a fountain [25]
-- Photo with a street musician (10-15)
+- Photo with a street musician [10-15]
 
 # Food
 
-- Get a free dessert from a restaurant: 10-15 pts
+- Get a free dessert from a restaurant [10-15]
 - Eat something you have never tried [5-10]
 - Order a drink in Dutch [5]
 
 # Team
 
 - Build a human pyramid [10-30]
-- Sing on a bridge 15 points
+- Sing on a bridge [15]
 - Find a canal cat [20]
 `;
 

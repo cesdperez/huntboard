@@ -80,7 +80,7 @@ Each challenge has a min and max. Judges cannot go outside it. A single value is
 
 ## Challenges pasted as text
 
-The organiser keeps the challenge list secret and writes it in their own tools. The admin pastes it as markdown-ish text and the app parses it. See [challenge format](challenge-format.md).
+The organiser keeps the challenge list secret and writes it in their own tools. The admin pastes it as markdown-ish text and the app parses it. The format has one way to write each part ([10] or [5-20] for points, `- ` for a challenge, `# ` for a section). A lenient parser that accepted many forms made the hint and example harder to follow than the few keystrokes it saved. See [challenge format](challenge-format.md).
 
 ## Proof stays outside the app
 

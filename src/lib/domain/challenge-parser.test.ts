@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { parseChallenges, titleKey } from './challenge-parser.js';
+import {
+	NO_POINTS,
+	parseChallenges,
+	titleKey,
+	WRONG_HEADING,
+	WRONG_MARKER
+} from './challenge-parser.js';
 
 function only(text: string) {
 	const result = parseChallenges(text);
@@ -25,8 +31,8 @@ describe('parseChallenges', () => {
 			'',
 			'# Food',
 			'',
-			'- Get a free dessert from a restaurant (10-15)',
-			'- Eat something you have never tried: 5-10 pts'
+			'- Get a free dessert from a restaurant [10-15]',
+			'- Eat something you have never tried [5-10]'
 		].join('\n');
 
 		expect(parseChallenges(text)).toEqual({
@@ -82,21 +88,22 @@ describe('parseChallenges', () => {
 	});
 
 	describe('list markers', () => {
-		it.each([
-			['- Swim [25]'],
-			['* Swim [25]'],
-			['+ Swim [25]'],
-			['1. Swim [25]'],
-			['1) Swim [25]'],
-			['12. Swim [25]'],
-			['  - Swim [25]'],
-			['- [ ] Swim [25]'],
-			['- [x] Swim [25]']
-		])('accepts %j', (line) => {
+		it.each([['- Swim [25]'], ['  - Swim [25]']])('accepts %j', (line) => {
 			expect(only(line)).toMatchObject({ title: 'Swim', min_points: 25, max_points: 25 });
 		});
 
-		it('needs a space after the marker', () => {
+		it.each([['* Swim [25]'], ['+ Swim [25]'], ['1. Swim [25]'], ['12) Swim [25]']])(
+			'asks for a dash instead of %j',
+			(line) => {
+				expect(errorsOf(line)).toEqual([{ line: 1, message: WRONG_MARKER }]);
+			}
+		);
+
+		it('asks for a dash when another marker follows a challenge at the same indent', () => {
+			expect(errorsOf('- Swim [25]\n* Run [5]')).toEqual([{ line: 2, message: WRONG_MARKER }]);
+		});
+
+		it('needs a space after the dash', () => {
 			expect(errorsOf('-Swim [25]')).toEqual([
 				{ line: 1, message: expect.stringMatching(/not under a challenge/i) }
 			]);
@@ -106,24 +113,10 @@ describe('parseChallenges', () => {
 	describe('points', () => {
 		it.each([
 			['- Swim [5-20]', 5, 20],
-			['- Swim (5-20)', 5, 20],
 			['- Swim [10]', 10, 10],
-			['- Swim (10)', 10, 10],
-			['- Swim 5-20 pts', 5, 20],
-			['- Swim 10 points', 10, 10],
-			['- Swim 1 point', 1, 1],
-			['- Swim 10 pt', 10, 10],
-			['- Swim 10pts', 10, 10],
-			['- Swim 5-20 PTS', 5, 20],
-			['- Swim: 5-20', 5, 20],
-			['- Swim : 10', 10, 10],
-			['- Swim: 5-20 pts', 5, 20],
-			['- Swim [5 – 20]', 5, 20],
+			['- Swim [5 - 20]', 5, 20],
 			['- Swim [5–20]', 5, 20],
-			['- Swim [5 — 20]', 5, 20],
-			['- Swim [ 5 - 20 ]', 5, 20],
-			['- Swim [5-20 pts]', 5, 20],
-			['- Swim (10 points)', 10, 10],
+			['- Swim [ 10 ]', 10, 10],
 			['- Swim [0]', 0, 0],
 			['- Swim [0-5]', 0, 5],
 			['- Swim [5-20]   ', 5, 20]
@@ -131,15 +124,27 @@ describe('parseChallenges', () => {
 			expect(only(line)).toMatchObject({ title: 'Swim', min_points: min, max_points: max });
 		});
 
+		it.each([
+			['- Swim (5-20)'],
+			['- Swim (10)'],
+			['- Swim 5-20 pts'],
+			['- Swim 10 points'],
+			['- Swim: 5-20'],
+			['- Swim [5-20 pts]'],
+			['- Drive along Route 66'],
+			['- Meet at 12:30']
+		])('reports %j as having no points', (line) => {
+			expect(errorsOf(line)).toEqual([{ line: 1, message: NO_POINTS }]);
+		});
+
 		it('strips separators left between title and points', () => {
-			expect(only('- Swim - 10 points').title).toBe('Swim');
-			expect(only('- Swim – [10]').title).toBe('Swim');
+			expect(only('- Swim - [10]').title).toBe('Swim');
 			expect(only('- Swim: [10]').title).toBe('Swim');
 		});
 
 		it('only reads points at the end of the line', () => {
 			expect(only('- Visit 3 shops [10]').title).toBe('Visit 3 shops');
-			expect(only('- Take [2] photos (5-10)')).toMatchObject({
+			expect(only('- Take [2] photos [5-10]')).toMatchObject({
 				title: 'Take [2] photos',
 				min_points: 5,
 				max_points: 10
@@ -149,33 +154,8 @@ describe('parseChallenges', () => {
 		it('reports a challenge without points', () => {
 			expect(parseChallenges('- Swim in a fountain')).toEqual({
 				challenges: [],
-				errors: [{ line: 1, message: 'No points found' }]
+				errors: [{ line: 1, message: NO_POINTS }]
 			});
-		});
-
-		it('does not read a bare trailing number as points', () => {
-			expect(errorsOf('- Drive along Route 66')).toEqual([{ line: 1, message: 'No points found' }]);
-		});
-
-		it('does not read a clock time at the end of the title as points', () => {
-			expect(errorsOf('- Meet at 12:30')).toEqual([{ line: 1, message: 'No points found' }]);
-			expect(errorsOf('- Be at the Dam at 16:00')).toEqual([
-				{ line: 1, message: 'No points found' }
-			]);
-		});
-
-		it('reads colon points after a clock time', () => {
-			expect(only('- Meet at 12:30: 10')).toMatchObject({
-				title: 'Meet at 12:30',
-				min_points: 10,
-				max_points: 10
-			});
-		});
-
-		it('reads colon points with or without spaces', () => {
-			expect(only('- Swim:10')).toMatchObject({ title: 'Swim', min_points: 10 });
-			expect(only('- Swim : 10')).toMatchObject({ title: 'Swim', min_points: 10 });
-			expect(only('- Swim: 5 – 20')).toMatchObject({ min_points: 5, max_points: 20 });
 		});
 
 		it('reports min greater than max', () => {
@@ -184,9 +164,6 @@ describe('parseChallenges', () => {
 
 		it('reports fractional points', () => {
 			expect(errorsOf('- Swim [2.5]')).toEqual([
-				{ line: 1, message: 'Points must be whole numbers' }
-			]);
-			expect(errorsOf('- Swim 1.5-3 pts')).toEqual([
 				{ line: 1, message: 'Points must be whole numbers' }
 			]);
 		});
@@ -199,11 +176,10 @@ describe('parseChallenges', () => {
 
 		it('reports a challenge with points but no title', () => {
 			expect(errorsOf('- [10]')).toEqual([{ line: 1, message: 'No title found' }]);
-			expect(errorsOf('- : 10 pts')).toEqual([{ line: 1, message: 'No title found' }]);
 		});
 
 		it('ignores an empty list item like a blank line', () => {
-			const result = parseChallenges('- Swim [25]\n-   \n  Wet.\n1.\n- [ ]');
+			const result = parseChallenges('- Swim [25]\n-   \n  Wet.');
 			expect(result.errors).toEqual([]);
 			expect(result.challenges).toEqual([
 				expect.objectContaining({ title: 'Swim', description: 'Wet.' })
@@ -248,13 +224,13 @@ describe('parseChallenges', () => {
 		});
 
 		it('keeps list items indented under a challenge as description', () => {
-			const text = ['- Make a card [5-20]', '  - effort', '  - creativity', '- Swim [25]'].join(
+			const text = ['- Make a card [5-20]', '  - effort', '  1. creativity', '- Swim [25]'].join(
 				'\n'
 			);
 			const result = parseChallenges(text);
 			expect(result.errors).toEqual([]);
 			expect(result.challenges.map((c) => [c.title, c.description])).toEqual([
-				['Make a card', '- effort\n- creativity'],
+				['Make a card', '- effort\n1. creativity'],
 				['Swim', null]
 			]);
 		});
@@ -270,9 +246,7 @@ describe('parseChallenges', () => {
 		});
 
 		it('swallows description lines under a challenge that failed to parse', () => {
-			expect(errorsOf('- Swim\n  Wet.\n- Run [5]')).toEqual([
-				{ line: 1, message: 'No points found' }
-			]);
+			expect(errorsOf('- Swim\n  Wet.\n- Run [5]')).toEqual([{ line: 1, message: NO_POINTS }]);
 		});
 
 		it('reports text before the first challenge', () => {
@@ -284,9 +258,16 @@ describe('parseChallenges', () => {
 	});
 
 	describe('sections', () => {
-		it('accepts every heading level and trims closing hashes', () => {
-			const text = ['## Food ##', '- Eat [5]', '###### Water', '- Swim [25]'].join('\n');
-			expect(parseChallenges(text).challenges.map((c) => c.section)).toEqual(['Food', 'Water']);
+		it('reads a single # as a section', () => {
+			const text = ['# Food', '- Eat [5]', '#   Open  water ', '- Swim [25]'].join('\n');
+			expect(parseChallenges(text).challenges.map((c) => c.section)).toEqual([
+				'Food',
+				'Open water'
+			]);
+		});
+
+		it('asks for a single # instead of a deeper heading', () => {
+			expect(errorsOf('## Food\n- Eat [5]')).toEqual([{ line: 1, message: WRONG_HEADING }]);
 		});
 
 		it('has no section before the first heading', () => {
@@ -306,12 +287,6 @@ describe('parseChallenges', () => {
 		});
 	});
 
-	it('ignores horizontal rules', () => {
-		const result = parseChallenges('- Swim [25]\n---\n***\n- Run [5]');
-		expect(result.errors).toEqual([]);
-		expect(result.challenges.map((c) => c.description)).toEqual([null, null]);
-	});
-
 	it('numbers positions over accepted challenges only', () => {
 		const result = parseChallenges('- Swim [25]\n- Broken\n- Run [5]');
 		expect(result.challenges.map((c) => [c.title, c.position])).toEqual([
@@ -323,7 +298,7 @@ describe('parseChallenges', () => {
 	it('reports every error with its own line number', () => {
 		const text = ['# Food', '- Eat', '', '- Drink [5-1]', '- Swim [25]', '- [3]'].join('\n');
 		expect(parseChallenges(text).errors).toEqual([
-			{ line: 2, message: 'No points found' },
+			{ line: 2, message: NO_POINTS },
 			{ line: 4, message: 'Min is greater than max' },
 			{ line: 6, message: 'No title found' }
 		]);
@@ -331,7 +306,7 @@ describe('parseChallenges', () => {
 
 	describe('duplicate titles', () => {
 		it('reports a title that repeats ignoring case and spacing, keeping the first', () => {
-			const text = ['- Swim in a fountain [25]', '# Other', '-   SWIM  in a Fountain (5)'].join(
+			const text = ['- Swim in a fountain [25]', '# Other', '-   SWIM  in a Fountain [5]'].join(
 				'\n'
 			);
 			expect(parseChallenges(text)).toEqual({

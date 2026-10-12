@@ -1,6 +1,6 @@
 # Challenge format
 
-Organisers write their challenge list wherever they like (notes app, WhatsApp, a doc) and paste it into the admin setup page. The parser is lenient: it accepts the way people write lists naturally, then shows a preview before anything is saved.
+Organisers write their challenge list wherever they like (notes app, WhatsApp, a doc) and paste it into the admin setup page. There is one way to write each part, so the example teaches the whole format. A line written another way gets an error that shows the right form. The preview shows the result before anything is saved.
 
 ## Example
 
@@ -15,19 +15,16 @@ Organisers write their challenge list wherever they like (notes app, WhatsApp, a
 
 # Food
 
-- Get a free dessert from a restaurant (10-15)
-- Eat something you have never tried: 5-10 pts
+- Get a free dessert from a restaurant [10-15]
+- Eat something you have never tried [5-10]
 ```
 
 ## Rules
 
-- **A challenge** is a list item: a line starting with `-`, `*`, `+` or a number (`1.`, `1)`).
-- **Points** go at the end of the line, as a range or a single value of whole numbers. A single value means min and max are the same. Accepted forms:
-  - `[5-20]`, `(5-20)`, `[10]`, `(10)`
-  - `5-20 pts`, `10 points`, `: 5-20`
-  - En dashes and spaces around the dash are fine: `[5 – 20]`.
+- **A challenge** is a line starting with `- `. Other list markers (`*`, `+`, `1.`) are an error, unless they are indented under a challenge as part of its description.
+- **Points** go at the end of the line in square brackets, as whole numbers: `[10]` for a fixed score or `[5-20]` for a range. Spaces inside the brackets and an en dash (`[5 – 20]`, which phones often type) are fine. Other forms, like `(10)` or `10 pts`, are an error.
 - **A description** is any indented or plain line directly under a challenge, up to the next list item or heading.
-- **A section** is a markdown heading (`#`, `##`, ...). Challenges below it belong to that section. Sections are optional.
+- **A section** is a line starting with `# `. Challenges below it belong to that section. Sections are optional. `##` and deeper headings are an error.
 - Blank lines are ignored.
 
 ## Preview and errors

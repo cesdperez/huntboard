@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseChallenges } from './challenge-parser.js';
+import { NO_POINTS, parseChallenges } from './challenge-parser.js';
 import {
 	buildImportPlan,
 	buildImportPreview,
@@ -124,7 +124,7 @@ describe('buildImportPreview', () => {
 		const preview = buildImportPreview('- Fine [1]\r\n- Broken line\n- Bad [9-2]', [], new Map());
 
 		expect(preview.errors).toEqual([
-			{ line: 2, message: 'No points found', source: '- Broken line' },
+			{ line: 2, message: NO_POINTS, source: '- Broken line' },
 			{ line: 3, message: 'Min is greater than max', source: '- Bad [9-2]' }
 		]);
 	});

@@ -20,8 +20,8 @@
 
 # Food
 
-- Get a free dessert from a restaurant (10-15)
-- Eat something you have never tried: 5-10 pts`;
+- Get a free dessert from a restaurant [10-15]
+- Eat something you have never tried [5-10]`;
 
 	let { hasChallenges }: { hasChallenges: boolean } = $props();
 
@@ -72,8 +72,9 @@
 	<div class="flex flex-col gap-2">
 		<Label for="challenge-text">{hasChallenges ? 'Replace the list' : 'Paste your list'}</Label>
 		<p id="challenge-text-hint" class="type-secondary">
-			One challenge per line, starting with a dash. Points go at the end, like [5-20] or (10).
-			Headings with # become sections. Lines under a challenge are its description.
+			One challenge per line, starting with a dash. Points go at the end in square brackets, like
+			[10] or [5-20]. A line starting with # starts a section. Lines under a challenge are its
+			description.
 			{#if !hasChallenges}Edit the example or replace it with your own list.{/if}
 		</p>
 		<textarea

@@ -24,7 +24,9 @@ export interface ParseResult {
 type Line =
 	| { kind: 'skip' }
 	| { kind: 'heading'; text: string }
+	| { kind: 'deep-heading' }
 	| { kind: 'item'; indent: number; content: string; raw: string }
+	| { kind: 'other-marker'; indent: number; raw: string }
 	| { kind: 'text'; raw: string };
 
 interface OpenItem {
@@ -46,17 +48,13 @@ interface State {
 }
 
 const NUMBER = String.raw`\d+(?:\.\d+)?`;
-const RANGE = String.raw`(${NUMBER})(?:\s*[-–—]\s*(${NUMBER}))?`;
-const UNIT = String.raw`(?:pts?|points?)\.?`;
-const POINTS_PATTERNS = [
-	new RegExp(String.raw`[[(]\s*${RANGE}(?:\s*${UNIT})?\s*[\])]$`, 'i'),
-	new RegExp(String.raw`(?:^|[\s:])${RANGE}\s*${UNIT}$`, 'i'),
-	// A colon between two digits is a clock time (16:00), not points.
-	new RegExp(String.raw`(?:(?<!\d):\s*|:\s+)${RANGE}$`)
-];
+// An en or em dash is what a phone keyboard often types for "-", so it reads the same.
+const POINTS = new RegExp(String.raw`\[\s*(${NUMBER})(?:\s*[-–—]\s*(${NUMBER}))?\s*\]$`);
 
-const NOT_UNDER_CHALLENGE =
-	'Not under a challenge. Start a challenge with -, *, + or a number followed by a space';
+export const NO_POINTS = 'No points found. End the line with points like [10] or [5-20]';
+export const WRONG_MARKER = 'Start a challenge with a dash, like "- Swim [25]"';
+export const WRONG_HEADING = 'Start a section with a single #, like "# Food"';
+const NOT_UNDER_CHALLENGE = 'Not under a challenge. Start a challenge with a dash and a space';
 
 /** Matches challenges the way re-import does: ignoring case and surrounding or repeated spaces. */
 export function titleKey(title: string): string {
@@ -93,18 +91,23 @@ function splitLines(text: string): string[] {
 
 function classify(raw: string): Line {
 	const trimmed = raw.trim();
-	if (trimmed === '' || isHorizontalRule(trimmed)) return { kind: 'skip' };
+	if (trimmed === '') return { kind: 'skip' };
 
-	const heading = /^#{1,6}(?:\s+(.*))?$/.exec(trimmed);
-	if (heading) return { kind: 'heading', text: stripClosingHashes(heading[1] ?? '') };
+	const heading = /^#(?:\s+(.*))?$/.exec(trimmed);
+	if (heading) return { kind: 'heading', text: heading[1] ?? '' };
+	if (/^#{2,}(?:\s|$)/.test(trimmed)) return { kind: 'deep-heading' };
 
-	const item = /^(\s*)(?:[-*+]|\d+[.)])(?:\s+(.*))?$/.exec(raw);
+	const item = /^(\s*)-(?:\s+(.*))?$/.exec(raw);
 	if (item) {
-		const content = stripCheckbox((item[2] ?? '').trim());
+		const content = (item[2] ?? '').trim();
 		// A notes app often leaves an empty bullet behind; it means nothing.
 		if (content === '') return { kind: 'skip' };
 		return { kind: 'item', indent: indentWidth(item[1]), content, raw: trimmed };
 	}
+
+	const otherMarker = /^(\s*)(?:[*+•]|\d+[.)])\s/.exec(raw);
+	if (otherMarker)
+		return { kind: 'other-marker', indent: indentWidth(otherMarker[1]), raw: trimmed };
 
 	return { kind: 'text', raw: trimmed };
 }
@@ -117,8 +120,19 @@ function handleLine(state: State, line: Line, lineNumber: number): void {
 			state.openItem = null;
 			state.section = collapseSpaces(line.text) || null;
 			return;
+		case 'deep-heading':
+			state.openItem = null;
+			state.errors.push({ line: lineNumber, message: WRONG_HEADING });
+			return;
+		case 'other-marker':
+			if (isUnderOpenItem(state, line.indent)) {
+				addDescription(state, line.raw, lineNumber);
+			} else {
+				rejectItem(state, WRONG_MARKER, line.indent, lineNumber);
+			}
+			return;
 		case 'item':
-			if (state.openItem && line.indent > state.openItem.indent) {
+			if (isUnderOpenItem(state, line.indent)) {
 				addDescription(state, line.raw, lineNumber);
 			} else {
 				openItem(state, line.content, line.indent, lineNumber);
@@ -128,6 +142,10 @@ function handleLine(state: State, line: Line, lineNumber: number): void {
 			addDescription(state, line.raw, lineNumber);
 			return;
 	}
+}
+
+function isUnderOpenItem(state: State, indent: number): boolean {
+	return state.openItem !== null && indent > state.openItem.indent;
 }
 
 function addDescription(state: State, text: string, lineNumber: number): void {
@@ -168,8 +186,8 @@ interface ParsedItem {
 }
 
 function parseItem(content: string): ParsedItem | { error: string } {
-	const match = findPoints(content);
-	if (!match) return { error: 'No points found' };
+	const match = POINTS.exec(content);
+	if (!match) return { error: NO_POINTS };
 
 	const [minText, maxText = minText] = [match[1], match[2]];
 	if (minText.includes('.') || maxText.includes('.')) {
@@ -186,26 +204,6 @@ function parseItem(content: string): ParsedItem | { error: string } {
 	if (title === '') return { error: 'No title found' };
 
 	return { title, min, max };
-}
-
-function findPoints(content: string): RegExpExecArray | null {
-	for (const pattern of POINTS_PATTERNS) {
-		const match = pattern.exec(content);
-		if (match) return match;
-	}
-	return null;
-}
-
-function isHorizontalRule(trimmed: string): boolean {
-	return /^([-*_])(?:\s*\1){2,}$/.test(trimmed);
-}
-
-function stripClosingHashes(text: string): string {
-	return text.replace(/(?:^|\s+)#+\s*$/, '').trim();
-}
-
-function stripCheckbox(content: string): string {
-	return content.replace(/^\[[ xX]\](?:\s+|$)/, '');
 }
 
 function indentWidth(whitespace: string): number {
