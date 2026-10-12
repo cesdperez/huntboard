@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
 	import { Points } from '#lib/components/points/index.js';
@@ -9,8 +10,18 @@
 	import { groupBySection } from '#lib/group-by-section.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
-	const PLACEHOLDER =
-		'# Around town\n- Make a birthday card [5-20]\n  Judged on effort.\n- Swim in a fountain [25]';
+	const EXAMPLE = `# Around town
+
+- Make a birthday card [5-20]
+  Judged on effort. A napkin counts, but barely.
+- Pick up a free item from Marktplaats and deliver it by bike [30-100]
+  Bigger and more awkward scores higher.
+- Swim in a fountain [25]
+
+# Food
+
+- Get a free dessert from a restaurant (10-15)
+- Eat something you have never tried: 5-10 pts`;
 
 	let { hasChallenges }: { hasChallenges: boolean } = $props();
 
@@ -20,7 +31,10 @@
 	const imported = $derived(result?.kind === 'imported' ? result.count : null);
 
 	const initial = page.form?.challenges as ChallengesFormResult | undefined;
-	let text = $state(initial?.kind === 'preview' ? initial.text : '');
+	// A first list starts from the example, so the format can be learned by editing it.
+	let text = $state(
+		initial?.kind === 'preview' ? initial.text : untrack(() => (hasChallenges ? '' : EXAMPLE))
+	);
 	let pending = $state(false);
 
 	const stale = $derived(previewResult !== null && previewResult.text !== text);
@@ -60,6 +74,7 @@
 		<p id="challenge-text-hint" class="type-secondary">
 			One challenge per line, starting with a dash. Points go at the end, like [5-20] or (10).
 			Headings with # become sections. Lines under a challenge are its description.
+			{#if !hasChallenges}Edit the example or replace it with your own list.{/if}
 		</p>
 		<textarea
 			id="challenge-text"
@@ -69,7 +84,7 @@
 			aria-describedby="challenge-text-hint"
 			aria-invalid={previewResult?.error && !preview ? true : undefined}
 			class="min-h-48 w-full rounded-control border-2 border-line bg-surface px-3 py-2 text-ink placeholder:text-muted focus-visible:border-ink aria-invalid:border-danger"
-			placeholder={PLACEHOLDER}></textarea>
+			placeholder={EXAMPLE}></textarea>
 	</div>
 	<Button type="submit" disabled={pending || text.trim() === ''}>Preview</Button>
 </form>
