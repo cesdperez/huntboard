@@ -1,6 +1,8 @@
 <script lang="ts">
 	import ArrowDownIcon from '@lucide/svelte/icons/arrow-down';
 	import ArrowUpIcon from '@lucide/svelte/icons/arrow-up';
+	import DicesIcon from '@lucide/svelte/icons/dices';
+	import { onMount } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -10,6 +12,7 @@
 	import type { TeamsFormResult } from '#lib/server/actions/teams.js';
 	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
 	import { TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
+	import { suggestTeamName } from '#lib/team-name-suggestion.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { game, teams }: { game: GameRow; teams: TeamWithClaimCount[] } = $props();
@@ -20,15 +23,33 @@
 	let editingId = $state<number | null>(null);
 	let pending = $state(false);
 
-	const submit: SubmitFunction = () => {
-		pending = true;
-		return async (settled) => {
-			const { result } = settled;
-			await updateOrRetry(settled);
-			pending = false;
-			if (result.type === 'success') editingId = null;
+	const initial = page.form?.teams as TeamsFormResult | undefined;
+	let newName = $state(initial?.error && initial.teamId === undefined ? (initial.name ?? '') : '');
+
+	const suggestNewName = () => (newName = suggestTeamName(teams.map((team) => team.name)));
+
+	// Random on the client only, so the server render and hydration agree.
+	onMount(() => {
+		if (newName === '') suggestNewName();
+	});
+
+	const submitThen =
+		(onSuccess?: () => void): SubmitFunction =>
+		() => {
+			pending = true;
+			return async (settled) => {
+				const { result } = settled;
+				await updateOrRetry(settled);
+				pending = false;
+				if (result.type === 'success') {
+					editingId = null;
+					onSuccess?.();
+				}
+			};
 		};
-	};
+
+	const submit = submitThen();
+	const submitAdd = submitThen(suggestNewName);
 
 	function confirmDelete(team: TeamWithClaimCount): SubmitFunction {
 		return (input) => {
@@ -141,20 +162,29 @@
 		</ol>
 	{/if}
 
-	<form method="POST" action="?/teamsAdd" class="flex flex-col gap-2" use:enhance={submit}>
+	<form method="POST" action="?/teamsAdd" class="flex flex-col gap-2" use:enhance={submitAdd}>
 		<Label for="new-team-name">New team</Label>
-		<div class="flex gap-3">
+		<div class="flex gap-1">
 			<Input
 				id="new-team-name"
 				name="name"
 				required
 				maxlength={TEAM_NAME_MAX_LENGTH}
 				placeholder="Canal Rats"
-				value={addError ? (result?.name ?? '') : ''}
+				bind:value={newName}
+				onfocus={(event) => event.currentTarget.select()}
 				aria-invalid={addError ? true : undefined}
 				aria-describedby={addError ? 'new-team-error' : undefined}
 			/>
-			<Button type="submit" disabled={pending}>Add team</Button>
+			<Button
+				variant="ghost"
+				size="icon"
+				aria-label="Suggest another name"
+				onclick={suggestNewName}
+			>
+				<DicesIcon aria-hidden="true" />
+			</Button>
+			<Button type="submit" class="ml-2" disabled={pending}>Add team</Button>
 		</div>
 		{#if addError}
 			<p id="new-team-error" class="text-[15px] text-danger" role="alert">{addError}</p>
