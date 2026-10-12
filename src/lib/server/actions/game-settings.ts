@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { fail } from '@sveltejs/kit';
 import { requireAdminGame } from '#lib/server/admin-game.js';
-import { updateGameSettings } from '#lib/server/db/games.js';
+import { resetGame, updateGameSettings } from '#lib/server/db/games.js';
 import { parseGameSettings, type GameSettingsErrors } from '#lib/server/game-settings-form.js';
 import type { AdminActions } from './types.js';
 
@@ -23,5 +23,10 @@ export const gameSettingsActions = {
 			...result.settings
 		});
 		return { gameSettings: { saved: true } satisfies GameSettingsFormData };
+	},
+
+	gameSettingsReset: async ({ params }) => {
+		const game = await requireAdminGame(params.token);
+		await resetGame(env.DB, game.id);
 	}
 } satisfies AdminActions;

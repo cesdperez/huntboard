@@ -2,6 +2,7 @@
 	import ChallengesSection from '#lib/components/setup/challenges-section.svelte';
 	import GameSettingsSection from '#lib/components/setup/game-settings-section.svelte';
 	import LinksSection from '#lib/components/setup/links-section.svelte';
+	import ResetSection from '#lib/components/setup/reset-section.svelte';
 	import TeamsSection from '#lib/components/setup/teams-section.svelte';
 	import type { PageProps } from './$types';
 
@@ -15,4 +16,5 @@
 	<TeamsSection game={data.game} teams={data.teams} />
 	<ChallengesSection game={data.game} challenges={data.challenges} />
 	<LinksSection game={data.game} teams={data.teams} />
+	<ResetSection game={data.game} />
 </div>

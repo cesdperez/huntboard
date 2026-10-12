@@ -151,6 +151,8 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
 - Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
 
+Setup ends with "Reset game", which returns the game to how `/new` created it: the name and the admin and scoreboard links stay, everything else goes. It confirms first, naming what gets deleted.
+
 ### Scoreboard
 
 A ranked list. Rank and total in Archivo Expanded, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and nothing else changes.
