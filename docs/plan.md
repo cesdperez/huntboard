@@ -37,7 +37,7 @@ QA: none in the browser. The review checks test coverage of the edge cases above
 
 ## M2: Create and set up a game
 
-- `/new`: creation code plus game name. The code is the `CREATE_GAME_CODE` secret (`.dev.vars` locally). Success redirects to the admin link.
+- `/new`: creation code plus game name. The code is the `CREATE_GAME_CODE` secret (`.env.dev` locally). Success redirects to the admin link.
 - Nickname prompt on first visit, stored in `localStorage`.
 - Admin Setup tab: game name, start and end (browser time zone to UTC), penalty per minute.
 - Teams: add, rename, reorder, delete (only without claims).

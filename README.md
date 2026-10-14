@@ -25,7 +25,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Secrets for `pnpm dev` live in `.dev.vars`, which git ignores. Create it with this content:
+Secrets for `pnpm dev` live in `.env.dev`, which git ignores. Create it with this content:
 
 ```
 CREATE_GAME_CODE=letmein
