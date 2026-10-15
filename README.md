@@ -56,6 +56,17 @@ HUNTBOARD_URL=https://huntboard.example.workers.dev CREATE_GAME_CODE=... pnpm re
 
 Each run creates a new game.
 
+## Load test
+
+`pnpm loadtest` plays one full game over HTTP against a local production build: 7 teams of 6 players, 3 judges and a big screen over 5 hours, with an opening rush and a finale where 40 phones load the scoreboard. The players and judges follow the model in [Free-tier budget](docs/decisions.md#free-tier-budget). It reports Worker requests and D1 rows per request and per game, and compares them with the free plan's daily limits. It also checks that the final scoreboard matches the points the judges gave.
+
+```sh
+pnpm loadtest              # 5 game hours at 30x: about 12 minutes
+pnpm loadtest --speed 300  # a quick smoke run
+```
+
+It serves the build with `wrangler dev` on port 4174 and keeps its own D1 state in `.wrangler/loadtest`, wiped on every run. `LOADTEST_METRICS` makes the Worker add each request's D1 usage in a `Server-Timing` header. Leave it unset in production. Local latency says nothing about Cloudflare, so the latency check only catches gross regressions.
+
 ## Deploy
 
 The app runs on the Cloudflare free tier. A human runs these commands once, from the repo root:
