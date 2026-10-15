@@ -198,6 +198,27 @@ describe('renameOwnTeam', () => {
 		expect((await getTeamByToken(db, rats.token))?.name).toBe('Canal Kings');
 	});
 
+	it('saves the members next to the name', async () => {
+		await renameOwnTeam(
+			db,
+			{ team: rats, game },
+			form({ name: 'Canal Rats', members: ' Ana,  Bo ' })
+		);
+
+		expect((await getTeamByToken(db, rats.token))?.members).toBe('Ana, Bo');
+	});
+
+	it('refuses members that are too long and keeps the old ones', async () => {
+		const outcome = await renameOwnTeam(
+			db,
+			{ team: rats, game },
+			form({ name: 'Kings', members: 'a'.repeat(81) })
+		);
+
+		expect(outcome.status).toBe(400);
+		expect((await getTeamByToken(db, rats.token))?.name).toBe('Canal Rats');
+	});
+
 	it('works outside the game window', async () => {
 		const ended = { ...game, starts_at: null, ends_at: null };
 

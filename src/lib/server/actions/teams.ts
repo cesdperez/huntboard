@@ -1,8 +1,13 @@
 import { env } from 'cloudflare:workers';
 import { fail } from '@sveltejs/kit';
-import { TEAM_NAME_ERROR, normalizeTeamName } from '#lib/team-name.js';
+import {
+	TEAM_MEMBERS_ERROR,
+	TEAM_NAME_ERROR,
+	normalizeTeamMembers,
+	normalizeTeamName
+} from '#lib/team-name.js';
 import { requireAdminGame } from '#lib/server/admin-game.js';
-import { addTeam, deleteTeam, moveTeam, renameTeam } from '#lib/server/db/teams.js';
+import { addTeam, deleteTeam, moveTeam, updateTeam } from '#lib/server/db/teams.js';
 import { readId, readString } from '#lib/server/form.js';
 import type { AdminAction, AdminActions } from './types.js';
 
@@ -11,6 +16,7 @@ export interface TeamsFormResult {
 	error?: string;
 	teamId?: number;
 	name?: string;
+	members?: string;
 }
 
 const MISSING_ERROR = 'That team is not in this game any more. Reload the page.';
@@ -35,10 +41,13 @@ export const teamsActions = {
 	teamsAdd: async ({ params, request }) => {
 		const game = await requireAdminGame(params.token);
 		const data = await request.formData();
+		const typed = { name: readString(data, 'name'), members: readString(data, 'members') };
 		const name = normalizeTeamName(data.get('name'));
-		if (!name) return teamsFail(400, { error: TEAM_NAME_ERROR, name: readString(data, 'name') });
+		if (!name) return teamsFail(400, { error: TEAM_NAME_ERROR, ...typed });
+		const members = normalizeTeamMembers(data.get('members'));
+		if (members === null) return teamsFail(400, { error: TEAM_MEMBERS_ERROR, ...typed });
 
-		const team = await addTeam(env.DB, game.id, name);
+		const team = await addTeam(env.DB, game.id, name, members);
 		return { teams: { teamId: team.id } satisfies TeamsFormResult };
 	},
 
@@ -47,12 +56,13 @@ export const teamsActions = {
 		const data = await request.formData();
 		const teamId = readId(data, 'teamId');
 		if (teamId === null) return teamsFail(400, { error: MISSING_ERROR });
+		const typed = { teamId, name: readString(data, 'name'), members: readString(data, 'members') };
 		const name = normalizeTeamName(data.get('name'));
-		if (!name) {
-			return teamsFail(400, { error: TEAM_NAME_ERROR, teamId, name: readString(data, 'name') });
-		}
+		if (!name) return teamsFail(400, { error: TEAM_NAME_ERROR, ...typed });
+		const members = normalizeTeamMembers(data.get('members'));
+		if (members === null) return teamsFail(400, { error: TEAM_MEMBERS_ERROR, ...typed });
 
-		if (!(await renameTeam(env.DB, game.id, teamId, name))) {
+		if (!(await updateTeam(env.DB, game.id, teamId, { name, members }))) {
 			return teamsFail(404, { error: MISSING_ERROR, teamId });
 		}
 		return { teams: { teamId } satisfies TeamsFormResult };

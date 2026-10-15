@@ -7,8 +7,8 @@ import {
 	listTeamsWithClaimCounts,
 	moveTeam,
 	recordFirstArrival,
-	renameTeam,
-	setArrival
+	setArrival,
+	updateTeam
 } from './teams.js';
 import { createTestDb } from './testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
@@ -74,9 +74,14 @@ describe('addTeam', () => {
 	it('adds the team at the end with its own link token', async () => {
 		await seedTeam(db, game.id, { name: 'Canal Rats' });
 
-		const owls = await addTeam(db, game.id, 'Night Owls');
+		const owls = await addTeam(db, game.id, 'Night Owls', 'Ana, Bo');
 
-		expect(owls).toMatchObject({ game_id: game.id, name: 'Night Owls', position: 1 });
+		expect(owls).toMatchObject({
+			game_id: game.id,
+			name: 'Night Owls',
+			members: 'Ana, Bo',
+			position: 1
+		});
 		expect(owls.token).toMatch(/^[A-Za-z0-9_-]{22}$/);
 		expect(await names()).toEqual(['0:Canal Rats', '1:Night Owls']);
 	});
@@ -85,23 +90,28 @@ describe('addTeam', () => {
 		const other = await createGame(db, 'Other hunt');
 		await seedTeam(db, other.id);
 
-		expect((await addTeam(db, game.id, 'Canal Rats')).position).toBe(0);
+		expect((await addTeam(db, game.id, 'Canal Rats', '')).position).toBe(0);
 	});
 });
 
-describe('renameTeam', () => {
-	it('renames a team of this game', async () => {
-		const rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
+describe('updateTeam', () => {
+	it('changes the name and members of a team of this game', async () => {
+		const rats = await seedTeam(db, game.id, { name: 'Canal Rats', members: 'Ana' });
 
-		expect(await renameTeam(db, game.id, rats.id, 'Sewer Rats')).toBe(true);
-		expect(await names()).toEqual(['0:Sewer Rats']);
+		expect(await updateTeam(db, game.id, rats.id, { name: 'Sewer Rats', members: 'Ana, Bo' })).toBe(
+			true
+		);
+		const [team] = await listTeamsWithClaimCounts(db, game.id);
+		expect(team).toMatchObject({ name: 'Sewer Rats', members: 'Ana, Bo' });
 	});
 
 	it('refuses a team of another game', async () => {
 		const other = await createGame(db, 'Other hunt');
 		const elsewhere = await seedTeam(db, other.id, { name: 'Elsewhere' });
 
-		expect(await renameTeam(db, game.id, elsewhere.id, 'Hijacked')).toBe(false);
+		expect(await updateTeam(db, game.id, elsewhere.id, { name: 'Hijacked', members: '' })).toBe(
+			false
+		);
 		expect(await names(other.id)).toEqual(['0:Elsewhere']);
 	});
 });

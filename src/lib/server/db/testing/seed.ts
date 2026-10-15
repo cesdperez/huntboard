@@ -11,6 +11,7 @@ export async function seedTeam(
 	return insert<TeamRow>(db, 'team', {
 		game_id: gameId,
 		name: fields.name ?? `Team ${position + 1}`,
+		members: fields.members ?? '',
 		token: fields.token ?? `team-token-${gameId}-${position}`,
 		position,
 		arrived_at: fields.arrived_at ?? null

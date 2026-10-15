@@ -12,13 +12,14 @@
 
 	type Props = {
 		teamName: string;
+		members: string;
 		standings: Standing[];
 		/** Null until the browser clock runs. */
 		countdown: string | null;
 		onrename: () => void;
 	};
 
-	let { teamName, standings, countdown, onrename }: Props = $props();
+	let { teamName, members, standings, countdown, onrename }: Props = $props();
 
 	let expanded = $state(false);
 	const own = $derived(standings.find((row) => row.own));
@@ -36,7 +37,10 @@
 			{#if own}
 				<span class="type-score text-[28px]">{ordinal(own.rank)}</span>
 			{/if}
-			<span class="min-w-0 flex-1 truncate type-heading">{teamName}</span>
+			<span class="min-w-0 flex-1">
+				<span class="block truncate type-heading">{teamName}</span>
+				{#if members}<span class="block truncate type-secondary">{members}</span>{/if}
+			</span>
 			<CountingPoints value={own?.total ?? 0} />
 			<ChevronDownIcon
 				aria-hidden="true"
@@ -63,12 +67,15 @@
 							<span class="w-10 shrink-0 tabular-nums">{ordinal(row.rank)}</span>
 							<span class="min-w-0 flex-1 truncate">
 								{row.name}{#if row.own}<span class="sr-only">, your team</span>{/if}
+								{#if row.members}<span class="block truncate type-secondary font-normal"
+										>{row.members}</span
+									>{/if}
 							</span>
 							<Points value={row.total} />
 						</li>
 					{/each}
 				</ol>
-				<Button onclick={onrename}>Rename team</Button>
+				<Button onclick={onrename}>Edit team</Button>
 			</div>
 		{/if}
 	</div>

@@ -23,7 +23,7 @@ The first event shapes the requirements, but the app stays generic.
 | Creator | The create page plus the creation code | Create a game. They land on its admin page |
 | Admin | The admin link, created with the game | Edit the game, challenges and teams, judge claims, add adjustments, record arrivals, rotate links. Anyone with the admin link is an admin |
 | Player | Their team's secret link | See all challenges, mark them done with an optional note, undo a pending claim, rename their team |
-| Spectator | The public scoreboard link | See team names and total points |
+| Spectator | The public scoreboard link | See team names, members and total points |
 
 Players and admins type a nickname on first visit. It is stored in the browser and used only to show who did what ("marked done by Sam"). It is not an account.
 
@@ -37,7 +37,7 @@ Players and admins type a nickname on first visit. It is stored in the browser a
 
 ### Scoreboard (public)
 
-- Team names and total points, ranked. Tied teams share a rank.
+- Team names, members and total points, ranked. Tied teams share a rank.
 - Updates live during the game.
 - Never shows which challenges a team has done.
 - Works on a phone and scales up to a big screen for the final reveal.
@@ -54,7 +54,7 @@ Players and admins type a nickname on first visit. It is stored in the browser a
   - **Rejected**: a judge did not accept the claim. The judge's reason shows, if there is one. The team can mark it done again.
 - Marking done takes an optional short note (a reference to a WhatsApp message, or an explanation).
 - A team can undo its own claim only while it is pending.
-- A team can rename itself. The admin sets the first name.
+- A team can rename itself and edit its members line. The admin sets the first name.
 - The team page shows only this team's data. The server must enforce this: it never sends another team's claims to the browser.
 
 ### Admin
@@ -83,7 +83,7 @@ All times are stored as UTC.
 ```
 game        id, name, admin_token, scoreboard_token, starts_at, ends_at,
             late_penalty_per_minute, created_at
-team        id, game_id, name, token, position, arrived_at
+team        id, game_id, name, members, token, position, arrived_at
 challenge   id, game_id, title, title_key, description, section, min_points, max_points, position
             unique (game_id, title_key)
 claim       id, team_id, challenge_id, status (pending|scored|rejected), note,

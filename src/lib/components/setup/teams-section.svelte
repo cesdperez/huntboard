@@ -11,7 +11,7 @@
 	import { plural } from '#lib/plural.js';
 	import type { TeamsFormResult } from '#lib/server/actions/teams.js';
 	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
-	import { TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
+	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
 	import { suggestTeamName } from '#lib/team-name-suggestion.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
@@ -24,7 +24,9 @@
 	let pending = $state(false);
 
 	const initial = page.form?.teams as TeamsFormResult | undefined;
-	let newName = $state(initial?.error && initial.teamId === undefined ? (initial.name ?? '') : '');
+	const addFailed = initial?.error !== undefined && initial.teamId === undefined;
+	let newName = $state(addFailed ? (initial?.name ?? '') : '');
+	let newMembers = $state(addFailed ? (initial?.members ?? '') : '');
 
 	const suggestNewName = () => (newName = suggestTeamName(teams.map((team) => team.name)));
 
@@ -49,7 +51,10 @@
 		};
 
 	const submit = submitThen();
-	const submitAdd = submitThen(suggestNewName);
+	const submitAdd = submitThen(() => {
+		suggestNewName();
+		newMembers = '';
+	});
 
 	function confirmDelete(team: TeamWithClaimCount): SubmitFunction {
 		return (input) => {
@@ -94,6 +99,14 @@
 								aria-invalid={error ? true : undefined}
 								aria-describedby={error ? `team-error-${team.id}` : undefined}
 							/>
+							<Label for="team-members-{team.id}">Members</Label>
+							<Input
+								id="team-members-{team.id}"
+								name="members"
+								maxlength={TEAM_MEMBERS_MAX_LENGTH}
+								placeholder="César, Kos, Martin"
+								value={error && result?.members !== undefined ? result.members : team.members}
+							/>
 							<div class="flex gap-3">
 								<Button type="submit" class="flex-1" disabled={pending}>Save</Button>
 								<Button variant="ghost" class="flex-1" onclick={() => (editingId = null)}>
@@ -117,6 +130,7 @@
 						<div class="flex min-h-touch items-center gap-1">
 							<div class="min-w-0 flex-1">
 								<p class="truncate">{team.name}</p>
+								{#if team.members}<p class="truncate type-secondary">{team.members}</p>{/if}
 								{#if team.claim_count > 0}
 									<p class="type-secondary tabular-nums">{plural(team.claim_count, 'claim')}</p>
 								{/if}
@@ -186,6 +200,13 @@
 			</Button>
 			<Button type="submit" class="ml-2" disabled={pending}>Add team</Button>
 		</div>
+		<Input
+			name="members"
+			maxlength={TEAM_MEMBERS_MAX_LENGTH}
+			placeholder="Members: César, Kos, Martin"
+			aria-label="Team members (optional)"
+			bind:value={newMembers}
+		/>
 		{#if addError}
 			<p id="new-team-error" class="text-[15px] text-danger" role="alert">{addError}</p>
 		{/if}

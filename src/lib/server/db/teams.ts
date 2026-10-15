@@ -28,31 +28,36 @@ export async function listTeamNames(
 }
 
 /** Adds a team after the last one, with a fresh link token. */
-export async function addTeam(db: D1Database, gameId: number, name: string): Promise<TeamRow> {
+export async function addTeam(
+	db: D1Database,
+	gameId: number,
+	name: string,
+	members: string
+): Promise<TeamRow> {
 	const team = await db
 		.prepare(
-			`INSERT INTO team (game_id, name, token, position)
-			SELECT ?1, ?2, ?3, coalesce(max(position) + 1, 0) FROM team WHERE game_id = ?1
+			`INSERT INTO team (game_id, name, members, token, position)
+			SELECT ?1, ?2, ?3, ?4, coalesce(max(position) + 1, 0) FROM team WHERE game_id = ?1
 			RETURNING *`
 		)
-		.bind(gameId, name, generateToken())
+		.bind(gameId, name, members, generateToken())
 		.first<TeamRow>();
 	if (!team) throw new Error('Inserting a team returned no row');
 	return team;
 }
 
 /** False when the team is not in this game. */
-export async function renameTeam(
+export async function updateTeam(
 	db: D1Database,
 	gameId: number,
 	teamId: number,
-	name: string
+	{ name, members }: Pick<TeamRow, 'name' | 'members'>
 ): Promise<boolean> {
-	const renamed = await db
-		.prepare('UPDATE team SET name = ? WHERE id = ? AND game_id = ? RETURNING id')
-		.bind(name, teamId, gameId)
+	const updated = await db
+		.prepare('UPDATE team SET name = ?, members = ? WHERE id = ? AND game_id = ? RETURNING id')
+		.bind(name, members, teamId, gameId)
 		.first<number>('id');
-	return renamed !== null;
+	return updated !== null;
 }
 
 /** Corrects or (with null) clears when the team reached the meeting point. False when it is not in this game. */

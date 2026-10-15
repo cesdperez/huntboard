@@ -2,9 +2,14 @@ import { CLAIM_NOTE_MAX_LENGTH } from '#lib/claim-note.js';
 import { DEAD_LINK_MESSAGE } from '#lib/dead-link.js';
 import { gamePhase, type GamePhase } from '#lib/domain/game-window.js';
 import { normalizeNickname } from '#lib/nickname.js';
-import { TEAM_NAME_ERROR, normalizeTeamName } from '#lib/team-name.js';
+import {
+	TEAM_MEMBERS_ERROR,
+	TEAM_NAME_ERROR,
+	normalizeTeamMembers,
+	normalizeTeamName
+} from '#lib/team-name.js';
 import { markClaim, undoClaim } from './db/claims.js';
-import { renameTeam } from './db/teams.js';
+import { updateTeam } from './db/teams.js';
 import { conflictMessage } from './conflict-message.js';
 import { readId, readString } from './form.js';
 import type { TeamLink } from './team-page.js';
@@ -91,7 +96,11 @@ export async function renameOwnTeam(
 ): Promise<TeamActionOutcome> {
 	const name = normalizeTeamName(data.get('name'));
 	if (!name) return error(400, TEAM_NAME_ERROR);
-	if (!(await renameTeam(db, game.id, team.id, name))) return error(404, DEAD_LINK_MESSAGE);
+	const members = normalizeTeamMembers(data.get('members'));
+	if (members === null) return error(400, TEAM_MEMBERS_ERROR);
+	if (!(await updateTeam(db, game.id, team.id, { name, members }))) {
+		return error(404, DEAD_LINK_MESSAGE);
+	}
 	return { status: 200, result: { kind: 'renamed' } };
 }
 

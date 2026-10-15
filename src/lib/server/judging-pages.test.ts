@@ -68,6 +68,7 @@ describe('getTeamScoresPage', () => {
 			{
 				id: rats.id,
 				name: 'Canal Rats',
+				members: '',
 				arrivedAt: '2026-06-01T21:03:30.000Z',
 				rank: 2,
 				claimPoints: 10,
@@ -80,6 +81,7 @@ describe('getTeamScoresPage', () => {
 			{
 				id: owls.id,
 				name: 'Night Owls',
+				members: '',
 				arrivedAt: null,
 				rank: 1,
 				claimPoints: 8,

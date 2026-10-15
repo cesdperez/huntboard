@@ -50,6 +50,8 @@ Minutes late are rounded down, so arriving 30 seconds late costs nothing. The pe
 
 The admin names teams during setup so links are easy to hand out. A team can rename itself from its page. The admin can rename it back.
 
+Each team also has an optional members line, such as "César, Kos, Martin", shown under the name. A team name alone does not say who is on the team. The admin or the team sets it, and it shows on the public scoreboard, so it is visible to anyone with that link.
+
 ## Rejections carry an optional reason
 
 The judge can add a short reason when rejecting. The team sees it next to the rejected challenge.

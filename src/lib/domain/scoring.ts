@@ -11,6 +11,8 @@ export interface ScoringGame {
 export interface ScoringTeam {
 	id: number;
 	name: string;
+	/** Free text naming the people on the team. Empty when not set. */
+	members: string;
 	/** Admin-set display order, used to order tied teams. */
 	position: number;
 	/** UTC ISO timestamp, or null when no arrival is recorded. */
@@ -32,6 +34,7 @@ export interface ScoringAdjustment {
 export interface TeamScore {
 	teamId: number;
 	name: string;
+	members: string;
 	claimPoints: number;
 	adjustmentPoints: number;
 	minutesLate: number;
@@ -91,6 +94,7 @@ export interface Standing {
 	teamId: number;
 	rank: number;
 	name: string;
+	members: string;
 	total: number;
 	/** True on the viewing team's own row. */
 	own: boolean;
@@ -101,6 +105,7 @@ export function toStandings(scores: TeamScore[], ownTeamId: number | null): Stan
 		teamId: score.teamId,
 		rank: score.rank,
 		name: score.name,
+		members: score.members,
 		total: score.total,
 		own: score.teamId === ownTeamId
 	}));
@@ -117,6 +122,7 @@ function scoreTeam(
 	return {
 		teamId: team.id,
 		name: team.name,
+		members: team.members,
 		claimPoints,
 		adjustmentPoints,
 		minutesLate: late,

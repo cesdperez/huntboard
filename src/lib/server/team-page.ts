@@ -21,7 +21,7 @@ export async function findTeamLink(db: D1Database, token: string): Promise<TeamL
 
 /** What the team page sends to the browser. Times are UTC ISO strings. */
 export interface TeamPageData {
-	team: { name: string };
+	team: { name: string; members: string };
 	game: { name: string; startsAt: string | null; endsAt: string | null };
 	standings: Standing[];
 	challenges: TeamChallenge[];
@@ -39,7 +39,7 @@ export async function getTeamPage(
 		getScoreboardInput(db, game)
 	]);
 	return {
-		team: { name: team.name },
+		team: { name: team.name, members: team.members },
 		game: { name: game.name, startsAt: game.starts_at, endsAt: game.ends_at },
 		standings: toStandings(computeScoreboard(scoreboard), team.id),
 		challenges: teamBoard(challenges, claims)

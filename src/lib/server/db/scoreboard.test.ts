@@ -31,14 +31,18 @@ describe('getScoreboardInput', () => {
 			position: 1,
 			arrived_at: '2026-06-01T21:03:00.000Z'
 		});
-		const owls = await seedTeam(db, game.id, { name: 'Night Owls', position: 0 });
+		const owls = await seedTeam(db, game.id, {
+			name: 'Night Owls',
+			members: 'Ana, Bo',
+			position: 0
+		});
 		const other = await createGame(db, 'Other hunt');
 		await seedTeam(db, other.id, { name: 'Elsewhere' });
 
 		const { teams } = await getScoreboardInput(db, game);
 
 		expect(teams).toEqual([
-			{ id: owls.id, name: 'Night Owls', position: 0, arrivedAt: null },
+			{ id: owls.id, name: 'Night Owls', members: 'Ana, Bo', position: 0, arrivedAt: null },
 			expect.objectContaining({ name: 'Canal Rats', arrivedAt: '2026-06-01T21:03:00.000Z' })
 		]);
 	});

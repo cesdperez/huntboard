@@ -50,6 +50,7 @@
 
 	<TeamStrip
 		teamName={data.team.name}
+		members={data.team.members}
 		standings={data.standings}
 		countdown={clock.countdown}
 		onrename={() => (renaming = true)}
@@ -77,6 +78,12 @@
 </div>
 
 <ChallengeSheet challenge={selected} open={sheetOpen} {clock} onclose={() => (sheetOpen = false)} />
-<RenameSheet open={renaming} name={data.team.name} {clock} onclose={() => (renaming = false)} />
+<RenameSheet
+	open={renaming}
+	name={data.team.name}
+	members={data.team.members}
+	{clock}
+	onclose={() => (renaming = false)}
+/>
 <NicknamePrompt />
 <Toast />

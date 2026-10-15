@@ -16,6 +16,7 @@ export interface TeamRow {
 	id: number;
 	game_id: number;
 	name: string;
+	members: string;
 	token: string;
 	position: number;
 	arrived_at: string | null;

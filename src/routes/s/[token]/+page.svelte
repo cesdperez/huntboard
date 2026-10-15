@@ -52,7 +52,12 @@
 					<span class="scoreboard-rank w-16 shrink-0 type-score text-[28px]"
 						>{ordinal(row.rank)}</span
 					>
-					<span class="scoreboard-name min-w-0 flex-1 truncate">{row.name}</span>
+					<span class="min-w-0 flex-1">
+						<span class="scoreboard-name block truncate">{row.name}</span>
+						{#if row.members}<span class="scoreboard-members block type-secondary"
+								>{row.members}</span
+							>{/if}
+					</span>
 					<CountingPoints value={row.total} class="scoreboard-total" />
 				</li>
 			{/each}
@@ -91,6 +96,10 @@
 		.scoreboard-name {
 			font-size: calc(var(--score-size) * 0.45);
 			font-weight: 600;
+		}
+
+		.scoreboard-members {
+			font-size: calc(var(--score-size) * 0.25);
 		}
 
 		.scoreboard :global(.scoreboard-total) {
