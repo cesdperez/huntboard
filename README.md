@@ -87,6 +87,8 @@ pnpm run deploy
 
 Use `pnpm run deploy`: plain `pnpm deploy` is a pnpm command, not this script. `pnpm db:migrate:remote` applies new migrations on later deploys too.
 
+After that first setup, every push to `main` deploys through Cloudflare Workers Builds. It builds the app, applies pending D1 migrations, then runs `wrangler deploy`. Its settings live in Cloudflare, not in this repo: Worker `huntboard` → Settings → Builds, or `cf builds workers get <worker-tag>`. Preview builds for other branches are off. The build uses a Cloudflare API token with D1 Write permission, so rotating that token breaks deploys. `pnpm run deploy` stays as the manual fallback.
+
 `TURNSTILE_SITE_KEY` in `wrangler.jsonc` belongs to the managed **Huntboard game creation** widget, restricted to `huntboard.checho.xyz`. `TURNSTILE_SECRET_KEY` must be that widget's secret. When changing the app hostname, update the widget's allowed hostnames in Cloudflare. The public site key can be committed; the secret belongs in a Worker secret and ignored local env files.
 
 To deploy a code change and its Turnstile secret together, put only `TURNSTILE_SECRET_KEY` in a private JSON or env file and run `pnpm exec wrangler deploy --secrets-file <path>` after `pnpm build`. Wrangler preserves other existing secrets. Never upload `.env.example` as production secrets.
