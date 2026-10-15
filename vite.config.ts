@@ -16,13 +16,12 @@ export default defineConfig({
 				mode: 'auto',
 				directives: {
 					'default-src': ['self'],
-					'script-src': ['self', 'https://challenges.cloudflare.com'],
+					'script-src': ['self'],
 					// Svelte and bits-ui render style attributes, which nonces cannot cover.
 					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
 					'font-src': ['self', 'https://fonts.gstatic.com'],
 					'img-src': ['self', 'data:'],
 					'connect-src': ['self'],
-					'frame-src': ['https://challenges.cloudflare.com'],
 					'frame-ancestors': ['none'],
 					'form-action': ['self'],
 					'base-uri': ['none'],

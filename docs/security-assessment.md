@@ -67,13 +67,13 @@ Authenticated production-page inspection remains pending explicit approval. Auto
 
 ## Remediation, 15 October 2026
 
-Creation-code guessing is addressed by Turnstile and the `CREATE_GAME_RATE_LIMITER` binding. The header, caching, transport and body-size findings are addressed as follows:
+Creation-code guessing is addressed by a random code and the zone's per-IP WAF rate rule. Turnstile and a Worker rate limiter were added and later removed as redundant; see `docs/decisions.md`. The header, caching, transport and body-size findings are addressed as follows:
 
 - `src/hooks.server.ts` adds `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy`, `Permissions-Policy`, HSTS and `X-Robots-Tag: noindex, nofollow` to every Worker response. `/a/*`, `/t/*` and `/s/*`, including their `__data.json` responses, also get `Cache-Control: no-store`.
 - `robots.txt` disallows every path for every crawler.
 - The same hook redirects plain HTTP to HTTPS with 308, except on loopback hosts used by local previews.
 - Request bodies without `Content-Length` get 411, and bodies over 2 MiB get 413, before any form parsing. This bounds the creation code and every other form field.
-- SvelteKit sets an enforced CSP with per-request script nonces. Scripts and frames are limited to the app and Turnstile, fonts to Google Fonts, and `frame-ancestors`, `base-uri` and `object-src` are closed. `style-src` keeps `'unsafe-inline'` because Svelte and bits-ui render style attributes.
+- SvelteKit sets an enforced CSP with per-request script nonces. Scripts are limited to the app, fonts to Google Fonts, and `frame-ancestors`, `base-uri` and `object-src` are closed. `style-src` keeps `'unsafe-inline'` because Svelte and bits-ui render style attributes.
 - The root `_headers` file applies the static hardening headers to assets served without the Worker.
 - The rehearsal fails on any CSP violation logged in the browser.
 

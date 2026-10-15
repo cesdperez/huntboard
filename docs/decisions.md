@@ -64,7 +64,7 @@ Ranges and awarded points are integers. Fractions add input friction on a phone 
 
 Creating a game asks for a creation code, set as a server secret. Without it, anyone who finds the site can fill the free-tier database. There is no list of games: each game is reachable only through its links.
 
-Game creation also requires Turnstile and a rate limit of five attempts per minute per client IP. The rate limit runs before reading the form. Turnstile is verified server-side, including hostname and action, before checking the creation code. Failed protection checks never create a game. Teams, judges and scoreboard polling do not run these checks. IP limits suit infrequent organiser requests, but organisers on one shared connection share the allowance. Cloudflare's limiter is local to each location and eventually consistent, not a global lockout.
+The code is random, so online guessing cannot find it, even past the zone's per-IP rate rule. A Worker rate limiter and Turnstile on `/new` were removed: against a random code they stopped nothing, and each added a way for game creation to fail.
 
 ## Links can be rotated
 
@@ -150,13 +150,12 @@ The scoreboard caches its standings per game for 15 seconds, so extra scoreboard
 
 ### Abuse limits
 
-The free tier fails closed: past a daily limit, requests fail until 00:00 UTC, which ends a running game. Three layers keep a stranger or a leaked link from spending the allowance:
+The free tier fails closed: past a daily limit, requests fail until 00:00 UTC, which ends a running game. Two layers keep a stranger or a leaked link from spending the allowance:
 
 - The Worker is served only on `huntboard.checho.xyz`. The `workers.dev` hostname and preview URLs are off, so no route skips the zone's WAF.
 - A zone rate-limiting rule blocks an IP for 10 seconds after 20 dynamic requests in 10 seconds. Static assets are excluded. A venue where every player shares one IP stays far below it, and a single attacker IP is capped at about 170,000 requests a day instead of unlimited. The free plan allows only one such rule, with fixed 10-second periods.
-- `LINK_RATE_LIMITER` allows 120 requests a minute per admin, team or scoreboard link, checked before routing so a rejected request never reads D1. It is keyed by link, not IP, because players share venue Wi-Fi. A limiter outage lets requests through rather than stopping the game. Cloudflare's counters are per location, cached per machine and eventually consistent: in production a few requests a second ran past both Worker limiters, while the same build enforced them exactly under `wrangler dev`. They only stop sustained high volume, so the WAF rule is the control that holds at low rates.
 
-A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
+A per-link Worker limiter was removed. From one IP it allowed no more than the WAF rule does, and its counters are per location and eventually consistent, so requests ran past it in production. Its cap, 120 a minute, was also above what the daily allowance can absorb from many IPs. A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
 
 ## Nothing event-specific in the app
 
