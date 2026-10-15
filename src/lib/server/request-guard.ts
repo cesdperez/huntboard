@@ -30,14 +30,14 @@ export function securityHeaders(url: URL): Record<string, string> {
 		// Admin, team, and scoreboard links carry their token in the path.
 		'Referrer-Policy': 'no-referrer',
 		'Cross-Origin-Opener-Policy': 'same-origin',
-		'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()'
+		'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+		'X-Robots-Tag': 'noindex, nofollow'
 	};
 	if (url.protocol === 'https:') {
 		headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
 	}
 	if (SECRET_LINK_PATH.test(url.pathname)) {
 		headers['Cache-Control'] = 'no-store';
-		headers['X-Robots-Tag'] = 'noindex, nofollow';
 	}
 	return headers;
 }

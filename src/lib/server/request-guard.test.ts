@@ -44,15 +44,16 @@ describe('securityHeaders', () => {
 		expect(headers['Referrer-Policy']).toBe('no-referrer');
 		expect(headers['Strict-Transport-Security']).toContain('max-age=');
 		expect(headers['Permissions-Policy']).toContain('camera=()');
+		expect(headers['X-Robots-Tag']).toBe('noindex, nofollow');
 		expect(headers['Cache-Control']).toBeUndefined();
 	});
 
 	it.each(['/a/tok', '/t/tok/__data.json', '/s/tok'])(
-		'keeps secret-link responses %s out of caches and search indexes',
+		'keeps secret-link responses %s out of caches',
 		(path) => {
-			const headers = securityHeaders(new URL(`https://huntboard.example${path}`));
-			expect(headers['Cache-Control']).toBe('no-store');
-			expect(headers['X-Robots-Tag']).toBe('noindex, nofollow');
+			expect(securityHeaders(new URL(`https://huntboard.example${path}`))['Cache-Control']).toBe(
+				'no-store'
+			);
 		}
 	);
 
