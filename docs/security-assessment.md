@@ -64,3 +64,16 @@ The following controls passed review or verification:
 Fix order: add creation-attempt limits and preserve a strong random code; add dynamic-response headers and private-route cache policies; then strengthen quota protection and monitoring. Browser policy changes should be verified against the team, admin, and scoreboard flows before deployment. No application fixes or deployment changes were made during this assessment.
 
 Authenticated production-page inspection remains pending explicit approval. Automatic approval review rejected retrieving one game's private access tokens and using them for GET-only checks because those tokens grant privileged access and were not specifically authorized. No production tokens or records were retrieved.
+
+## Remediation, 15 October 2026
+
+Creation-code guessing is addressed by Turnstile and the `CREATE_GAME_RATE_LIMITER` binding. The header, caching, transport and body-size findings are addressed as follows:
+
+- `src/hooks.server.ts` adds `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy`, `Permissions-Policy` and HSTS to every Worker response. `/a/*`, `/t/*` and `/s/*`, including their `__data.json` responses, also get `Cache-Control: no-store` and `X-Robots-Tag: noindex, nofollow`.
+- The same hook redirects plain HTTP to HTTPS with 308, except on loopback hosts used by local previews.
+- Request bodies without `Content-Length` get 411, and bodies over 2 MiB get 413, before any form parsing. This bounds the creation code and every other form field.
+- SvelteKit sets an enforced CSP with per-request script nonces. Scripts and frames are limited to the app and Turnstile, fonts to Google Fonts, and `frame-ancestors`, `base-uri` and `object-src` are closed. `style-src` keeps `'unsafe-inline'` because Svelte and bits-ui render style attributes.
+- The root `_headers` file applies the static hardening headers to assets served without the Worker.
+- The rehearsal fails on any CSP violation logged in the browser.
+
+A Trivy filesystem scan (vulnerabilities, secrets, misconfigurations) of the lockfile and source found no issues. Quota exhaustion by valid-link polling is still open; it needs edge rules on an owned domain and the query indexes described in `docs/decisions.md`.
