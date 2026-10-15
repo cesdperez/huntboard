@@ -29,7 +29,7 @@ async function waitForServer(server: ReturnType<typeof spawn>) {
 	for (let tries = 0; tries < 60; tries += 1) {
 		if (server.exitCode !== null) throw new Error('wrangler dev exited before it served');
 		try {
-			await fetch(baseUrl);
+			await fetch(baseUrl, { redirect: 'manual' });
 			return;
 		} catch {
 			await new Promise((resolve) => setTimeout(resolve, 500));
@@ -64,7 +64,10 @@ const server = spawn(
 		'--persist-to',
 		STATE_DIR,
 		'--var',
-		'LOADTEST_METRICS:1'
+		'LOADTEST_METRICS:1',
+		// The custom domain route would hand the Worker http://<domain>, which it redirects to https.
+		'--local-upstream',
+		`localhost:${options.port}`
 	],
 	{ stdio: 'ignore', detached: true }
 );

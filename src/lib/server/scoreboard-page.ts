@@ -18,3 +18,27 @@ export async function getScoreboardPage(
 		standings: toStandings(computeScoreboard(scoreboard), null)
 	};
 }
+
+type ScoreboardCache = Pick<Cache, 'match' | 'put'>;
+
+/** Every viewer of one game polls the same standings, so they share one read per 15 seconds. */
+const SCOREBOARD_CACHE_SECONDS = 15;
+
+export async function getCachedScoreboardPage(
+	db: D1Database,
+	game: GameRow,
+	origin: string,
+	cache: ScoreboardCache | undefined
+): Promise<ScoreboardPageData> {
+	if (!cache) return getScoreboardPage(db, game);
+	const key = `${origin}/__cache/scoreboard/${game.id}`;
+	const cached = await cache.match(key);
+	if (cached) return cached.json();
+
+	const page = await getScoreboardPage(db, game);
+	await cache.put(
+		key,
+		Response.json(page, { headers: { 'Cache-Control': `max-age=${SCOREBOARD_CACHE_SECONDS}` } })
+	);
+	return page;
+}

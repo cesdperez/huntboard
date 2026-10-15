@@ -43,6 +43,12 @@ const FINAL_STANDINGS = [
 	['3rd', 'Tulip Squad', '32']
 ];
 
+const cspViolations: string[] = [];
+
+test.afterEach(() => {
+	expect(cspViolations).toEqual([]);
+});
+
 test('rehearsal: a 4-team, 10-challenge game from creation to final scores', async ({
 	browser
 }) => {
@@ -258,7 +264,11 @@ async function openAs(
 			localStorage.setItem('huntboard.nickname', name);
 		}, nickname);
 	}
-	return context.newPage();
+	const page = await context.newPage();
+	page.on('console', (message) => {
+		if (message.text().includes('Content Security Policy')) cspViolations.push(message.text());
+	});
+	return page;
 }
 
 /** Wall-clock times in the browser's time zone, as a datetime-local field takes them. */
