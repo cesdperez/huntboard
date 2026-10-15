@@ -38,3 +38,4 @@ qa/
 # Playwright rehearsal output
 /test-results/
 /playwright-report/
+.cloudflare/

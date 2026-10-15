@@ -3,7 +3,7 @@ import { createGame, updateGameSettings } from './db/games.js';
 import { createTestDb } from './db/testing/test-db.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './db/testing/seed.js';
 import type { GameRow, TeamRow } from './db/types.js';
-import { getScoreboardPage } from './scoreboard-page.js';
+import { getCachedScoreboardPage, getScoreboardPage } from './scoreboard-page.js';
 
 let db: D1Database;
 let game: GameRow;
@@ -75,5 +75,39 @@ describe('getScoreboardPage', () => {
 		]) {
 			expect(json).not.toContain(leak);
 		}
+	});
+});
+
+describe('getCachedScoreboardPage', () => {
+	function memoryCache() {
+		const entries = new Map<string, Response>();
+		return {
+			entries,
+			match: async (key: string) => entries.get(key)?.clone(),
+			put: async (key: string, response: Response) => {
+				entries.set(key, response);
+			}
+		};
+	}
+
+	it('serves repeat loads of one game from the cache until it expires', async () => {
+		const cache = memoryCache();
+		const first = await getCachedScoreboardPage(db, game, 'https://huntboard.example', cache);
+		await seedClaim(db, owls.id, (await seedChallenge(db, game.id)).id, {
+			status: 'scored',
+			points: 50
+		});
+		expect(await getCachedScoreboardPage(db, game, 'https://huntboard.example', cache)).toEqual(
+			first
+		);
+		const [key, stored] = [...cache.entries][0];
+		expect(key).toBe(`https://huntboard.example/__cache/scoreboard/${game.id}`);
+		expect(stored.headers.get('Cache-Control')).toBe('max-age=15');
+	});
+
+	it('reads the database when no cache is available', async () => {
+		expect(await getCachedScoreboardPage(db, game, 'https://huntboard.example', undefined)).toEqual(
+			await getScoreboardPage(db, game)
+		);
 	});
 });

@@ -1,4 +1,5 @@
 import type { ClaimRow } from './types.js';
+import { GAME_CLAIMS } from './game-claims.js';
 
 /** A claim waiting in the judging queue, with what the judge needs to see beside it. */
 export interface PendingClaimRow extends ClaimRow {
@@ -27,8 +28,7 @@ export async function listPendingClaims(
 					WHERE rejected.team_id = claim.team_id AND rejected.challenge_id = claim.challenge_id
 						AND rejected.status = 'rejected'
 					ORDER BY rejected.id DESC LIMIT 1) AS last_rejection_note
-			FROM claim
-			JOIN team ON team.id = claim.team_id
+			FROM ${GAME_CLAIMS}
 			JOIN challenge ON challenge.id = claim.challenge_id
 			WHERE team.game_id = ? AND claim.status = 'pending'
 			ORDER BY claim.marked_at, claim.id`
@@ -41,7 +41,7 @@ export async function listPendingClaims(
 export async function countPendingClaims(db: D1Database, gameId: number): Promise<number> {
 	const count = await db
 		.prepare(
-			`SELECT count(*) AS n FROM claim JOIN team ON team.id = claim.team_id
+			`SELECT count(*) AS n FROM ${GAME_CLAIMS}
 			WHERE team.game_id = ? AND claim.status = 'pending'`
 		)
 		.bind(gameId)
@@ -53,7 +53,7 @@ export async function countPendingClaims(db: D1Database, gameId: number): Promis
 export async function listGameClaims(db: D1Database, gameId: number): Promise<ClaimRow[]> {
 	const { results } = await db
 		.prepare(
-			`SELECT claim.* FROM claim JOIN team ON team.id = claim.team_id
+			`SELECT claim.* FROM ${GAME_CLAIMS}
 			WHERE team.game_id = ? ORDER BY claim.id`
 		)
 		.bind(gameId)

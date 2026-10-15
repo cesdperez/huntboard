@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_BODY_BYTES, rejection, securityHeaders } from './request-guard.js';
+import { linkRateLimit, MAX_BODY_BYTES, rejection, securityHeaders } from './request-guard.js';
 
 function post(url: string, headers: Record<string, string> = {}) {
 	return new Request(url, { method: 'POST', headers });
@@ -61,5 +61,49 @@ describe('securityHeaders', () => {
 		expect(
 			securityHeaders(new URL('http://localhost:4173/'))['Strict-Transport-Security']
 		).toBeUndefined();
+	});
+});
+
+describe('linkRateLimit', () => {
+	function limiter(success: boolean) {
+		const keys: string[] = [];
+		return {
+			keys,
+			limit: async ({ key }: { key: string }) => {
+				keys.push(key);
+				return { success };
+			}
+		};
+	}
+
+	it.each(['/a/tok/queue', '/t/tok/__data.json', '/s/tok'])(
+		'counts every request to %s against its link',
+		async (path) => {
+			const counter = limiter(true);
+			expect(await linkRateLimit(new URL(`https://huntboard.example${path}`), counter)).toBeNull();
+			expect(counter.keys).toEqual(['huntboard:link:tok']);
+		}
+	);
+
+	it('rejects a link over its limit before the database is read', async () => {
+		const response = await linkRateLimit(
+			new URL('https://huntboard.example/t/tok'),
+			limiter(false)
+		);
+		expect(response?.status).toBe(429);
+		expect(response?.headers.get('Retry-After')).toBe('60');
+	});
+
+	it('leaves other pages to the edge rule', async () => {
+		const counter = limiter(false);
+		expect(await linkRateLimit(new URL('https://huntboard.example/new'), counter)).toBeNull();
+		expect(counter.keys).toEqual([]);
+	});
+
+	it('serves the game when the limiter is missing or fails', async () => {
+		const url = new URL('https://huntboard.example/t/tok');
+		expect(await linkRateLimit(url, undefined)).toBeNull();
+		const broken = { limit: async () => Promise.reject(new Error('down')) };
+		expect(await linkRateLimit(url, broken)).toBeNull();
 	});
 });

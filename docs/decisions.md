@@ -144,9 +144,19 @@ Opening pages and acting cost about 1.3 million rows at any interval. Polling co
 
 If all 44 clients stayed visible for the whole game, 60 seconds would read about 5.7 million rows (114%) from about 14,000 requests. Requests stay far from their limit even then: at 15 seconds that case is about 54,000.
 
-Rows read also grow with other games in the database. Two queries scan claims of every game: the scored claims behind each scoreboard, and a team's own claims. One more finished game of the same size added about 60% to a team page poll. Delete old games, rehearsal games included, before the event.
+Claim queries start from the game's teams and use the `claim_team_id` index, so other games in the database add no rows to a poll. The figures above were measured before that index and are an upper bound.
 
-If polling ever gets too close to the limit, the cheaper fix is indexes that keep those two queries inside one game, then a cheap check that loads the page only when the game changed. The upgrade path past that is a Durable Object per game that pushes changes over WebSockets.
+The scoreboard caches its standings per game for 15 seconds, so extra scoreboard viewers cost almost no rows. If polling ever gets too close to the limit, the next fix is a cheap check that loads the page only when the game changed. The upgrade path past that is a Durable Object per game that pushes changes over WebSockets.
+
+### Abuse limits
+
+The free tier fails closed: past a daily limit, requests fail until 00:00 UTC, which ends a running game. Three layers keep a stranger or a leaked link from spending the allowance:
+
+- The Worker is served only on `huntboard.checho.xyz`. The `workers.dev` hostname and preview URLs are off, so no route skips the zone's WAF.
+- A zone rate-limiting rule blocks an IP for 10 seconds after 20 dynamic requests in 10 seconds. Static assets are excluded. A venue where every player shares one IP stays far below it, and a single attacker IP is capped at about 170,000 requests a day instead of unlimited. The free plan allows only one such rule, with fixed 10-second periods.
+- `LINK_RATE_LIMITER` allows 120 requests a minute per admin, team or scoreboard link, checked before routing so a rejected request never reads D1. It is keyed by link, not IP, because players share venue Wi-Fi. A limiter outage lets requests through rather than stopping the game.
+
+A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
 
 ## Nothing event-specific in the app
 

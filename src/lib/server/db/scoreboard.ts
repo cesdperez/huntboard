@@ -5,6 +5,7 @@ import type {
 	ScoringTeam
 } from '#lib/domain/scoring.js';
 import type { GameRow } from './types.js';
+import { GAME_CLAIMS } from './game-claims.js';
 
 /** Everything computeScoreboard needs for one game, read in one round trip. */
 export async function getScoreboardInput(
@@ -21,7 +22,7 @@ export async function getScoreboardInput(
 		db
 			.prepare(
 				`SELECT claim.team_id AS teamId, claim.status, claim.points
-				FROM claim JOIN team ON team.id = claim.team_id
+				FROM ${GAME_CLAIMS}
 				WHERE team.game_id = ? AND claim.status = 'scored'
 				ORDER BY claim.id`
 			)

@@ -76,17 +76,19 @@ pnpm run deploy
 
 Use `pnpm run deploy`: plain `pnpm deploy` is a pnpm command, not this script. `pnpm db:migrate:remote` applies new migrations on later deploys too.
 
-`TURNSTILE_SITE_KEY` in `wrangler.jsonc` belongs to the managed **Huntboard game creation** widget, restricted to `huntboard.cesdperez.workers.dev`. `TURNSTILE_SECRET_KEY` must be that widget's secret. When changing the app hostname, update the widget's allowed hostnames in Cloudflare. The public site key can be committed; the secret belongs in a Worker secret and ignored local env files.
+`TURNSTILE_SITE_KEY` in `wrangler.jsonc` belongs to the managed **Huntboard game creation** widget, restricted to `huntboard.checho.xyz`. `TURNSTILE_SECRET_KEY` must be that widget's secret. When changing the app hostname, update the widget's allowed hostnames in Cloudflare. The public site key can be committed; the secret belongs in a Worker secret and ignored local env files.
 
 To deploy a code change and its Turnstile secret together, put only `TURNSTILE_SECRET_KEY` in a private JSON or env file and run `pnpm exec wrangler deploy --secrets-file <path>` after `pnpm build`. Wrangler preserves other existing secrets. Never upload `.env.example` as production secrets.
 
-Rehearse against the URL that `deploy` prints, with the code you just set:
+Rehearse against the production URL, with the code you just set:
 
 ```sh
-HUNTBOARD_URL=https://huntboard.<your-subdomain>.workers.dev CREATE_GAME_CODE=... pnpm rehearsal
+HUNTBOARD_URL=https://huntboard.checho.xyz CREATE_GAME_CODE=... pnpm rehearsal
 ```
 
-Rehearsal games stay in the database and make every poll read more rows (see [decisions](docs/decisions.md#live-updates-by-polling)). Delete them before the event:
+The app is served only on `huntboard.checho.xyz`, a custom domain on the `checho.xyz` zone. The zone's rate-limiting rule lives in Cloudflare (Security, WAF, Rate limiting rules), not in this repo; see [decisions](docs/decisions.md#abuse-limits).
+
+Rehearsal games stay in the database. Delete them before the event:
 
 ```sh
 pnpm exec wrangler d1 execute huntboard --remote --command "DELETE FROM game WHERE name LIKE 'Rehearsal %'"

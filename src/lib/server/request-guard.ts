@@ -2,7 +2,7 @@
 export const MAX_BODY_BYTES = 2 * 1024 * 1024;
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
-const SECRET_LINK_PATH = /^\/[ats]\//;
+const SECRET_LINK_PATH = /^\/[ats]\/([^/]+)/;
 const BODYLESS_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /** A response that ends the request before routing, or null to continue. */
@@ -20,6 +20,31 @@ export function rejection(request: Request): Response | null {
 		return new Response('Request body too large', { status: 413 });
 	}
 	return null;
+}
+
+type LinkRateLimiter = Pick<RateLimit, 'limit'>;
+
+/**
+ * Caps requests per admin, team or scoreboard link, so one leaked link cannot spend the daily
+ * database allowance. Runs before routing, so a rejected request never reaches the database.
+ */
+export async function linkRateLimit(
+	url: URL,
+	limiter: LinkRateLimiter | undefined
+): Promise<Response | null> {
+	const token = SECRET_LINK_PATH.exec(url.pathname)?.[1];
+	if (!token || !limiter) return null;
+	try {
+		const { success } = await limiter.limit({ key: `huntboard:link:${token}` });
+		if (success) return null;
+	} catch {
+		// A limiter outage must not stop a running game; the edge rule still applies.
+		return null;
+	}
+	return new Response('Too many requests. Wait a minute and try again.', {
+		status: 429,
+		headers: { 'Retry-After': '60' }
+	});
 }
 
 /** Headers for every dynamic response. CSP is set by SvelteKit so it can add nonces. */
