@@ -154,7 +154,7 @@ The free tier fails closed: past a daily limit, requests fail until 00:00 UTC, w
 
 - The Worker is served only on `huntboard.checho.xyz`. The `workers.dev` hostname and preview URLs are off, so no route skips the zone's WAF.
 - A zone rate-limiting rule blocks an IP for 10 seconds after 20 dynamic requests in 10 seconds. Static assets are excluded. A venue where every player shares one IP stays far below it, and a single attacker IP is capped at about 170,000 requests a day instead of unlimited. The free plan allows only one such rule, with fixed 10-second periods.
-- `LINK_RATE_LIMITER` allows 120 requests a minute per admin, team or scoreboard link, checked before routing so a rejected request never reads D1. It is keyed by link, not IP, because players share venue Wi-Fi. A limiter outage lets requests through rather than stopping the game.
+- `LINK_RATE_LIMITER` allows 120 requests a minute per admin, team or scoreboard link, checked before routing so a rejected request never reads D1. It is keyed by link, not IP, because players share venue Wi-Fi. A limiter outage lets requests through rather than stopping the game. Cloudflare's counters are per location, cached per machine and eventually consistent: in production a few requests a second ran past both Worker limiters, while the same build enforced them exactly under `wrangler dev`. They only stop sustained high volume, so the WAF rule is the control that holds at low rates.
 
 A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
 
