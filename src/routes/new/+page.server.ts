@@ -1,25 +1,12 @@
 import { env } from 'cloudflare:workers';
-import { fail, redirect } from '@sveltejs/kit';
-import { resolve } from '$app/paths';
-import { creationCodeMatches } from '#lib/server/creation-code.js';
-import { createGame } from '#lib/server/db/games.js';
-import { readString } from '#lib/server/form.js';
-import { gameNameError } from '#lib/server/game-settings-form.js';
-import type { Actions } from './$types';
+import { createNewGameAction } from '#lib/server/new-game.js';
+import { turnstileConfig } from '#lib/server/turnstile.js';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = () => ({
+	turnstileSiteKey: turnstileConfig(env, import.meta.env.DEV)?.siteKey ?? null
+});
 
 export const actions: Actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
-		const code = readString(data, 'code');
-		const name = readString(data, 'name');
-
-		const nameError = gameNameError(name);
-		if (nameError) return fail(400, { name, error: nameError });
-		if (!(await creationCodeMatches(code, env.CREATE_GAME_CODE))) {
-			return fail(403, { name, error: 'That creation code is not right. Check it and try again.' });
-		}
-
-		const game = await createGame(env.DB, name);
-		redirect(303, resolve('/a/[token]', { token: game.admin_token }));
-	}
+	default: createNewGameAction(env, import.meta.env.DEV)
 };

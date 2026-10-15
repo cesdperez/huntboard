@@ -1,6 +1,7 @@
 {
 	"extends": "$app/tsconfig",
 	"compilerOptions": {
+		"checkJs": false,
 		"strict": true,
 		"types": ["$app/types", "./worker-configuration.d.ts", "node"]
 	},

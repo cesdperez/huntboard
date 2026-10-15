@@ -62,6 +62,8 @@ Ranges and awarded points are integers. Fractions add input friction on a phone 
 
 Creating a game asks for a creation code, set as a server secret. Without it, anyone who finds the site can fill the free-tier database. There is no list of games: each game is reachable only through its links.
 
+Game creation also requires Turnstile and a rate limit of five attempts per minute per client IP. The rate limit runs before reading the form. Turnstile is verified server-side, including hostname and action, before checking the creation code. Failed protection checks never create a game. Teams, judges and scoreboard polling do not run these checks. IP limits suit infrequent organiser requests, but organisers on one shared connection share the allowance. Cloudflare's limiter is local to each location and eventually consistent, not a global lockout.
+
 ## Links can be rotated
 
 If a team or admin link leaks, the admin rotates it. The old link stops working at once, and the admin shares the new one.

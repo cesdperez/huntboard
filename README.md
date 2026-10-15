@@ -25,13 +25,19 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Secrets for `pnpm dev` live in `.env.dev`, which git ignores. Create it with this content:
+Secrets for `pnpm dev` live in `.env.dev`, which git ignores. Copy the example:
 
 ```
-CREATE_GAME_CODE=letmein
+cp .env.example .env.dev
 ```
 
 `CREATE_GAME_CODE` is the code `/new` asks for before it creates a game. After adding or renaming a variable, run `pnpm gen` to update `worker-configuration.d.ts`.
+
+`/new` POSTs use the `CREATE_GAME_RATE_LIMITER` binding: five attempts per IP per 60 seconds, including successful requests and rejected forms. The limit runs before form parsing or Turnstile verification. A rejection returns 429 with `Retry-After: 60`. IPs are shared at some venues, so organisers behind the same IP share that allowance. Cloudflare's counters are local to each location and eventually consistent, so this is a burst limit rather than a global lockout.
+
+The form also requires Turnstile verification before checking the creation code. Tokens must match the request hostname and the `create-game` action. Missing configuration or an unavailable protection service closes game creation. These protections apply only to `/new` submissions.
+
+`pnpm dev` uses Cloudflare's always-pass test keys, including real Siteverify calls. Production builds reject test keys. Automated rehearsals against a production widget may be challenged as bots; use the local dev server for automated rehearsals.
 
 ## Rehearsal
 
@@ -64,10 +70,15 @@ Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, in place of
 ```sh
 pnpm db:migrate:remote
 pnpm exec wrangler secret put CREATE_GAME_CODE
+pnpm exec wrangler secret put TURNSTILE_SECRET_KEY
 pnpm run deploy
 ```
 
 Use `pnpm run deploy`: plain `pnpm deploy` is a pnpm command, not this script. `pnpm db:migrate:remote` applies new migrations on later deploys too.
+
+`TURNSTILE_SITE_KEY` in `wrangler.jsonc` belongs to the managed **Huntboard game creation** widget, restricted to `huntboard.cesdperez.workers.dev`. `TURNSTILE_SECRET_KEY` must be that widget's secret. When changing the app hostname, update the widget's allowed hostnames in Cloudflare. The public site key can be committed; the secret belongs in a Worker secret and ignored local env files.
+
+To deploy a code change and its Turnstile secret together, put only `TURNSTILE_SECRET_KEY` in a private JSON or env file and run `pnpm exec wrangler deploy --secrets-file <path>` after `pnpm build`. Wrangler preserves other existing secrets. Never upload `.env.example` as production secrets.
 
 Rehearse against the URL that `deploy` prints, with the code you just set:
 
