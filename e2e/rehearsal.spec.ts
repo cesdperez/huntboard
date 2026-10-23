@@ -60,6 +60,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await admin.getByLabel('Creation code').fill(CREATE_GAME_CODE);
 		await admin.getByRole('button', { name: 'Create game' }).click();
 		await expect(admin).toHaveURL(/\/a\/[^/]+\/setup$/);
+		await expect(admin.locator('html')).toHaveAttribute('data-game-theme', 'highland-bru');
 	});
 
 	await test.step('set the game window to running, with a late penalty', async () => {
@@ -70,6 +71,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await admin.getByLabel('Control flag').check();
 		await admin.getByRole('button', { name: 'Save game' }).click();
 		await expect(admin.getByText('Saved.')).toBeVisible();
+		await expect(admin.locator('html')).toHaveAttribute('data-game-theme', 'flag');
 	});
 
 	await test.step('add 4 teams', async () => {
