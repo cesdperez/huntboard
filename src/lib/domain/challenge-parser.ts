@@ -1,4 +1,5 @@
 import { collapseSpaces } from '../format/text.js';
+import { CHALLENGE_MAX_POINTS } from './points.js';
 
 export interface ParsedChallenge {
 	title: string;
@@ -109,6 +110,12 @@ function classify(raw: string): Line {
 	if (otherMarker)
 		return { kind: 'other-marker', indent: indentWidth(otherMarker[1]), raw: trimmed };
 
+	// "-Run [5]" or "– Run [5]" is a mistyped challenge, not description text.
+	const mistypedDash = /^(\s*)[-–—]/.exec(raw);
+	if (mistypedDash && POINTS.test(trimmed)) {
+		return { kind: 'other-marker', indent: indentWidth(mistypedDash[1]), raw: trimmed };
+	}
+
 	return { kind: 'text', raw: trimmed };
 }
 
@@ -195,7 +202,7 @@ function parseItem(content: string): ParsedItem | { error: string } {
 	}
 	const min = Number(minText);
 	const max = Number(maxText);
-	if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max)) {
+	if (max > CHALLENGE_MAX_POINTS) {
 		return { error: 'Points are too large' };
 	}
 	if (min > max) return { error: 'Min is greater than max' };

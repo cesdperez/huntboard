@@ -99,7 +99,10 @@ function assertUniqueTitles(pasted: readonly ParsedChallenge[]): void {
 	}
 }
 
-/** Two stored titles can share a key (they differ only in spacing); the first one wins the match. */
+/**
+ * Keys are recomputed from the stored titles, so if titleKey ever folds more than the stored
+ * title_key did, two stored titles can share a key. The first one then wins the match.
+ */
 function indexByTitle(existing: readonly ExistingChallenge[]): Map<string, ExistingChallenge> {
 	const byTitle = new Map<string, ExistingChallenge>();
 	for (const stored of existing) {

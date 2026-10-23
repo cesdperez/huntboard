@@ -6,6 +6,7 @@ import {
 	WRONG_HEADING,
 	WRONG_MARKER
 } from './challenge-parser.js';
+import { CHALLENGE_MAX_POINTS } from './points.js';
 
 function only(text: string) {
 	const result = parseChallenges(text);
@@ -103,10 +104,22 @@ describe('parseChallenges', () => {
 			expect(errorsOf('- Swim [25]\n* Run [5]')).toEqual([{ line: 2, message: WRONG_MARKER }]);
 		});
 
-		it('needs a space after the dash', () => {
-			expect(errorsOf('-Swim [25]')).toEqual([
-				{ line: 1, message: expect.stringMatching(/not under a challenge/i) }
-			]);
+		it.each([['-Swim [25]'], ['– Swim [25]'], ['— Swim [25]']])(
+			'asks for a dash and a space instead of %j',
+			(line) => {
+				expect(errorsOf(line)).toEqual([{ line: 1, message: WRONG_MARKER }]);
+			}
+		);
+
+		it.each([['-Run [5]'], ['– Run [5]']])(
+			'asks for a dash and a space when %j follows a challenge',
+			(line) => {
+				expect(errorsOf(`- Swim [25]\n${line}`)).toEqual([{ line: 2, message: WRONG_MARKER }]);
+			}
+		);
+
+		it('keeps a dash line without points as description', () => {
+			expect(only('- Swim [25]\n-wet').description).toBe('-wet');
 		});
 	});
 
@@ -170,6 +183,16 @@ describe('parseChallenges', () => {
 
 		it('reports points too large to store exactly', () => {
 			expect(errorsOf('- Swim [99999999999999999999]')).toEqual([
+				{ line: 1, message: 'Points are too large' }
+			]);
+		});
+
+		it('accepts points up to the cap', () => {
+			expect(only(`- Swim [0-${CHALLENGE_MAX_POINTS}]`).max_points).toBe(CHALLENGE_MAX_POINTS);
+		});
+
+		it('reports points above the cap', () => {
+			expect(errorsOf(`- Swim [${CHALLENGE_MAX_POINTS + 1}]`)).toEqual([
 				{ line: 1, message: 'Points are too large' }
 			]);
 		});

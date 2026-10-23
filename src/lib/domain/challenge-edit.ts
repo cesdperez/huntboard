@@ -1,6 +1,7 @@
 import { collapseSpaces } from '../format/text.js';
 import type { ChallengeFields } from './challenge-import.js';
 import { titleKey } from './challenge-parser.js';
+import { CHALLENGE_MAX_POINTS } from './points.js';
 
 /** The edit form's raw text fields. */
 export interface ChallengeEditInput {
@@ -19,6 +20,7 @@ export type ChallengeEditResult =
 	{ ok: true; fields: ChallengeEditFields } | { ok: false; errors: ChallengeEditErrors };
 
 const WHOLE_NUMBER_ERROR = 'Enter a whole number, 0 or more.';
+const TOO_LARGE_ERROR = 'Points are too large.';
 
 /** Validates an in-place edit with the same rules the parser applies to pasted challenges. */
 export function validateChallengeEdit(input: ChallengeEditInput): ChallengeEditResult {
@@ -28,9 +30,13 @@ export function validateChallengeEdit(input: ChallengeEditInput): ChallengeEditR
 
 	const min = wholeNumber(input.min);
 	const max = wholeNumber(input.max);
-	if (min === null) errors.min = WHOLE_NUMBER_ERROR;
-	if (max === null) errors.max = WHOLE_NUMBER_ERROR;
-	else if (min !== null && min > max) errors.max = `Max must be at least the min (${min}).`;
+	const minError = pointsError(min);
+	const maxError = pointsError(max);
+	if (minError) errors.min = minError;
+	if (maxError) errors.max = maxError;
+	else if (min !== null && max !== null && min > max) {
+		errors.max = `Max must be at least the min (${min}).`;
+	}
 
 	if (Object.keys(errors).length > 0 || min === null || max === null) return { ok: false, errors };
 
@@ -50,7 +56,10 @@ export function validateChallengeEdit(input: ChallengeEditInput): ChallengeEditR
 
 function wholeNumber(text: string): number | null {
 	const trimmed = text.trim();
-	if (!/^\d+$/.test(trimmed)) return null;
-	const value = Number(trimmed);
-	return Number.isSafeInteger(value) ? value : null;
+	return /^\d+$/.test(trimmed) ? Number(trimmed) : null;
+}
+
+function pointsError(points: number | null): string | undefined {
+	if (points === null) return WHOLE_NUMBER_ERROR;
+	return points > CHALLENGE_MAX_POINTS ? TOO_LARGE_ERROR : undefined;
 }

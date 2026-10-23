@@ -21,8 +21,8 @@ Organisers write their challenge list wherever they like (notes app, WhatsApp, a
 
 ## Rules
 
-- **A challenge** is a line starting with `- `. Other list markers (`*`, `+`, `•`, `1.`, `1)`) are an error, unless they are indented under a challenge as part of its description.
-- **Points** go at the end of the line in square brackets, as whole numbers: `[10]` for a fixed score or `[5-20]` for a range. Spaces inside the brackets and an en or em dash (`[5 – 20]` or `[5—20]`, which phones often type) are fine. Other forms, like `(10)` or `10 pts`, are an error.
+- **A challenge** is a line starting with `- `. Other list markers (`*`, `+`, `•`, `1.`, `1)`) are an error, unless they are indented under a challenge as part of its description. So is a line that ends in points but starts with a dash and no space (`-Run [5]`) or with an en or em dash (`– Run [5]`).
+- **Points** go at the end of the line in square brackets, as whole numbers up to 100000: `[10]` for a fixed score or `[5-20]` for a range. Spaces inside the brackets and an en or em dash (`[5 – 20]` or `[5—20]`, which phones often type) are fine. Other forms, like `(10)` or `10 pts`, are an error.
 - **A description** is any indented or plain line directly under a challenge, up to the next list item or heading.
 - **A section** is a line starting with `# `. Challenges below it belong to that section. Sections are optional. `##` and deeper headings are an error.
 - Blank lines are ignored.

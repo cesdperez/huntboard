@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateChallengeEdit, type ChallengeEditInput } from './challenge-edit.js';
+import { CHALLENGE_MAX_POINTS } from './points.js';
 
 function input(overrides: Partial<ChallengeEditInput> = {}): ChallengeEditInput {
 	return {
@@ -56,6 +57,20 @@ describe('validateChallengeEdit', () => {
 				max: 'Enter a whole number, 0 or more.'
 			}
 		});
+	});
+
+	it('rejects points above the cap', () => {
+		const tooMany = String(CHALLENGE_MAX_POINTS + 1);
+		expect(validateChallengeEdit(input({ min: tooMany, max: tooMany }))).toEqual({
+			ok: false,
+			errors: { min: 'Points are too large.', max: 'Points are too large.' }
+		});
+	});
+
+	it('accepts points up to the cap', () => {
+		expect(
+			validateChallengeEdit(input({ min: '0', max: String(CHALLENGE_MAX_POINTS) }))
+		).toMatchObject({ ok: true, fields: { max_points: CHALLENGE_MAX_POINTS } });
 	});
 
 	it('rejects a min greater than the max', () => {

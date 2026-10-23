@@ -1,3 +1,6 @@
+/** Highest score a challenge may award, so totals stay far below Number.MAX_SAFE_INTEGER. */
+export const CHALLENGE_MAX_POINTS = 100_000;
+
 /** Inclusive range of whole points a judge may award for a challenge. */
 export type PointsRange = { min: number; max: number };
 
