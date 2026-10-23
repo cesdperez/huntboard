@@ -25,7 +25,7 @@ describe('createGame', () => {
 			starts_at: null,
 			ends_at: null,
 			late_penalty_per_minute: 0,
-			theme: 'flag'
+			theme: 'highland-bru'
 		});
 		expect(game.admin_token).toMatch(/^[A-Za-z0-9_-]{22}$/);
 		expect(game.scoreboard_token).toMatch(/^[A-Za-z0-9_-]{22}$/);

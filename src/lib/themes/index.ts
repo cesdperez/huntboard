@@ -45,6 +45,9 @@ const HIGHLAND_BRU: Theme = {
 
 export const THEMES: readonly Theme[] = [DEFAULT_THEME, HIGHLAND_BRU];
 
+/** The theme /new gives a game. Pages without a game, and unknown ids, still use DEFAULT_THEME. */
+export const NEW_GAME_THEME: Theme = HIGHLAND_BRU;
+
 /** Ids stored before a theme was removed still open their game, in the default theme. */
 export function resolveTheme(id: string | null | undefined, themes = THEMES): Theme {
 	return themes.find((theme) => theme.id === id) ?? DEFAULT_THEME;

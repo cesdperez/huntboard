@@ -192,7 +192,7 @@ Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs),
 
 ## Themes
 
-The admin picks a theme for the game in Setup. It changes the team page and the scoreboard. Admin pages, `/new` and error pages always use `flag`.
+The admin picks a theme for the game in Setup. It changes the team page and the scoreboard. A game made at `/new` starts in `NEW_GAME_THEME`, Highland Bru. Admin pages, `/new`, error pages and an id that is no longer registered always use `flag`.
 
 A theme is two things:
 
