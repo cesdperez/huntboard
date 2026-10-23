@@ -1,21 +1,32 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { AppBar, PageBanner } from '#lib/components/event/index.js';
 	import { GAME_NAME_MAX_LENGTH } from '#lib/game-settings.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
+	import { pageLayout } from '#lib/themes/page-layout.js';
 	import type { PageProps } from './$types';
 
 	let { form }: PageProps = $props();
 	let submitting = $state(false);
+
+	const event = $derived(pageLayout() === 'event');
 </script>
 
 <svelte:head>
 	<title>New game · Huntboard</title>
 </svelte:head>
 
-<main class="mx-auto flex max-w-content flex-col gap-6 px-gutter py-10">
-	<h1 class="type-title">New game</h1>
+{#if event}
+	<AppBar />
+	<PageBanner title="New game">Name it and start setting it up.</PageBanner>
+{/if}
+
+<main class="mx-auto flex max-w-content flex-col gap-6 px-gutter {event ? 'py-6' : 'py-10'}">
+	{#if !event}
+		<h1 class="type-title">New game</h1>
+	{/if}
 
 	<form
 		method="POST"

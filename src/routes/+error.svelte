@@ -2,7 +2,9 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { checkConnection, connection, retryPage } from '#lib/components/connection/index.js';
+	import { AppBar } from '#lib/components/event/index.js';
 	import { startPolling } from '#lib/live-updates.js';
+	import { pageLayout } from '#lib/themes/page-layout.js';
 
 	const notFound = $derived(page.status === 404);
 	const heading = $derived(
@@ -12,6 +14,8 @@
 				? 'This page did not load'
 				: 'You are offline'
 	);
+
+	const event = $derived(pageLayout() === 'event');
 
 	onMount(() => {
 		if (notFound) return;
@@ -25,6 +29,10 @@
 <svelte:head>
 	<title>{heading} · Huntboard</title>
 </svelte:head>
+
+{#if event}
+	<AppBar />
+{/if}
 
 <main class="mx-auto flex max-w-content flex-col gap-3 px-gutter py-10">
 	<h1 class="type-title">{heading}</h1>
