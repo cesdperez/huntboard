@@ -11,5 +11,4 @@ Resolved questions move to [decisions](decisions.md).
 
 ## Technical
 
-- **Free-tier limits.** Confirm the current Workers and D1 free-tier limits before the event. They set the polling interval.
 - **Re-import after the game starts.** Re-importing deletes claims on challenges that disappear from the list. The preview warns, but a careless confirm mid-game loses scores. If this bites, block destructive re-imports once the game has started.

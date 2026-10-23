@@ -10,12 +10,39 @@ No accounts. Each team joins through its own secret link, so teams see only thei
 - [Decisions](docs/decisions.md): what we chose and why
 - [Challenge format](docs/challenge-format.md): how organisers paste in their challenge list
 - [Open questions](docs/open-questions.md)
-- [Plan](docs/plan.md): milestones and how each one is checked
+- [Security assessment](docs/security-assessment.md): findings and their remediation
 - [Design](DESIGN.md): visual and interaction rules for every screen
 
 ## Stack
 
 SvelteKit + TypeScript on Cloudflare Workers, D1 for storage, pnpm. Everything fits the Cloudflare free tier.
+
+## Code layout
+
+Dependencies point one way: route, then action adapter or page builder, then use case, then database or storage, then domain. Routes stay thin and hold no rules.
+
+`src/lib`:
+
+- `domain/`: pure game rules and shared limits, such as the challenge parser, scoring and points.
+- `format/`: display formatting, such as times, ordinals and plurals.
+- `client/`: browser-only code, such as live updates and image resizing.
+- `themes/`: the theme registry and each theme's tokens.
+- `components/`: Svelte components, and the form action state they share.
+- `action-results.ts`: the form action result types, by key.
+
+`src/lib/server`:
+
+- `use-cases/`: what each form action does, tested without HTTP.
+- `pages/`: page load builders.
+- `http/`: request guards, security headers, form parsing and link lookups.
+- `db/`: D1 queries.
+- `storage/`: the R2 image store.
+- `actions/`: thin form action adapters.
+- `testing/`: an in-memory R2 bucket for tests.
+
+A use case returns an `ActionOutcome<R>`: an HTTP status and a result. The adapter calls `respond(key, outcome)`, which puts the result under `page.form[key]`. The client reads it back by the same key, through `AdminAction<K>` or `resultUnder(page.form, key)`. `ActionResults` in `src/lib/action-results.ts` maps each key to its result type on both sides, so a renamed key or a changed result fails `pnpm check`.
+
+Domain rules are written test first. Vitest covers the domain, use cases, page builders and D1 queries. Query tests run on in-memory SQLite. UI is checked with Playwright rather than component tests. Before a commit, `pnpm test`, `pnpm check` and `pnpm lint` pass.
 
 ## Local development
 
@@ -47,7 +74,7 @@ pnpm rehearsal
 To rehearse against another deployment, set `HUNTBOARD_URL` and that deployment's `CREATE_GAME_CODE`:
 
 ```sh
-HUNTBOARD_URL=https://huntboard.example.workers.dev CREATE_GAME_CODE=... pnpm rehearsal
+HUNTBOARD_URL=https://huntboard.example.com CREATE_GAME_CODE=... pnpm rehearsal
 ```
 
 Each run creates a new game.
@@ -75,7 +102,7 @@ pnpm exec wrangler r2 bucket create huntboard-images
 
 The bucket holds the game images and team pictures. `wrangler deploy` fails while the bucket named in `wrangler.jsonc` does not exist, so create it before the first deploy.
 
-Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, in place of the zeros, and commit it. Then:
+`wrangler.jsonc` holds this project's `database_id`. On another Cloudflare account, replace it with the id that `d1 create` prints and commit it. Then:
 
 ```sh
 pnpm db:migrate:remote

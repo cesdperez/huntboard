@@ -64,7 +64,7 @@ Ranges and awarded points are integers. Fractions add input friction on a phone 
 
 Creating a game asks for a creation code, set as a server secret. Without it, anyone who finds the site can fill the free-tier database. There is no list of games: each game is reachable only through its links.
 
-The code is random, so online guessing cannot find it, even past the zone's per-IP rate rule. A Worker rate limiter and Turnstile on `/new` were removed: against a random code they stopped nothing, and each added a way for game creation to fail.
+The code is random, so online guessing cannot find it, even past the zone's per-IP rate rule. `/new` has no Worker rate limiter or Turnstile: against a random code they stop nothing, and each adds a way for game creation to fail.
 
 ## Links can be rotated
 
@@ -108,14 +108,14 @@ Challenge choice is the strategy, so every team sees the full list with point ra
 - **SvelteKit + TypeScript**, deployed to Cloudflare Workers with `@sveltejs/adapter-cloudflare`.
 - **D1** (SQLite) for storage, **R2** for the game image and team pictures.
 - **pnpm**.
-- **Tailwind + shadcn-svelte** for components, only where they save time (buttons, dialogs, tables).
-- **Vitest** for the challenge parser and scoring rules. These are pure functions and the easiest place to get things wrong.
-- **Raw SQL on D1** through a thin query module. Five tables do not need an ORM.
-- **Playwright CLI** for QA at the end of each milestone, on a phone viewport first.
+- **Tailwind + shadcn-svelte** for components, only where they save time (button, input, label, sheet).
+- **Vitest** for the domain rules, use cases, page builders and D1 queries. Query tests run on in-memory SQLite with every migration applied.
+- **Raw SQL on D1** through thin query modules. Five tables do not need an ORM.
+- **Playwright** for the rehearsal, and the Playwright CLI for QA on a phone viewport first.
 
 ## Live updates by polling
 
-Each page's load function depends on a shared key. Clients invalidate it every 60 seconds, pause while the tab is hidden, and refresh at once on focus and after their own actions. `POLL_INTERVAL_MS` in `src/lib/live-updates.ts` holds the interval.
+Each page's load function depends on a shared key. Clients invalidate it every 60 seconds, pause while the tab is hidden, and refresh at once on focus and after their own actions. `POLL_INTERVAL_MS` in `src/lib/client/live-updates.ts` holds the interval.
 
 Before each poll the client fetches a small static file. Static assets never run the Worker, so the check costs nothing from the request budget. When it fails, the poll is skipped and the page shows an offline notice. Without the check, a load that fails offline replaces the whole page with the error page.
 
@@ -153,7 +153,7 @@ Opening pages and acting cost about 1.3 million rows at any interval. Polling co
 
 If all 44 clients stayed visible for the whole game, 60 seconds would read about 5.7 million rows (114%) from about 14,000 requests. Requests stay far from their limit even then: at 15 seconds that case is about 54,000.
 
-Claim queries start from the game's teams and use the `claim_team_id` index, so other games in the database add no rows to a poll. The figures above were measured before that index and are an upper bound.
+Claim queries start from the game's teams and use the `claim_team_id` index, so other games in the database add no rows to a poll. The figures above were measured without that index, so they are an upper bound.
 
 The scoreboard caches its standings per game for 15 seconds, so extra scoreboard viewers cost almost no rows. If polling ever gets too close to the limit, the next fix is a cheap check that loads the page only when the game changed. The upgrade path past that is a Durable Object per game that pushes changes over WebSockets.
 
@@ -164,7 +164,7 @@ The free tier fails closed: past a daily limit, requests fail until 00:00 UTC, w
 - The Worker is served only on `huntboard.checho.xyz`. The `workers.dev` hostname and preview URLs are off, so no route skips the zone's WAF.
 - A zone rate-limiting rule blocks an IP for 10 seconds after 20 dynamic requests in 10 seconds. Static assets are excluded. A venue where every player shares one IP stays far below it, and a single attacker IP is capped at about 170,000 requests a day instead of unlimited. The free plan allows only one such rule, with fixed 10-second periods.
 
-A per-link Worker limiter was removed. From one IP it allowed no more than the WAF rule does, and its counters are per location and eventually consistent, so requests ran past it in production. Its cap, 120 a minute, was also above what the daily allowance can absorb from many IPs. A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
+There is no per-link Worker rate limiter. From one IP it would allow no more than the WAF rule does. Its counters are per location and eventually consistent, so requests run past it in production. A cap loose enough for a busy team is also above what the daily allowance can absorb from many IPs. A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
 
 ## Visual themes live in code
 

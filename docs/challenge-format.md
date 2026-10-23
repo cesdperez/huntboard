@@ -21,8 +21,8 @@ Organisers write their challenge list wherever they like (notes app, WhatsApp, a
 
 ## Rules
 
-- **A challenge** is a line starting with `- `. Other list markers (`*`, `+`, `1.`) are an error, unless they are indented under a challenge as part of its description.
-- **Points** go at the end of the line in square brackets, as whole numbers: `[10]` for a fixed score or `[5-20]` for a range. Spaces inside the brackets and an en dash (`[5 – 20]`, which phones often type) are fine. Other forms, like `(10)` or `10 pts`, are an error.
+- **A challenge** is a line starting with `- `. Other list markers (`*`, `+`, `•`, `1.`, `1)`) are an error, unless they are indented under a challenge as part of its description.
+- **Points** go at the end of the line in square brackets, as whole numbers: `[10]` for a fixed score or `[5-20]` for a range. Spaces inside the brackets and an en or em dash (`[5 – 20]` or `[5—20]`, which phones often type) are fine. Other forms, like `(10)` or `10 pts`, are an error.
 - **A description** is any indented or plain line directly under a challenge, up to the next list item or heading.
 - **A section** is a line starting with `# `. Challenges below it belong to that section. Sections are optional. `##` and deeper headings are an error.
 - Blank lines are ignored.
@@ -33,7 +33,7 @@ Before saving, the admin sees a table of what was parsed: section, title, points
 
 ## Re-importing
 
-Pasting again replaces the challenge list. Challenges are matched by title, ignoring case and surrounding spaces.
+Pasting again replaces the challenge list. Challenges are matched by title, ignoring case, surrounding spaces and repeated spaces.
 
 - **Matched**: section, description, range and position are updated. Scored claims are clamped to the new range.
 - **New**: added.
@@ -42,4 +42,4 @@ Pasting again replaces the challenge list. Challenges are matched by title, igno
 
 To fix a typo in the title of a challenge that already has claims, edit that challenge in place instead of re-importing.
 
-Two challenges with the same title are a parse error.
+Two challenges whose titles match this way are a parse error.

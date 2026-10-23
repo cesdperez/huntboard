@@ -182,7 +182,7 @@ A ranked list. Rank and total in display type, the total in `--score`, team name
 
 ## Components
 
-Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs), restyled with the tokens above.
+Built on shadcn-svelte where it saves time (Button, Input, Label, Sheet), restyled with the tokens above.
 
 - Touch targets at least 48px. Rows in lists are at least 56px tall.
 - Radii by hierarchy: sheets 16px on the top corners, buttons and inputs 10px, markers 3px, list rows 0 (rows are divided by `--line`, not boxed in cards).
