@@ -25,3 +25,20 @@ export function formatClockTime(
 	}).format(date);
 	return `${weekday}, ${time}`;
 }
+
+/** A UTC ISO time as the viewer's calendar day, "24 October", with the year only when it differs. */
+export function formatDay(
+	iso: string,
+	now: Date,
+	{ locale, timeZone }: ClockTimeOptions = {}
+): string {
+	const date = new Date(iso);
+	const year = new Intl.DateTimeFormat(locale, { timeZone, year: 'numeric' });
+	const sameYear = year.format(date) === year.format(now);
+	return new Intl.DateTimeFormat(locale, {
+		timeZone,
+		day: 'numeric',
+		month: 'long',
+		year: sameYear ? undefined : 'numeric'
+	}).format(date);
+}
