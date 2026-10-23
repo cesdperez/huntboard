@@ -20,6 +20,7 @@ export const gameSettingsActions = {
 		await updateGameSettings(env.DB, game.id, {
 			starts_at: game.starts_at,
 			ends_at: game.ends_at,
+			theme: game.theme,
 			...result.settings
 		});
 		return { gameSettings: { saved: true } satisfies GameSettingsFormData };

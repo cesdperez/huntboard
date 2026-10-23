@@ -157,6 +157,10 @@ The free tier fails closed: past a daily limit, requests fail until 00:00 UTC, w
 
 A per-link Worker limiter was removed. From one IP it allowed no more than the WAF rule does, and its counters are per location and eventually consistent, so requests ran past it in production. Its cap, 120 a minute, was also above what the daily allowance can absorb from many IPs. A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
 
+## Visual themes live in code
+
+A game stores a theme id, and the admin picks it in Setup. Themes are registered in code, not stored as data, so each one is a reviewed set of tokens and fonts that keeps the rules in DESIGN.md. Only the team page and the scoreboard use it. Admin pages keep the default, so judging looks the same in every game. An id that is no longer registered reads as the default, so removing a theme never breaks a game. Reset keeps the theme, like the name.
+
 ## Nothing event-specific in the app
 
 The app never mentions specific people or a specific event. Names, themes and inside jokes live only in the challenge text the organiser writes.

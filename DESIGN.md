@@ -8,9 +8,11 @@ Orienteering marks each checkpoint with a square flag split diagonally into oran
 
 The palette is signal orange on a cool white, with deep navy for text. Orange is also the Dutch colour, which suits the reference event without naming it.
 
+This direction is the default theme, `flag`. A game can pick another theme for its team page and scoreboard; see [Themes](#themes). The rest of this document describes `flag`.
+
 ## Color
 
-Defined as CSS custom properties on `:root`, with a dark set under `prefers-color-scheme: dark`. The hunt runs from afternoon into evening, so dark mode is a first-class theme, not an afterthought.
+Defined as CSS custom properties in `src/lib/themes/flag.css`, with the dark set inside `@variant dark`, which follows `prefers-color-scheme` and the `data-theme` override. The hunt runs from afternoon into evening, so dark mode is first-class, not an afterthought.
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
@@ -19,17 +21,19 @@ Defined as CSS custom properties on `:root`, with a dark set under `prefers-colo
 | `--ink` | `#14213D` | `#EEF1F6` | Text, outlines, icons |
 | `--muted` | `#5B6578` | `#9AA4B8` | Secondary text, open markers |
 | `--line` | `#DDE2EA` | `#26324D` | Dividers, input borders |
-| `--flag` | `#F25C05` | `#FF7A2E` | Pending and scored markers, primary actions |
+| `--flag` | `#F25C05` | `#FF7A2E` | The orange behind `--marker`, `--action` and `--own` |
 | `--on-flag` | `#14213D` | `#14213D` | Text on flag orange |
 | `--danger` | `#C42847` | `#FF6B85` | Reject, penalties, destructive actions |
 | `--scrim` | `rgb(20 33 61 / 0.4)` | `rgb(5 10 20 / 0.6)` | Overlay behind sheets |
 
+Components never use `--flag` directly. They use the role tokens in [Themes](#themes), which `flag` maps onto these colours.
+
 Rules:
 
-- Orange means "this is ours, it counts". Use it for markers, the primary action on a screen, and the team's own row on the scoreboard. Nowhere else.
+- `--marker`, `--action` and `--own` mean "this is ours, it counts". Use them for markers, the primary action on a screen, and the team's own row. Nowhere else. In `flag` all three are orange.
 - No gradients, no tinted washes, no decorative colour.
-- Every pair used for text meets WCAG AA. Check `--flag` with `--on-flag` at the sizes used before changing either.
-- `--on-flag` is navy in both themes. White on `#F25C05` is 3.3:1 and fails AA for marker numbers and button labels; navy is 4.8:1.
+- Every pair used for text meets WCAG AA. Check each role with its `--on-` pair at the sizes used before changing either.
+- `--on-flag` is navy in both modes. White on `#F25C05` is 3.3:1 and fails AA for marker numbers and button labels; navy is 4.8:1.
 - State is never told by colour alone. The marker shape carries it.
 
 ## The claim marker
@@ -42,21 +46,22 @@ A square, 28px on lists and 40px in the grid on phone. It encodes the claim stat
  |    |      |   /|       | 15 |       | \/ |
  |    |      |  //|       |    |       | /\ |
  +----+      +----+       +----+       +----+
- outline     lower-right  full flag,   outline in
- --muted     half --flag  points in    --danger,
-                          --on-flag    diagonal cross
+ outline     lower-right  full         outline in
+ --muted     half         --marker,    --danger,
+             --marker     points in    diagonal cross
+                          --on-marker
 ```
 
 - Open: 2px `--muted` outline, empty.
-- Pending: `--ink` outline, the lower-right triangle filled with `--flag`. This is the control flag itself.
-- Scored: fully filled `--flag`, awarded points centred in `--on-flag`, tabular figures.
+- Pending: `--ink` outline, the lower-right triangle filled with `--marker`. This is the control flag itself.
+- Scored: fully filled `--marker`, awarded points centred in `--on-marker`, tabular figures.
 - Rejected: 2px `--danger` outline with a thin diagonal cross.
 - Corner radius 3px. Markers are the only square-cornered element with this radius, so they read as objects, not buttons.
 - Every marker has an accessible label: "Pending", "Scored 15 points", and so on.
 
 ## Typography
 
-One family: **Archivo** (variable, Google Fonts), using its width axis as the active element.
+One family: **Archivo** (variable, Google Fonts), using its width axis as the active element. It fills both font tokens: `--font-sans` for everything, and `--font-display` for screen titles, ranks, totals and team page section headings. The widths come from `--stretch-display` (125), `--stretch-condensed` (87) and `--stretch-compressed` (70), so a theme with a font that has no width axis can set them to `normal`.
 
 | Role | Setting | Size (phone) |
 |---|---|---|
@@ -100,8 +105,8 @@ The bottom third of the screen is where thumbs reach. Primary actions live there
 
 Tapping a row opens a bottom sheet with the description, the note field and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
 
-- The strip shows the rank in Archivo Expanded at 28px and the total at the full 40px, so the team name keeps room at 390px. Tapping it expands the scoreboard in place, with the team's own row marked by a flag-orange bar on its left edge. "Rename team" sits under that list.
-- A pending row reads "Waiting for a judge" under its title. A rejected row shows the reason in `--danger`.
+- The strip shows the rank in display type at 28px and the total at the full 40px, so the team name keeps room at 390px. Tapping it expands the scoreboard in place, with the team's own row marked by an `--own` bar on its left edge and a semibold name. "Edit team" sits under that list.
+- A pending row reads "Waiting for a judge" under its title, in `--waiting`. A rejected row shows the reason in `--danger`.
 - The sheet moves focus to itself, not to the note field, so the phone keyboard opens only when the player taps the field.
 - Outside the game window the sheet keeps "Mark done" visible but disabled, with the closed message above it.
 - An error in the sheet stays only while the claim it is about is unchanged. Once a poll shows a new state, the error goes, so it never contradicts the button under it.
@@ -131,8 +136,8 @@ The points picker buttons are at least 56px tall. Tapping a quick value scores a
 - The admin link opens on Queue once the game has teams and challenges, and on Setup before that.
 - The header shows the game name with the same status line as the scoreboard, so every tab says whether the game has started or ended.
 - The empty queue follows the game: "Nothing to judge yet. Claims show up here once the game starts." before, "Nothing to judge. New claims show up here." while it runs, "Nothing left to judge. The game has ended, so no new claims come in." after.
-- The Queue badge is `--flag` with `--on-flag` text: pending claims are what counts next.
-- Queue items have no primary button. Every item carries the same actions, so a column of orange buttons would say nothing. Score is the primary action in the grid sheet.
+- The Queue badge is `--marker` with `--on-marker` text: pending claims are what counts next.
+- Queue items have no primary button. Every item carries the same actions, so a column of primary buttons would say nothing. Score is the primary action in the grid sheet.
 - "Reject" opens an optional reason field and a "Reject claim" button. That second tap is the confirmation.
 - A claim judged or undone elsewhere stays in the queue where it was, showing the conflict ("Sam already scored this: 15 points.") and an "OK" button, until the judge dismisses it. It never just vanishes under a thumb.
 - An earlier rejection of the same team and challenge shows under the note in `--danger`, so the judge knows what failed before.
@@ -151,11 +156,13 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
 - Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
 
-Setup ends with "Reset game", which returns the game to how `/new` created it: the name and the admin and scoreboard links stay, everything else goes. It confirms first, naming what gets deleted.
+The game settings end with the theme, one option per registered theme, saved with the rest of the form.
+
+Setup ends with "Reset game", which returns the game to how `/new` created it: the name, the theme and the admin and scoreboard links stay, everything else goes. The theme stays because, like the name, it belongs to the event, and a reset clears a rehearsal before that same event. It confirms first, naming what gets deleted.
 
 ### Scoreboard
 
-A ranked list. Rank and total in Archivo Expanded, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and nothing else changes.
+A ranked list. Rank and total in display type, the total in `--score`, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and nothing else changes.
 
 - Under the game name, one status line: "Starts in 0:42:10", "Ends in 1:42:10" or "Ended at 21:00". The scoreboard keeps updating after the end, because judging goes on at the meeting point.
 - Tied teams show the same rank and keep their setup order.
@@ -169,7 +176,56 @@ Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs),
 - Touch targets at least 48px. Rows in lists are at least 56px tall.
 - Radii by hierarchy: sheets 16px on the top corners, buttons and inputs 10px, markers 3px, list rows 0 (rows are divided by `--line`, not boxed in cards).
 - No box shadows except on sheets and the sticky strip, where they show something floats above the page.
-- Buttons: one primary (filled `--flag`) per screen or sheet. Secondary buttons are `--ink` outlines. Destructive buttons are `--danger` outlines and confirm before acting.
+- Buttons: one primary (filled `--action`, label in `--on-action`) per screen or sheet. Secondary buttons are `--ink` outlines. Destructive buttons are `--danger` outlines and confirm before acting.
+- shadcn's semantic names (`--primary`, `--background` and the rest) map onto the tokens in `app.css`, so generated components follow the theme.
+
+## Themes
+
+The admin picks a theme for the game in Setup. It changes the team page and the scoreboard. Admin pages, `/new` and error pages always use `flag`.
+
+A theme is two things:
+
+- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each, and the font stylesheets it loads.
+- A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
+
+The server writes `data-game-theme` on `<html>`, so the first paint and the sheets portalled to `<body>` already wear the theme. A stored id that is no longer registered shows `flag`.
+
+A theme supports light, dark or both. With one mode, the server also writes `data-theme` and that mode wins over the phone setting. With both, it follows the phone, and the dark set is declared once inside `@variant dark`. `/dev/design?theme=<id>&mode=dark` previews any theme in any mode it supports.
+
+### Token roles
+
+Components use roles, never a theme's own colour names.
+
+| Role | In `flag` | Use |
+|---|---|---|
+| `--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--danger`, `--scrim` | See [Color](#color) | The base palette |
+| `--marker`, `--on-marker` | `--flag`, `--on-flag` | Pending triangle and scored fill, the points on it, the Queue badge |
+| `--action`, `--on-action` | `--flag`, `--on-flag` | The primary button and its label |
+| `--own` | `--flag` | Bar on the team's own row |
+| `--own-row` | `--strip` | Background of the team's own row |
+| `--strip`, `--on-strip` | `--surface`, `--ink` | The sticky team strip and its text |
+| `--on-strip-muted`, `--strip-line`, `--strip-score` | `--muted`, `--line`, `--ink` | Secondary text, dividers and the total on the strip |
+| `--score` | `--ink` | Score totals |
+| `--section`, `--on-section` | transparent, `--ink` | Band behind team page section headings, and their text |
+| `--waiting` | `--muted` | "Waiting for a judge" under a pending row |
+| `--font-sans` | Archivo | All text without a display role |
+| `--font-display` | Archivo | Screen titles, ranks, totals, team page section headings |
+| `--stretch-display`, `--stretch-condensed`, `--stretch-compressed` | 125%, 87%, 70% | Width of display type, point ranges, and marker points |
+
+Inside the strip, the strip roles stand in for `--surface`, `--ink`, `--muted`, `--line` and `--score`, so everything in it, the expanded scoreboard included, follows the strip.
+
+### What a theme may change
+
+- The palette and every role above.
+- The display font, and the sans font. The theme's stylesheets load every family its tokens name, Archivo included while it keeps the `flag` sans.
+- Decoration in the event heading and the page margins. It never sits behind a row, a button or a number.
+
+### What a theme keeps
+
+- Marker shapes: the outline, the lower-right triangle, the full square and the diagonal cross. Only their colours change.
+- Layout, spacing, radii and touch sizes.
+- WCAG AA for every text pair, checked in each mode the theme supports. That includes each `--on-` pair, `--waiting` on `--paper` and `--on-strip-muted` on `--strip` at 15px.
+- State told by shape and words, not colour alone. The own row keeps its bar and its semibold name.
 
 ## Motion
 

@@ -9,6 +9,8 @@ export interface GameRow {
 	starts_at: string | null;
 	ends_at: string | null;
 	late_penalty_per_minute: number;
+	/** A theme id. Read it through resolveTheme, which handles ids no longer registered. */
+	theme: string;
 	created_at: string;
 }
 

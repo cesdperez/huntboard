@@ -20,7 +20,7 @@ export function getGameById(db: D1Database, id: number): Promise<GameRow | null>
 
 export type GameSettings = Pick<
 	GameRow,
-	'name' | 'starts_at' | 'ends_at' | 'late_penalty_per_minute'
+	'name' | 'starts_at' | 'ends_at' | 'late_penalty_per_minute' | 'theme'
 >;
 
 export async function updateGameSettings(
@@ -30,7 +30,7 @@ export async function updateGameSettings(
 ): Promise<GameRow> {
 	const game = await db
 		.prepare(
-			`UPDATE game SET name = ?, starts_at = ?, ends_at = ?, late_penalty_per_minute = ?
+			`UPDATE game SET name = ?, starts_at = ?, ends_at = ?, late_penalty_per_minute = ?, theme = ?
 			WHERE id = ? RETURNING *`
 		)
 		.bind(
@@ -38,6 +38,7 @@ export async function updateGameSettings(
 			settings.starts_at,
 			settings.ends_at,
 			settings.late_penalty_per_minute,
+			settings.theme,
 			gameId
 		)
 		.first<GameRow>();
@@ -45,7 +46,7 @@ export async function updateGameSettings(
 	return game;
 }
 
-/** Returns the game to how /new created it: same name and links, nothing else. */
+/** Returns the game to how /new created it, except that the name, theme and links stay. */
 export async function resetGame(db: D1Database, gameId: number): Promise<GameRow> {
 	// Claims, adjustments and arrivals go with their team through ON DELETE CASCADE.
 	const [, , reset] = await db.batch<GameRow>([
