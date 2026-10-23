@@ -1,11 +1,14 @@
 <script lang="ts">
+	import ClockIcon from '@lucide/svelte/icons/clock';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { OfflineNotice } from '#lib/components/connection/index.js';
+	import { AppBar } from '#lib/components/event/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import { Toast } from '#lib/components/toast/index.js';
 	import { GameClock, setGameClock } from '#lib/game-clock.svelte.js';
+	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
 	import type { LayoutProps } from './$types';
 
@@ -20,6 +23,7 @@
 	]);
 	// The grid is the one admin screen wider than the content column.
 	const wide = $derived(page.route.id === '/a/[token]/grid');
+	const event = $derived(pageLayout() === 'event');
 
 	const clock = setGameClock(
 		new GameClock(() => ({
@@ -36,15 +40,35 @@
 </svelte:head>
 
 <div class="flex min-h-dvh flex-col">
-	<header
-		class="mx-auto flex w-full max-w-content items-center justify-between gap-3 px-gutter pt-4"
-	>
-		<div class="flex min-w-0 flex-col">
-			<p class="truncate type-secondary">{data.game.name}</p>
-			<p class="type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
-		</div>
-		<NicknameButton />
-	</header>
+	{#if event}
+		<!-- Judging is fast work on a phone, so the event banner shrinks to one row here. -->
+		<header>
+			<AppBar><NicknameButton /></AppBar>
+			<div class="surface-banner">
+				<div
+					class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-3 px-gutter py-2"
+				>
+					<p class="min-w-0 font-banner text-[32px] leading-none break-words uppercase">
+						{data.game.name}
+					</p>
+					<p class="flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">
+						<ClockIcon aria-hidden="true" class="size-4 shrink-0" />
+						{clock.countdown ?? ' '}
+					</p>
+				</div>
+			</div>
+		</header>
+	{:else}
+		<header
+			class="mx-auto flex w-full max-w-content items-center justify-between gap-3 px-gutter pt-4"
+		>
+			<div class="flex min-w-0 flex-col">
+				<p class="truncate type-secondary">{data.game.name}</p>
+				<p class="type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
+			</div>
+			<NicknameButton />
+		</header>
+	{/if}
 	<OfflineNotice class="mx-auto w-full max-w-content px-gutter pt-2" />
 
 	<main class={cn('mx-auto w-full flex-1 px-gutter pt-4 pb-28', !wide && 'max-w-content')}>
@@ -54,7 +78,7 @@
 	<nav
 		data-bottom-bar
 		aria-label="Admin"
-		class="fixed inset-x-0 bottom-0 z-40 border-t bg-surface pb-[env(safe-area-inset-bottom)]"
+		class="fixed inset-x-0 bottom-0 z-40 border-t surface-strip pb-[env(safe-area-inset-bottom)]"
 	>
 		<ul class="mx-auto flex max-w-content">
 			{#each tabs as tab (tab.routeId)}
@@ -65,7 +89,8 @@
 						aria-current={current ? 'page' : undefined}
 						class={cn(
 							'flex min-h-row items-center justify-center gap-1.5 font-semibold',
-							current ? 'text-ink' : 'text-muted'
+							current ? 'text-ink' : 'text-muted',
+							event && current && 'shadow-[inset_0_4px_0_var(--own)]'
 						)}
 					>
 						{tab.label}

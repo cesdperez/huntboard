@@ -42,7 +42,7 @@
 {/snippet}
 
 <section aria-labelledby="game-settings-heading" class="flex flex-col gap-3">
-	<h2 id="game-settings-heading" class="type-heading">Game</h2>
+	<h2 id="game-settings-heading" class="font-display type-heading">Game</h2>
 
 	<form
 		method="POST"
@@ -141,7 +141,7 @@
 		>
 			<legend class="mb-2 font-semibold">Theme</legend>
 			<p id="game-theme-hint" class="type-secondary">
-				How the team pages and the scoreboard look. Admin pages keep the default.
+				How every page of this game looks, these admin pages too.
 			</p>
 			{#each THEMES as theme (theme.id)}
 				<label class="flex min-h-touch items-center gap-3">
