@@ -7,7 +7,7 @@
 </script>
 
 <section aria-labelledby="challenges-heading" class="flex flex-col gap-4">
-	<h2 id="challenges-heading" class="type-heading">Challenges</h2>
+	<h2 id="challenges-heading" class="font-display type-heading">Challenges</h2>
 
 	{#if challenges.length === 0}
 		<p class="type-secondary">No challenges in {game.name} yet. Paste your list below.</p>

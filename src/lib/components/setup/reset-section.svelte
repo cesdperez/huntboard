@@ -25,7 +25,7 @@
 </script>
 
 <section aria-labelledby="reset-heading" class="flex flex-col gap-3">
-	<h2 id="reset-heading" class="type-heading">Reset</h2>
+	<h2 id="reset-heading" class="font-display type-heading">Reset</h2>
 	<p id="reset-hint" class="type-secondary">
 		Start over with a blank game. Deletes all teams, challenges, claims and scores, and clears the
 		times and late penalty. The game name, the theme and the admin and scoreboard links stay.

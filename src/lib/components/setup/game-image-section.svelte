@@ -56,7 +56,7 @@
 </script>
 
 <section aria-labelledby="game-image-heading" class="flex flex-col gap-3">
-	<h2 id="game-image-heading" class="type-heading">Game image</h2>
+	<h2 id="game-image-heading" class="font-display type-heading">Game image</h2>
 	<p class="type-secondary">
 		An invitation, poster or map. Players see it at the top of their page, and so does the
 		scoreboard.

@@ -55,7 +55,7 @@
 {#each groupBySection(challenges) as group, groupIndex (groupIndex)}
 	<div class="flex flex-col">
 		{#if group.section}
-			<h3 class="pt-2 pb-1 type-heading">{group.section}</h3>
+			<h3 class="pt-2 pb-1 font-display type-heading">{group.section}</h3>
 		{/if}
 		<ul class="flex flex-col border-t">
 			{#each group.items as challenge (challenge.id)}

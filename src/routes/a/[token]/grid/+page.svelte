@@ -68,7 +68,9 @@
 					{#if group.section}
 						<tr>
 							<th colspan={data.teams.length + 1} class="border-b px-0 pt-4 pb-1 text-left">
-								<span class="sticky left-0 px-gutter type-heading">{group.section}</span>
+								<span class="sticky left-0 px-gutter font-display type-heading"
+									>{group.section}</span
+								>
 							</th>
 						</tr>
 					{/if}

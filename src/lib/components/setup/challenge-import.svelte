@@ -100,7 +100,7 @@
 
 {#if preview}
 	<div class="flex flex-col gap-4" aria-labelledby="challenge-preview-heading" role="region">
-		<h3 id="challenge-preview-heading" class="type-heading">Preview</h3>
+		<h3 id="challenge-preview-heading" class="font-display type-heading">Preview</h3>
 
 		{#if stale}
 			<p class="text-[15px] text-danger" role="alert">
@@ -180,7 +180,7 @@
 					<tbody>
 						{#if group.section}
 							<tr>
-								<th scope="rowgroup" colspan="2" class="pt-4 pb-1 type-heading">
+								<th scope="rowgroup" colspan="2" class="pt-4 pb-1 font-display type-heading">
 									{group.section}
 								</th>
 							</tr>

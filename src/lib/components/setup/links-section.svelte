@@ -14,7 +14,7 @@
 </script>
 
 <section aria-labelledby="links-heading" class="flex flex-col gap-3">
-	<h2 id="links-heading" class="type-heading">Links</h2>
+	<h2 id="links-heading" class="font-display type-heading">Links</h2>
 	<p class="type-secondary">
 		Anyone with a link can use it. Rotate a link to shut out whoever has the old one.
 	</p>

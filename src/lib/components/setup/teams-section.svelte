@@ -86,7 +86,7 @@
 </script>
 
 <section aria-labelledby="teams-heading" class="flex flex-col gap-4">
-	<h2 id="teams-heading" class="type-heading">Teams</h2>
+	<h2 id="teams-heading" class="font-display type-heading">Teams</h2>
 
 	{#if teams.length === 0}
 		<p class="type-secondary">No teams yet. Add one for each group that gets its own link.</p>
