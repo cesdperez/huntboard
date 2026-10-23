@@ -19,7 +19,9 @@ SvelteKit + TypeScript on Cloudflare Workers, D1 for storage, pnpm. Everything f
 
 ## Code layout
 
-Dependencies point one way: route, then action adapter or page builder, then use case, then database or storage, then domain. Routes stay thin and hold no rules.
+Dependencies point one way: route, then action adapter or page builder, then HTTP guard, then use case, then database or storage, then domain. A module imports only from its own layer or the layers below it, and it may skip layers. Routes stay thin and hold no rules.
+
+Use cases, queries and the image store take the database or bucket as an argument. They never import SvelteKit or `cloudflare:workers`. Use cases read `FormData` themselves, because it is a web standard type and not a request.
 
 `src/lib`:
 
@@ -28,19 +30,21 @@ Dependencies point one way: route, then action adapter or page builder, then use
 - `client/`: code for the page in the browser, such as live updates, the game clock and image resizing. Pages that render on the server use some of it too.
 - `themes/`: the theme registry and each theme's tokens.
 - `components/`: Svelte components, and the form action state they share.
-- `action-results.ts`: the form action result types, by key.
+- `action-results.ts`: the form action result types, by key. It imports only types, from use cases.
 
 `src/lib/server`:
 
-- `use-cases/`: what each form action does, tested without HTTP.
+- `actions/`: thin form action adapters. They read the request, call a use case, and turn its outcome into a response, a failure or a redirect.
 - `pages/`: page load builders.
-- `http/`: request guards, security headers, form parsing and link lookups.
-- `db/`: D1 queries.
-- `storage/`: the R2 image store.
-- `actions/`: thin form action adapters.
+- `http/`: request guards, security headers, the D1 usage meter for the load test, and the admin and team link guards that answer 404.
+- `use-cases/`: what each form action does, tested without HTTP, and the form field readers they share.
+- `db/`: D1 queries, including the team link lookup.
+- `storage/`: the R2 image store. It also builds the response for an image request.
 - `testing/`: an in-memory R2 bucket for tests.
 
-A use case returns an `ActionOutcome<R>`: an HTTP status and a result. The adapter calls `respond(key, outcome)` from `server/actions/respond.ts`, which puts the result under `page.form[key]`. The client reads it back by the same key, through `AdminAction<K>` or `resultUnder(page.form, key)`. `ActionResults` in `src/lib/action-results.ts` maps each key to its result type on both sides, so a renamed key or a changed result fails `pnpm check`.
+The bottom layer is `domain/`, `format/` and the theme registry in `themes/index.ts`. These import nothing from `src/lib/server`. Browser code imports only types from `src/lib/server`.
+
+A use case returns an `ActionOutcome<R>`: an HTTP status and a result. The adapter calls `respond(key, outcome)` from `server/actions/respond.ts`, which puts the result under `page.form[key]`. When success is a redirect, the use case returns what the adapter needs to build it instead, such as the new admin token. `/new` puts its result at the top of `page.form`, so its adapter calls `fail` directly. The client reads it back by the same key, through `AdminAction<K>` or `resultUnder(page.form, key)`. `ActionResults` in `src/lib/action-results.ts` maps each key to its result type on both sides, so a renamed key or a changed result fails `pnpm check`.
 
 Domain rules are written test first. Vitest covers the domain, use cases, page builders and D1 queries. Query tests run on in-memory SQLite. UI is checked with Playwright rather than component tests. Before a commit, `pnpm test`, `pnpm check` and `pnpm lint` pass.
 

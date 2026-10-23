@@ -7,7 +7,7 @@ import { normalizeNickname } from '#lib/domain/nickname.js';
 import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
 import { addAdjustment, deleteAdjustment } from '../db/adjustments.js';
 import { recordFirstArrival, setArrival } from '../db/teams.js';
-import { readId, readString, readUtcTime } from '../http/form.js';
+import { readId, readString, readUtcTime } from './form.js';
 
 /** What the Teams tab actions return under `teamScores`. */
 export type TeamScoresFormResult =

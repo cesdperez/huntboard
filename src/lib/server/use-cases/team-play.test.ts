@@ -7,7 +7,7 @@ import { deleteTeam } from '../db/teams.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from '../db/types.js';
-import { NOT_AN_IMAGE } from '../http/image-upload.js';
+import { NOT_AN_IMAGE } from './image-upload.js';
 import { markDone, renameOwnTeam, saveOwnAvatar, undoOwnClaim } from './team-play.js';
 import { MemoryBucket } from '../testing/memory-bucket.js';
 

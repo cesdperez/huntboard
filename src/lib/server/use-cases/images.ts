@@ -15,8 +15,8 @@ import {
 	replaceImage,
 	type ImageBucket
 } from '../storage/image-store.js';
-import { readImageUpload } from '../http/image-upload.js';
-import { readString } from '../http/form.js';
+import { readImageUpload } from './image-upload.js';
+import { readString } from './form.js';
 
 /** What the game image actions put under page.form.gameImage. */
 export interface GameImageFormResult {

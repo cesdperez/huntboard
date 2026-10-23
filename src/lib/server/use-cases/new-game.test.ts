@@ -1,49 +1,59 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { getGameByAdminToken } from '../db/games.js';
+import { createTestDb } from '../db/testing/test-db.js';
+import { createNewGame } from './new-game.js';
 
-const mocks = vi.hoisted(() => ({
-	env: { CREATE_GAME_CODE: 'creation-secret', DB: {} },
-	createGame: vi.fn(),
-	creationCodeMatches: vi.fn()
-}));
+const CODE = 'creation-secret';
 
-vi.mock('#lib/server/db/games.js', () => ({ createGame: mocks.createGame }));
-vi.mock('#lib/server/use-cases/creation-code.js', () => ({
-	creationCodeMatches: mocks.creationCodeMatches
-}));
-
-import { createNewGameAction } from './new-game.js';
-const action = createNewGameAction(mocks.env as unknown as Cloudflare.Env);
-
-function submit(name = 'Canal hunt') {
-	const request = new Request('https://huntboard.example/new', {
-		method: 'POST',
-		body: new URLSearchParams({ name, code: 'creation-secret' })
-	});
-	return action({ request } as unknown as Parameters<typeof action>[0]);
-}
+let db: D1Database;
 
 beforeEach(() => {
-	vi.clearAllMocks();
-	mocks.creationCodeMatches.mockResolvedValue(true);
-	mocks.createGame.mockResolvedValue({ admin_token: 'admin-token' });
+	db = createTestDb();
 });
 
-describe('/new', () => {
-	it('rejects a wrong creation code', async () => {
-		mocks.creationCodeMatches.mockResolvedValue(false);
-		expect(await submit()).toMatchObject({ status: 403, data: { name: 'Canal hunt' } });
-		expect(mocks.createGame).not.toHaveBeenCalled();
+function form(fields: Record<string, string>): FormData {
+	const data = new FormData();
+	for (const [key, value] of Object.entries(fields)) data.set(key, value);
+	return data;
+}
+
+async function gameCount() {
+	return db.prepare('SELECT count(*) AS n FROM game').first<number>('n');
+}
+
+describe('createNewGame', () => {
+	it('creates the game and returns its admin token when the code matches', async () => {
+		const outcome = await createNewGame(db, CODE, form({ name: ' Canal hunt ', code: CODE }));
+
+		expect(outcome).toEqual({ adminToken: expect.any(String) });
+		const adminToken = (outcome as { adminToken: string }).adminToken;
+		expect(await getGameByAdminToken(db, adminToken)).toMatchObject({ name: 'Canal hunt' });
 	});
 
-	it('rejects an invalid name before checking the code', async () => {
-		expect(await submit('')).toMatchObject({ status: 400 });
-		expect(mocks.creationCodeMatches).not.toHaveBeenCalled();
-		expect(mocks.createGame).not.toHaveBeenCalled();
+	it('refuses a wrong creation code and keeps the typed name', async () => {
+		const outcome = await createNewGame(db, CODE, form({ name: 'Canal hunt', code: 'guess' }));
+
+		expect(outcome).toEqual({
+			status: 403,
+			result: {
+				name: 'Canal hunt',
+				error: 'That creation code is not right. Check it and try again.'
+			}
+		});
+		expect(await gameCount()).toBe(0);
 	});
 
-	it('creates a game when the code matches', async () => {
-		await expect(submit()).rejects.toMatchObject({ status: 303, location: '/a/admin-token' });
-		expect(mocks.creationCodeMatches).toHaveBeenCalledWith('creation-secret', 'creation-secret');
-		expect(mocks.createGame).toHaveBeenCalledWith(mocks.env.DB, 'Canal hunt');
+	it('refuses every code when no creation code is set', async () => {
+		const outcome = await createNewGame(db, undefined, form({ name: 'Canal hunt', code: '' }));
+
+		expect(outcome).toMatchObject({ status: 403 });
+		expect(await gameCount()).toBe(0);
+	});
+
+	it('refuses an empty name before it checks the code', async () => {
+		const outcome = await createNewGame(db, CODE, form({ name: '  ', code: 'guess' }));
+
+		expect(outcome).toEqual({ status: 400, result: { name: '', error: 'Give the game a name.' } });
+		expect(await gameCount()).toBe(0);
 	});
 });

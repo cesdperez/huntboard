@@ -13,7 +13,7 @@ import { parseChallenges } from '#lib/domain/challenge-parser.js';
 import { diffReimport } from '#lib/domain/reimport-diff.js';
 import type { ActionOutcome } from './action-outcome.js';
 import { applyChallengeImport, getImportSource, updateChallenge } from '../db/challenges.js';
-import { readId, readString } from '../http/form.js';
+import { readId, readString } from './form.js';
 
 /** What the challenges actions return under `page.form.challenges`. */
 export type ChallengesFormResult =

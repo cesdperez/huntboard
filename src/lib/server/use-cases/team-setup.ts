@@ -6,7 +6,7 @@ import {
 } from '#lib/domain/team-name.js';
 import type { ActionOutcome } from './action-outcome.js';
 import { addTeam, moveTeam, updateTeam } from '../db/teams.js';
-import { readId, readString } from '../http/form.js';
+import { readId, readString } from './form.js';
 import type { ImageBucket } from '../storage/image-store.js';
 import { deleteTeamWithAvatar, removeTeamAvatar } from './images.js';
 

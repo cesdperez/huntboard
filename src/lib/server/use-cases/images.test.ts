@@ -10,7 +10,7 @@ import { setGameImage } from '../db/images.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { GameRow } from '../db/types.js';
-import { IMAGE_TOO_LARGE, NOT_AN_IMAGE } from '../http/image-upload.js';
+import { IMAGE_TOO_LARGE, NOT_AN_IMAGE } from './image-upload.js';
 import {
 	deleteTeamWithAvatar,
 	removeGameImage,

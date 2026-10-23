@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { error } from '@sveltejs/kit';
-import { findTeamLink, type TeamLink } from '../pages/team-page.js';
+import { findTeamLink, type TeamLink } from '../db/links.js';
 
 /** The team and game a team token opens. Throws a 404 for an unknown or rotated token. */
 export async function requireTeamLink(token: string): Promise<TeamLink> {

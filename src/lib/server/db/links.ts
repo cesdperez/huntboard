@@ -1,5 +1,12 @@
 import { generateToken } from '#lib/domain/token.js';
+import { getGameById } from './games.js';
 import type { GameRow, TeamRow } from './types.js';
+
+/** The team a team token opens, with its game. */
+export interface TeamLink {
+	team: TeamRow;
+	game: GameRow;
+}
 
 /** Gives the game a new admin token. The old admin link stops working at once. */
 export async function rotateAdminToken(db: D1Database, gameId: number): Promise<string> {
@@ -33,4 +40,11 @@ export function getGameByScoreboardToken(db: D1Database, token: string): Promise
 
 export function getTeamByToken(db: D1Database, token: string): Promise<TeamRow | null> {
 	return db.prepare('SELECT * FROM team WHERE token = ?').bind(token).first<TeamRow>();
+}
+
+export async function findTeamLink(db: D1Database, token: string): Promise<TeamLink | null> {
+	const team = await getTeamByToken(db, token);
+	if (!team) return null;
+	const game = await getGameById(db, team.game_id);
+	return game && { team, game };
 }

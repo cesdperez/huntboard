@@ -2,9 +2,9 @@ import { parsePoints } from '#lib/domain/points.js';
 import { normalizeNickname } from '#lib/domain/nickname.js';
 import { normalizeReason, REASON_MAX_LENGTH, REASON_TOO_LONG } from '#lib/domain/reason.js';
 import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
-import { conflictMessage } from '../http/conflict-message.js';
+import { conflictMessage } from './conflict-message.js';
 import { judgeClaim, scoreWithoutClaim, type JudgeResult, type Verdict } from '../db/judging.js';
-import { readId, readString } from '../http/form.js';
+import { readId, readString } from './form.js';
 
 /** What a judging action returns under `judge`. Scored points are after clamping. */
 export type JudgeFormResult =

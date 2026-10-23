@@ -1,5 +1,12 @@
 import { generateToken } from '#lib/domain/token.js';
-import type { ImageType, ImageUpload } from '../http/image-upload.js';
+
+/** The formats the browser resizer produces. Anything else was not resized by this app. */
+export type ImageType = 'image/webp' | 'image/jpeg';
+
+export interface ImageUpload {
+	bytes: Uint8Array<ArrayBuffer>;
+	contentType: ImageType;
+}
 
 export type ImageBucket = Pick<R2Bucket, 'put' | 'get' | 'delete' | 'list'>;
 

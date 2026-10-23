@@ -5,9 +5,9 @@ import {
 	imageResponse,
 	isImageKey,
 	newImageKey,
-	replaceImage
+	replaceImage,
+	type ImageUpload
 } from './image-store.js';
-import type { ImageUpload } from '../http/image-upload.js';
 import { MemoryBucket } from '../testing/memory-bucket.js';
 
 const WEBP_UPLOAD: ImageUpload = {

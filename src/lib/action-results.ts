@@ -1,9 +1,9 @@
 // Imported by the browser too, so everything from the server stays a type-only import.
-import type { GameSettingsFormData } from '#lib/server/actions/game-settings.js';
-import type { LinksFormResult } from '#lib/server/actions/links.js';
 import type { ChallengesFormResult } from '#lib/server/use-cases/challenge-setup.js';
+import type { GameSettingsFormData } from '#lib/server/use-cases/game-settings.js';
 import type { GameImageFormResult } from '#lib/server/use-cases/images.js';
 import type { JudgeFormResult } from '#lib/server/use-cases/judging.js';
+import type { LinksFormResult } from '#lib/server/use-cases/links.js';
 import type { TeamFormResult } from '#lib/server/use-cases/team-play.js';
 import type { TeamScoresFormResult } from '#lib/server/use-cases/team-scores.js';
 import type { TeamsFormResult } from '#lib/server/use-cases/team-setup.js';

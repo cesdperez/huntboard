@@ -1,26 +1,35 @@
-import { fail, redirect } from '@sveltejs/kit';
-import { resolve } from '$app/paths';
-import { creationCodeMatches } from '#lib/server/use-cases/creation-code.js';
-import { createGame } from '#lib/server/db/games.js';
-import { readString } from '#lib/server/http/form.js';
-import { gameNameError } from '#lib/server/http/game-settings-form.js';
-import type { Action } from '@sveltejs/kit';
+import type { ActionOutcome } from './action-outcome.js';
+import { createGame } from '../db/games.js';
+import { creationCodeMatches } from './creation-code.js';
+import { readString } from './form.js';
+import { gameNameError } from './game-settings-form.js';
 
-type CreationEnv = Pick<Cloudflare.Env, 'DB' | 'CREATE_GAME_CODE'>;
+/** What /new shows again after a refused attempt. */
+export interface NewGameFormResult {
+	name: string;
+	error: string;
+}
 
-export function createNewGameAction(env: CreationEnv): Action {
-	return async ({ request }) => {
-		const data = await request.formData();
-		const code = readString(data, 'code');
-		const name = readString(data, 'name');
+/** The new game's admin token, or why no game was created. */
+export type NewGameOutcome = { adminToken: string } | ActionOutcome<NewGameFormResult>;
 
-		const nameError = gameNameError(name);
-		if (nameError) return fail(400, { name, error: nameError });
-		if (!(await creationCodeMatches(code, env.CREATE_GAME_CODE))) {
-			return fail(403, { name, error: 'That creation code is not right. Check it and try again.' });
-		}
+export async function createNewGame(
+	db: D1Database,
+	creationCode: string | undefined,
+	data: FormData
+): Promise<NewGameOutcome> {
+	const code = readString(data, 'code');
+	const name = readString(data, 'name');
 
-		const game = await createGame(env.DB, name);
-		redirect(303, resolve('/a/[token]', { token: game.admin_token }));
-	};
+	const nameError = gameNameError(name);
+	if (nameError) return { status: 400, result: { name, error: nameError } };
+	if (!(await creationCodeMatches(code, creationCode))) {
+		return {
+			status: 403,
+			result: { name, error: 'That creation code is not right. Check it and try again.' }
+		};
+	}
+
+	const game = await createGame(db, name);
+	return { adminToken: game.admin_token };
 }

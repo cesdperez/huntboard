@@ -13,11 +13,11 @@ import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js
 import { markClaim, undoClaim } from '../db/claims.js';
 import { setTeamAvatar } from '../db/images.js';
 import { updateTeam } from '../db/teams.js';
-import { conflictMessage } from '../http/conflict-message.js';
-import { readId, readString } from '../http/form.js';
+import { conflictMessage } from './conflict-message.js';
+import { readId, readString } from './form.js';
 import { replaceImage, type ImageBucket } from '../storage/image-store.js';
-import { readImageUpload } from '../http/image-upload.js';
-import type { TeamLink } from '../pages/team-page.js';
+import { readImageUpload } from './image-upload.js';
+import type { TeamLink } from '../db/links.js';
 
 /**
  * What a team action returns under `team`. A closed window carries only the phase,

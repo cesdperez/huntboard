@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createGame, getGameByAdminToken } from './games.js';
 import {
+	findTeamLink,
 	getGameByScoreboardToken,
 	getTeamByToken,
 	rotateAdminToken,
@@ -76,5 +77,18 @@ describe('getGameByScoreboardToken', () => {
 		const game = await createGame(db, 'Canal hunt');
 
 		expect(await getGameByScoreboardToken(db, game.admin_token)).toBeNull();
+	});
+});
+
+describe('findTeamLink', () => {
+	it('finds the team and its game by the team token', async () => {
+		const game = await createGame(db, 'Canal hunt');
+		const team = await seedTeam(db, game.id, { name: 'Canal Rats' });
+
+		expect(await findTeamLink(db, team.token)).toEqual({ team, game });
+	});
+
+	it('returns null for an unknown token', async () => {
+		expect(await findTeamLink(db, 'nope')).toBeNull();
 	});
 });

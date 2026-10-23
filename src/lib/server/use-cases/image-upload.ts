@@ -1,10 +1,4 @@
-/** The formats the browser resizer produces. Anything else was not resized by this app. */
-export type ImageType = 'image/webp' | 'image/jpeg';
-
-export interface ImageUpload {
-	bytes: Uint8Array<ArrayBuffer>;
-	contentType: ImageType;
-}
+import type { ImageType, ImageUpload } from '../storage/image-store.js';
 
 export type ReadImageResult =
 	| { status: 'ok'; upload: ImageUpload }

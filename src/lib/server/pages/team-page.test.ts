@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createGame, updateGameSettings } from '../db/games.js';
 import { setGameImage, setTeamAvatar } from '../db/images.js';
+import { findTeamLink } from '../db/links.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from '../db/types.js';
-import { findTeamLink, getTeamPage } from './team-page.js';
+import { getTeamPage } from './team-page.js';
 
 let db: D1Database;
 let game: GameRow;
@@ -26,16 +27,6 @@ beforeEach(async () => {
 	owls = await seedTeam(db, game.id, { name: 'Night Owls' });
 	swim = await seedChallenge(db, game.id, { title: 'Swim in a fountain', section: 'Water' });
 	cake = await seedChallenge(db, game.id, { title: 'Bake a cake' });
-});
-
-describe('findTeamLink', () => {
-	it('finds the team and its game by the team token', async () => {
-		expect(await findTeamLink(db, rats.token)).toEqual({ team: rats, game });
-	});
-
-	it('returns null for an unknown token', async () => {
-		expect(await findTeamLink(db, 'nope')).toBeNull();
-	});
 });
 
 describe('getTeamPage', () => {
