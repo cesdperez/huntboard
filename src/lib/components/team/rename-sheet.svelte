@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -48,7 +49,7 @@
 						name="name"
 						required
 						maxlength={TEAM_NAME_MAX_LENGTH}
-						value={name}
+						value={untrack(() => name)}
 						aria-invalid={action.error ? true : undefined}
 						aria-describedby={action.error ? 'team-name-error' : undefined}
 					/>
@@ -60,7 +61,7 @@
 						name="members"
 						maxlength={TEAM_MEMBERS_MAX_LENGTH}
 						placeholder="César, Kos, Martin"
-						value={members}
+						value={untrack(() => members)}
 					/>
 					{#if action.error}
 						<p id="team-name-error" class="text-[15px] text-danger" role="alert">

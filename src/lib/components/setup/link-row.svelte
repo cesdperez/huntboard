@@ -87,7 +87,7 @@
 					submitting = true;
 					return async (settled) => {
 						const { result } = settled;
-						confirming = false;
+						void setConfirming(false);
 						submitting = false;
 						// Only the admin rotate redirects: the new page needs to say its own link changed.
 						if (result.type === 'redirect') {

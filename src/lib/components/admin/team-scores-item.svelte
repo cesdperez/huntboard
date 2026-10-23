@@ -1,5 +1,6 @@
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
+	import { untrack } from 'svelte';
 	import { browser } from '$app/env';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { InPlaceForm } from '#lib/components/in-place-form.svelte.js';
@@ -33,8 +34,6 @@
 	const invalid = $derived(
 		adjusting.failed?.kind === 'adjustment-invalid' ? adjusting.failed : null
 	);
-	const typedPoints = $derived(invalid?.values.points ?? '');
-	const typedPenalty = $derived(typedPoints.startsWith('-'));
 
 	const formatTime = (iso: string) => (browser ? formatClockTime(iso, new Date()) : '');
 	const signed = (points: number) => (points > 0 ? `+${points}` : `−${-points}`);
@@ -115,12 +114,15 @@
 			>
 				<input type="hidden" name="teamId" value={team.id} />
 				<Label for="{id}-arrived">Arrival time</Label>
+				<!-- Input binds value, so a tracked seed would overwrite the typed time on every poll. -->
 				<Input
 					id="{id}-arrived"
 					name="arrivedAtLocal"
 					type="datetime-local"
 					required
-					value={utcToLocalInput(team.arrivedAt ?? endsAt ?? new Date().toISOString())}
+					value={untrack(() =>
+						utcToLocalInput(team.arrivedAt ?? endsAt ?? new Date().toISOString())
+					)}
 				/>
 				<div class="flex gap-3">
 					<Button variant="ghost" class="flex-1" onclick={correcting.hide}>Cancel</Button>
@@ -220,11 +222,11 @@
 				<fieldset class="flex gap-3">
 					<legend class="sr-only">Bonus or penalty</legend>
 					<label class="flex min-h-touch flex-1 items-center gap-2">
-						<input type="radio" name="sign" value="bonus" checked={!typedPenalty} class="size-5" />
+						<input type="radio" name="sign" value="bonus" checked class="size-5" />
 						Bonus
 					</label>
 					<label class="flex min-h-touch flex-1 items-center gap-2">
-						<input type="radio" name="sign" value="penalty" checked={typedPenalty} class="size-5" />
+						<input type="radio" name="sign" value="penalty" class="size-5" />
 						Penalty
 					</label>
 				</fieldset>
@@ -237,7 +239,6 @@
 						autocomplete="off"
 						required
 						class="tabular-nums"
-						value={typedPoints.replace(/^-/, '')}
 						aria-invalid={invalid?.errors.points ? true : undefined}
 						aria-describedby={invalid?.errors.points ? `${id}-points-error` : undefined}
 					/>
@@ -256,7 +257,6 @@
 						maxlength={REASON_MAX_LENGTH}
 						autocomplete="off"
 						placeholder="Best costume"
-						value={invalid?.values.reason ?? ''}
 						aria-invalid={invalid?.errors.reason ? true : undefined}
 						aria-describedby={invalid?.errors.reason ? `${id}-reason-error` : undefined}
 					/>

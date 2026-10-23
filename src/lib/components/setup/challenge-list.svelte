@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
@@ -78,7 +79,7 @@
 									id="{id}-title"
 									name="title"
 									required
-									value={current.title}
+									value={untrack(() => current.title)}
 									aria-invalid={errors.title ? true : undefined}
 									aria-describedby={errors.title ? `${id}-title-error` : undefined}
 								/>
@@ -90,7 +91,7 @@
 							</div>
 							<div class="flex flex-col gap-2">
 								<Label for="{id}-section">Section</Label>
-								<Input id="{id}-section" name="section" value={current.section} />
+								<Input id="{id}-section" name="section" value={untrack(() => current.section)} />
 							</div>
 							<div class="grid grid-cols-2 gap-3">
 								<div class="flex flex-col gap-2">
@@ -102,7 +103,7 @@
 										pattern="[0-9]*"
 										required
 										class="tabular"
-										value={current.min}
+										value={untrack(() => current.min)}
 										aria-invalid={errors.min ? true : undefined}
 										aria-describedby={errors.min ? `${id}-min-error` : undefined}
 									/>
@@ -116,7 +117,7 @@
 										pattern="[0-9]*"
 										required
 										class="tabular"
-										value={current.max}
+										value={untrack(() => current.max)}
 										aria-invalid={errors.max ? true : undefined}
 										aria-describedby={errors.max ? `${id}-max-error` : undefined}
 									/>

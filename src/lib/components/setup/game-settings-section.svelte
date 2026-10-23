@@ -14,13 +14,20 @@
 
 	let { game }: { game: GameRow } = $props();
 
-	// Reassigned from game after each save, and kept as typed after a failed one.
-	let name = $derived(game.name);
-	let penalty = $derived<number | null>(game.late_penalty_per_minute);
-	let themeId = $derived(resolveTheme(game.theme).id);
+	// Fields chain through these so a poll that replaces game with an equal object keeps what was
+	// typed. A field derived from game directly reseeds on every new game object.
+	const storedName = $derived(game.name);
+	const storedPenalty = $derived(game.late_penalty_per_minute);
+	const storedThemeId = $derived(resolveTheme(game.theme).id);
+	const storedStartsAt = $derived(game.starts_at);
+	const storedEndsAt = $derived(game.ends_at);
+
+	let name = $derived(storedName);
+	let penalty = $derived<number | null>(storedPenalty);
+	let themeId = $derived(storedThemeId);
 	// The server only knows UTC, so the wall clock is left empty until the browser renders it.
-	let startsLocal = $derived(browser ? utcToLocalInput(game.starts_at) : '');
-	let endsLocal = $derived(browser ? utcToLocalInput(game.ends_at) : '');
+	let startsLocal = $derived(browser ? utcToLocalInput(storedStartsAt) : '');
+	let endsLocal = $derived(browser ? utcToLocalInput(storedEndsAt) : '');
 
 	const timeZone = browser ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
 

@@ -13,8 +13,9 @@
 
 	let { game }: { game: GameRow } = $props();
 
-	// Reassigned from game after each save, and kept as typed after a failed one.
-	let label = $derived(game.image_label);
+	// Chained so a poll that replaces game with an equal object keeps what was typed.
+	const storedLabel = $derived(game.image_label);
+	let label = $derived(storedLabel);
 	let fileInput = $state<HTMLInputElement | null>(null);
 	let submitting = $state(false);
 	let browserError = $state<string | null>(null);

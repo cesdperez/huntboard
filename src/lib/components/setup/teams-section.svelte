@@ -2,7 +2,7 @@
 	import ArrowDownIcon from '@lucide/svelte/icons/arrow-down';
 	import ArrowUpIcon from '@lucide/svelte/icons/arrow-up';
 	import DicesIcon from '@lucide/svelte/icons/dices';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
@@ -109,7 +109,9 @@
 								name="name"
 								required
 								maxlength={TEAM_NAME_MAX_LENGTH}
-								value={error && result?.name !== undefined ? result.name : team.name}
+								value={untrack(() =>
+									error && result?.name !== undefined ? result.name : team.name
+								)}
 								aria-invalid={error ? true : undefined}
 								aria-describedby={error ? `team-error-${team.id}` : undefined}
 							/>
@@ -119,7 +121,9 @@
 								name="members"
 								maxlength={TEAM_MEMBERS_MAX_LENGTH}
 								placeholder="César, Kos, Martin"
-								value={error && result?.members !== undefined ? result.members : team.members}
+								value={untrack(() =>
+									error && result?.members !== undefined ? result.members : team.members
+								)}
 							/>
 							<div class="flex gap-3">
 								<Button type="submit" class="flex-1" disabled={pending}>Save</Button>
