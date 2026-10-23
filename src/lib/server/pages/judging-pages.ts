@@ -3,7 +3,7 @@ import { computeScoreboard, type TeamScore } from '#lib/domain/scoring.js';
 import { listAdjustments } from '../db/adjustments.js';
 import { listChallenges } from '../db/challenges.js';
 import { listGameClaims } from '../db/judging.js';
-import { getScoreboardInput } from '../db/scoreboard.js';
+import { getScoreboardInputWithoutAdjustments } from '../db/scoreboard.js';
 import { listTeamNames } from '../db/teams.js';
 import type { GameRow } from '../db/types.js';
 
@@ -47,10 +47,13 @@ export async function getTeamScoresPage(
 	game: GameRow
 ): Promise<TeamScoresPageData> {
 	const [input, adjustments] = await Promise.all([
-		getScoreboardInput(db, game),
+		getScoreboardInputWithoutAdjustments(db, game),
 		listAdjustments(db, game.id)
 	]);
-	const scores = new Map(computeScoreboard(input).map((score) => [score.teamId, score]));
+	const scoring = adjustments.map((a) => ({ teamId: a.team_id, points: a.points }));
+	const scores = new Map(
+		computeScoreboard({ ...input, adjustments: scoring }).map((score) => [score.teamId, score])
+	);
 
 	return {
 		game: input.game,

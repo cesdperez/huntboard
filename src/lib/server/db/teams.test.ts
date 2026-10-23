@@ -150,6 +150,14 @@ describe('moveTeam', () => {
 
 		expect(await moveTeam(db, game.id, elsewhere.id, -1)).toBe(false);
 	});
+
+	it('keeps both moves when two judges reorder at once', async () => {
+		const [a, , c] = await listTeamsWithClaimCounts(db, game.id);
+
+		await Promise.all([moveTeam(db, game.id, c.id, -1), moveTeam(db, game.id, a.id, 1)]);
+
+		expect(await names()).toEqual(['0:C', '1:A', '2:B']);
+	});
 });
 
 describe('deleteTeam', () => {

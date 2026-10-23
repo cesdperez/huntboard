@@ -1,4 +1,3 @@
-import { moveItem } from '#lib/domain/reorder.js';
 import { generateToken } from '#lib/domain/token.js';
 import type { TeamRow, TeamWithClaimCount } from './types.js';
 
@@ -102,20 +101,20 @@ export async function moveTeam(
 	teamId: number,
 	offset: -1 | 1
 ): Promise<boolean> {
-	const { results } = await db
-		.prepare('SELECT id FROM team WHERE game_id = ? ORDER BY position, id')
-		.bind(gameId)
-		.all<{ id: number }>();
-	const order = moveItem(
-		results.map((team) => team.id),
-		teamId,
-		offset
-	);
-	if (!order) return false;
-
-	const setPosition = db.prepare('UPDATE team SET position = ? WHERE id = ?');
-	await db.batch(order.map((id, position) => setPosition.bind(position, id)));
-	return true;
+	const [, swapped] = await db.batch([
+		renumberTeams(db, gameId),
+		// The join finds no neighbour past either end, so nothing moves there.
+		db
+			.prepare(
+				`UPDATE team SET position = CASE WHEN team.id = moved.id
+					THEN neighbour.position ELSE moved.position END
+				FROM team AS moved JOIN team AS neighbour
+					ON neighbour.game_id = moved.game_id AND neighbour.position = moved.position + ?
+				WHERE moved.id = ? AND moved.game_id = ? AND team.id IN (moved.id, neighbour.id)`
+			)
+			.bind(offset, teamId, gameId)
+	]);
+	return swapped.meta.changes === 2;
 }
 
 export type DeleteTeamResult =

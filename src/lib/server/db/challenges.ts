@@ -204,7 +204,7 @@ function clampStatement(
 		.prepare(
 			`UPDATE claim SET points = MAX(?, MIN(?, points))
 			WHERE status = 'scored' AND (points < ? OR points > ?)
-				AND challenge_id IN (SELECT id FROM challenge WHERE id = ? AND game_id = ?)`
+				AND challenge_id = (SELECT id FROM challenge WHERE id = ? AND game_id = ?)`
 		)
 		.bind(min_points, max_points, min_points, max_points, challengeId, gameId);
 }
