@@ -8,7 +8,7 @@ Orienteering marks each checkpoint with a square flag split diagonally into oran
 
 The palette is signal orange on a cool white, with deep navy for text. Orange is also the Dutch colour, which suits the reference event without naming it.
 
-This direction is the default theme, `flag`. A game can pick another theme for its team page and scoreboard; see [Themes](#themes). The rest of this document describes `flag`.
+This direction is the theme `flag`. A game can pick another theme for all its pages; see [Themes](#themes). The rest of this document describes `flag`.
 
 ## Color
 
@@ -192,14 +192,14 @@ Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs),
 
 ## Themes
 
-The admin picks a theme for the game in Setup. It changes the team page and the scoreboard. A game made at `/new` starts in `NEW_GAME_THEME`, Highland Bru. Admin pages, `/new`, error pages and an id that is no longer registered always use `flag`.
+The admin picks a theme for the game in Setup. It changes every page of that game: the team page, the scoreboard and the admin pages, so a `flag` game keeps a `flag` admin. `DEFAULT_THEME`, Highland Bru, is the theme a game made at `/new` starts in, and the one pages without a game wear: the home page, `/new`, error pages. An id that is no longer registered also reads as `DEFAULT_THEME`.
 
 A theme is two things:
 
 - An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, and its [layout](#layouts).
 - A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
 
-The server writes `data-game-theme` on `<html>`, so the first paint and the sheets portalled to `<body>` already wear the theme. A stored id that is no longer registered shows `flag`.
+The server writes `data-game-theme` on `<html>`, so the first paint and the sheets portalled to `<body>` already wear the theme. A stored id that is no longer registered shows `DEFAULT_THEME`.
 
 A theme supports light, dark or both. With one mode, the server also writes `data-theme` and that mode wins over the phone setting. With both, it follows the phone, and the dark set is declared once inside `@variant dark`. `/dev/design?theme=<id>&mode=dark` previews any theme in any mode it supports.
 
@@ -214,8 +214,8 @@ Components use roles, never a theme's own colour names.
 | `--action`, `--on-action` | `--flag`, `--on-flag` | The primary button and its label |
 | `--own` | `--flag` | Bar on the team's own row |
 | `--own-row` | `--strip` | Background of the team's own row |
-| `--strip`, `--on-strip` | `--surface`, `--ink` | The sticky team strip and its text |
-| `--on-strip-muted`, `--strip-line`, `--strip-score` | `--muted`, `--line`, `--ink` | Secondary text, dividers and the total on the strip |
+| `--strip`, `--on-strip` | `--surface`, `--ink` | The sticky team strip and the admin tab bar, and their text |
+| `--on-strip-muted`, `--strip-line`, `--strip-score` | `--muted`, `--line`, `--ink` | Secondary text and the tabs not shown, dividers, and the total on the strip |
 | `--score` | `--ink` | Score totals |
 | `--section`, `--on-section` | transparent, `--ink` | Band behind team page section headings, and their text |
 | `--waiting` | `--muted` | "Waiting for a judge" under a pending row |
@@ -227,19 +227,21 @@ Components use roles, never a theme's own colour names.
 | `--banner-art` | none | Event layout: an image drawn in the banner's own column, never behind text |
 | `--section-rule`, `--section-ornament` | `--line`, none | Event layout: the rule after a section heading and the image before it |
 | `--font-sans` | Archivo | All text without a display role |
-| `--font-display` | Archivo | Screen titles, ranks, team page section headings, team name in the event strip |
+| `--font-display` | Archivo | Screen titles, ranks, section headings, sheet titles, team names on the admin Teams tab and in the event strip |
 | `--font-score` | `--font-display` | Score totals |
 | `--font-banner` | `--font-display` | Event layout: the game name in the banner |
 | `--stretch-display`, `--stretch-condensed`, `--stretch-compressed` | 125%, 87%, 70% | Width of display type, point ranges, and marker points |
 
-Inside the strip, the strip roles stand in for `--surface`, `--ink`, `--muted`, `--line`, `--score`, `--own-row`, `--danger` and `--paper`, so everything in it, the expanded scoreboard and a picture error included, follows the strip. The app bar and the banner do the same with `--ink` (and the banner with `--muted`), so buttons inside them take their text colour.
+Inside the strip and the admin tab bar, the strip roles stand in for `--surface`, `--ink`, `--muted`, `--line`, `--score`, `--own-row`, `--danger` and `--paper`, so everything in it, the expanded scoreboard and a picture error included, follows the strip. The app bar and the banner do the same with `--ink` (and the banner with `--muted`), so buttons inside them take their text colour.
 
 ### Layouts
 
-A theme's registry entry names its layout. Structure changes only through it; the theme CSS changes only tokens. Components read it with `pageLayout()` from `src/lib/themes/page-layout.ts`, so admin pages, `/new` and error pages, which carry no game theme, always get `plain`.
+A theme's registry entry names its layout. Structure changes only through it; the theme CSS changes only tokens. Components read it with `pageLayout()` from `src/lib/themes/page-layout.ts`. Pages without a game get the layout of `DEFAULT_THEME`.
 
 - `plain`: the layout described above. `flag` uses it.
 - `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The banner shows the game name in `--font-banner`, large enough to fill the banner (17vw up to 80px, 40px past 16 characters so long names wrap into a few lines), the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings are 26px `--font-display` with `--section-ornament` before and a 2px `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
+  - Admin pages are worked fast on a phone, so they keep their density and touch sizes and skip the big banner. Under the app bar a one-row banner shows the game name in 32px `--font-banner` and the status line. The tab bar marks the current tab with a 4px bar in the strip's text colour along its top, and its focus ring sits inside the bar.
+  - The home page and `/new` have no game, so their banner holds the page title in `--font-banner` and one line under it, with `--banner-art` beside. Error pages add only the app bar.
 
 ### What a theme may change
 

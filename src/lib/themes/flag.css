@@ -1,4 +1,4 @@
-/* The default theme. It sits on :root, so admin pages and any token another theme leaves out use it. */
+/* The base layer on :root. Any token another theme leaves out falls back to it. */
 :root {
 	color-scheme: light;
 	--paper: #f5f7fa;

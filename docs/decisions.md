@@ -168,7 +168,7 @@ A per-link Worker limiter was removed. From one IP it allowed no more than the W
 
 ## Visual themes live in code
 
-A game stores a theme id, and the admin picks it in Setup. Themes are registered in code, not stored as data, so each one is a reviewed set of tokens and fonts that keeps the rules in DESIGN.md. Only the team page and the scoreboard use it. Admin pages keep the default, so judging looks the same in every game. An id that is no longer registered reads as the default, so removing a theme never breaks a game. Reset keeps the theme, like the name.
+A game stores a theme id, and the admin picks it in Setup. Themes are registered in code, not stored as data, so each one is a reviewed set of tokens and fonts that keeps the rules in DESIGN.md. Every page of the game wears it, the admin pages too, so the organiser sees the event the players see. Judging stays the same work in every theme because a theme changes only tokens and a named layout, never the controls, their order or their sizes. Pages without a game, and an id that is no longer registered, use the default theme, which is also the one new games start in, so removing a theme never breaks a game. Reset keeps the theme, like the name.
 
 ## Events bring their mood through a theme, their people through game data
 
@@ -176,4 +176,4 @@ A theme may be made for one event, such as a Scottish birthday, and ships as one
 
 ## Event themes change structure through a named layout
 
-An event theme may need more than tokens: a banner, a different strip, descriptive rows. The registry entry names a layout (`plain` or `event`), and components switch on it. Theme CSS stays tokens only, so a second event theme reuses the structure with its own palette, fonts and drawings, and `flag` cannot change by accident. Pages without a game theme get `plain`, so admin pages never switch.
+An event theme may need more than tokens: a banner, a different strip, descriptive rows. The registry entry names a layout (`plain` or `event`), and components switch on it. Theme CSS stays tokens only, so a second event theme reuses the structure with its own palette, fonts and drawings, and `flag` cannot change by accident. Pages without a game get the default theme's layout. Admin pages follow their game's layout, and in `event` they keep their density: a one-row banner instead of the full one.
