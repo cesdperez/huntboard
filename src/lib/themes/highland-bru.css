@@ -1,0 +1,59 @@
+/* Orange and cobalt from a Scottish birthday invitation, on warm ivory. Light only. */
+:root[data-game-theme='highland-bru'] {
+	color-scheme: light;
+	--paper: #fff9ef;
+	--surface: #fffdf8;
+	--ink: #151515;
+	--muted: #5e564d;
+	--line: #e8dcc8;
+	--flag: #ff741f;
+	/* White on this orange is 2.7:1. Ink is 6.8:1. */
+	--on-flag: #151515;
+	--danger: #b3261e;
+	--scrim: rgb(21 21 21 / 0.45);
+
+	--own-row: #ffe8d6;
+	--strip: #124bcc;
+	--on-strip: #ffffff;
+	--on-strip-muted: #d9e3ff;
+	--strip-line: #4a74d9;
+	--strip-score: #ffffff;
+	--strip-own-row: #0c3a9e;
+	--strip-danger: #ffd1cc;
+	--score: #124bcc;
+	--waiting: #b34700;
+
+	--app-bar:
+		repeating-linear-gradient(
+			90deg,
+			transparent 0 13px,
+			rgb(178 34 52 / 0.6) 13px 15px,
+			transparent 15px 21px,
+			rgb(18 75 204 / 0.35) 21px 33px,
+			transparent 33px 44px
+		),
+		repeating-linear-gradient(
+			0deg,
+			transparent 0 13px,
+			rgb(178 34 52 / 0.6) 13px 15px,
+			transparent 15px 21px,
+			rgb(18 75 204 / 0.35) 21px 33px,
+			transparent 33px 44px
+		),
+		#10241b;
+	--on-app-bar: #ffffff;
+	--banner: #ff741f;
+	--on-banner: #151515;
+	--banner-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 112' fill='none' stroke='%23151515' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M32 44V14M28 44L22 16M36 44L42 16M25 44L14 22M39 44L50 22M23 44L10 31M41 44L54 31'/%3E%3Cpath d='M18 44H46M18 44L14 39M46 44L50 39'/%3E%3Cpath d='M21 44C21 54 26 60 32 60S43 54 43 44'/%3E%3Cpath d='M24 47L35 59M30 45L41 52M40 47L29 59M34 45L23 52'/%3E%3Cpath d='M32 60C33 76 31 94 32 112'/%3E%3Cpath d='M32 94C24 92 16 86 9 74L16 77L13 68L20 73L20 64L26 72L27 64L29 76C30 84 31 89 32 94'/%3E%3Cpath d='M32 80C40 78 48 72 55 61L48 64L51 55L44 61L44 52L38 60L37 52L35 64C34 70 33 76 32 80'/%3E%3C/svg%3E");
+	--section-rule: #ff741f;
+	--section-ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 28' fill='none' stroke='%23ff741f' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13V3M8 13L4 5M12 13L16 5M7 13L2 9M13 13L18 9M5 13H15'/%3E%3Cpath d='M6 13C6 18 8 21 10 21S14 18 14 13M10 21V27'/%3E%3C/svg%3E");
+
+	--font-sans: 'Barlow', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Fraunces', ui-serif, Georgia, serif;
+	--font-score: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+	--font-banner: 'Jersey 10', ui-monospace, monospace;
+	/* None of these families has a width axis. */
+	--stretch-display: normal;
+	--stretch-condensed: normal;
+	--stretch-compressed: normal;
+}

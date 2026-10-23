@@ -1,5 +1,11 @@
 export type ColorMode = 'light' | 'dark';
 
+/**
+ * `plain` is the flag layout. `event` adds an app bar and an event banner, descriptive challenge
+ * rows with a points column, and a leaderboard heading. Admin pages always use `plain`.
+ */
+export type ThemeLayout = 'plain' | 'event';
+
 /** A look for the team and scoreboard pages. Its tokens live in <id>.css, imported by app.css. */
 export interface Theme {
 	id: string;
@@ -8,6 +14,7 @@ export interface Theme {
 	modes: Partial<Record<ColorMode, { themeColor: string }>>;
 	/** Stylesheets for every family the theme's tokens name, Archivo too if it keeps the flag sans. */
 	fonts: readonly string[];
+	layout: ThemeLayout;
 }
 
 /** The theme a page gets, and the mode it forces. A null mode follows the OS. */
@@ -22,10 +29,21 @@ export const DEFAULT_THEME: Theme = {
 	modes: { light: { themeColor: '#f5f7fa' }, dark: { themeColor: '#0f1a30' } },
 	fonts: [
 		'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap'
-	]
+	],
+	layout: 'plain'
 };
 
-export const THEMES: readonly Theme[] = [DEFAULT_THEME];
+const HIGHLAND_BRU: Theme = {
+	id: 'highland-bru',
+	name: 'Highland Bru',
+	modes: { light: { themeColor: '#fff9ef' } },
+	fonts: [
+		'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600..900&family=Jersey+10&display=swap'
+	],
+	layout: 'event'
+};
+
+export const THEMES: readonly Theme[] = [DEFAULT_THEME, HIGHLAND_BRU];
 
 /** Ids stored before a theme was removed still open their game, in the default theme. */
 export function resolveTheme(id: string | null | undefined, themes = THEMES): Theme {
