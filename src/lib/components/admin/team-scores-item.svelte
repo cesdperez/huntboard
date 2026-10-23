@@ -13,7 +13,6 @@
 	import { ordinal } from '#lib/ordinal.js';
 	import { REASON_MAX_LENGTH } from '#lib/reason.js';
 	import type { TeamScoresRow } from '#lib/server/judging-pages.js';
-	import type { TeamScoresFormResult } from '#lib/server/team-scores.js';
 	import { AdminAction } from './admin-action.svelte.js';
 
 	type Props = {
@@ -25,8 +24,8 @@
 	let { team, endsAt, latePenaltyPerMinute }: Props = $props();
 
 	const id = $props.id();
-	const arrival = new AdminAction<TeamScoresFormResult>('teamScores');
-	const adjusting = new AdminAction<TeamScoresFormResult>('teamScores');
+	const arrival = new AdminAction('teamScores');
+	const adjusting = new AdminAction('teamScores');
 
 	const correcting = new InPlaceForm();
 	const adding = new InPlaceForm();

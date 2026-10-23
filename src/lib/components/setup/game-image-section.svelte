@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
+	import { resultUnder } from '#lib/action-results.js';
 	import { toast } from '#lib/components/toast/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -8,7 +9,6 @@
 	import { GAME_IMAGE_SPEC, resizeImage } from '#lib/image-resize.js';
 	import { IMAGE_LABEL_MAX_LENGTH, imageSrc } from '#lib/images.js';
 	import type { GameRow } from '#lib/server/db/types.js';
-	import type { GameImageFormResult } from '#lib/server/images.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { game }: { game: GameRow } = $props();
@@ -19,7 +19,7 @@
 	let submitting = $state(false);
 	let browserError = $state<string | null>(null);
 
-	const result = $derived(page.form?.gameImage as GameImageFormResult | undefined);
+	const result = $derived(resultUnder(page.form, 'gameImage'));
 	const error = $derived(browserError ?? result?.error ?? null);
 
 	const save: SubmitFunction = async ({ formData, cancel }) => {

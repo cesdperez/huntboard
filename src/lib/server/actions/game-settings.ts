@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { fail } from '@sveltejs/kit';
+import { respond } from '#lib/server/action-outcome.js';
 import { requireAdminGame } from '#lib/server/admin-game.js';
 import { updateGameSettings } from '#lib/server/db/games.js';
 import { resetGameWithImages } from '#lib/server/images.js';
@@ -15,7 +15,7 @@ export const gameSettingsActions = {
 		const game = await requireAdminGame(params.token);
 		const result = parseGameSettings(await request.formData());
 		if (!result.ok) {
-			return fail(400, { gameSettings: { errors: result.errors } satisfies GameSettingsFormData });
+			return respond('gameSettings', { status: 400, result: { errors: result.errors } });
 		}
 
 		await updateGameSettings(env.DB, game.id, {
@@ -24,7 +24,7 @@ export const gameSettingsActions = {
 			theme: game.theme,
 			...result.settings
 		});
-		return { gameSettings: { saved: true } satisfies GameSettingsFormData };
+		return respond('gameSettings', { status: 200, result: { saved: true } });
 	},
 
 	gameSettingsReset: async ({ params }) => {

@@ -5,12 +5,12 @@
 	import { onMount } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
+	import { resultUnder } from '#lib/action-results.js';
 	import { TeamAvatar } from '#lib/components/images/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/plural.js';
-	import type { TeamsFormResult } from '#lib/server/team-setup.js';
 	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
 	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
 	import { suggestTeamName } from '#lib/team-name-suggestion.js';
@@ -18,13 +18,13 @@
 
 	let { game, teams }: { game: GameRow; teams: TeamWithClaimCount[] } = $props();
 
-	const result = $derived(page.form?.teams as TeamsFormResult | undefined);
+	const result = $derived(resultUnder(page.form, 'teams'));
 	const addError = $derived(result?.error && result.teamId === undefined ? result.error : null);
 
 	let editingId = $state<number | null>(null);
 	let pending = $state(false);
 
-	const initial = page.form?.teams as TeamsFormResult | undefined;
+	const initial = resultUnder(page.form, 'teams');
 	const addFailed = initial?.error !== undefined && initial.teamId === undefined;
 	let newName = $state(addFailed ? (initial?.name ?? '') : '');
 	let newMembers = $state(addFailed ? (initial?.members ?? '') : '');

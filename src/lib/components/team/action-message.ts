@@ -1,7 +1,7 @@
 import type { ActionResult } from '$app/forms';
 import { DEAD_LINK_MESSAGE } from '#lib/dead-link.js';
 import type { GamePhase } from '#lib/domain/game-window.js';
-import type { TeamFormResult } from '#lib/server/team-play.js';
+import { resultUnder } from '#lib/action-results.js';
 
 /** For a request that never got an answer the page understands. */
 export const RETRY = 'This did not go through. Check your connection and try again.';
@@ -18,7 +18,7 @@ export function actionFailureMessage(
 		case 'error':
 			return result.status === 404 ? DEAD_LINK_MESSAGE : RETRY;
 		case 'failure': {
-			const team = result.data?.team as TeamFormResult | undefined;
+			const team = resultUnder(result.data, 'team');
 			if (team?.kind === 'closed') return closedMessage(team.phase);
 			if (team?.kind === 'error') return team.message;
 			return RETRY;

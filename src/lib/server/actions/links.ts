@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
-import { fail, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
+import { respond } from '../action-outcome.js';
 import { requireAdminGame } from '../admin-game.js';
 import { rotateAdminToken, rotateScoreboardToken, rotateTeamToken } from '../db/links.js';
 import { readString } from '../form.js';
@@ -26,7 +27,7 @@ export const linksActions = {
 	linksRotateScoreboard: async ({ params }) => {
 		const game = await requireAdminGame(params.token);
 		await rotateScoreboardToken(env.DB, game.id);
-		return { links: { rotated: 'scoreboard' } satisfies LinksFormResult };
+		return respond('links', { status: 200, result: { rotated: 'scoreboard' } });
 	},
 
 	linksRotateTeam: async ({ params, request }) => {
@@ -34,12 +35,11 @@ export const linksActions = {
 		const teamId = Number(readString(await request.formData(), 'teamId'));
 		const token = Number.isInteger(teamId) ? await rotateTeamToken(env.DB, game.id, teamId) : null;
 		if (!token) {
-			return fail(404, {
-				links: {
-					error: 'That team is no longer in this game. Reload the page.'
-				} satisfies LinksFormResult
+			return respond('links', {
+				status: 404,
+				result: { error: 'That team is no longer in this game. Reload the page.' }
 			});
 		}
-		return { links: { rotated: `team-${teamId}` } satisfies LinksFormResult };
+		return respond('links', { status: 200, result: { rotated: `team-${teamId}` } });
 	}
 } satisfies AdminActions;

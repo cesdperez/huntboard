@@ -14,7 +14,6 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { clampPoints, parsePoints, quickPointValues } from '#lib/domain/points.js';
 	import { REASON_MAX_LENGTH } from '#lib/reason.js';
-	import type { JudgeFormResult } from '#lib/server/judging.js';
 	import { AdminAction } from './admin-action.svelte.js';
 
 	type Props = {
@@ -35,7 +34,7 @@
 
 	const id = $props.id();
 	const range = $derived({ min, max });
-	const action = new AdminAction<JudgeFormResult>('judge', () => JSON.stringify(target));
+	const action = new AdminAction('judge', () => JSON.stringify(target));
 
 	// A tap acts on the state the judge saw when the panel opened or the last answer came, never
 	// on one a poll swapped in meanwhile. A change in between gets the server's conflict message.

@@ -1,80 +1,48 @@
 import { applyAction, type SubmitFunction } from '$app/forms';
-import { refreshGameData } from '#lib/components/connection/index.js';
 import { nickname } from '#lib/components/nickname/index.js';
+import { FormAction } from '#lib/components/form-action.svelte.js';
+import { resultUnder, type ActionResults, type KindResultKey } from '#lib/action-results.js';
 import { adminFailureMessage } from './admin-message.js';
-
-interface Failure<T> {
-	message: string | null;
-	result: T | undefined;
-	subject: unknown;
-}
 
 /**
  * Busy and error state of an admin form, and its enhance callback. The action puts its result
  * under `key`. Every admin form sends the viewer's nickname, so the server knows who did it.
  */
-export class AdminAction<T> {
-	busy = $state(false);
-	#failure = $state<Failure<T> | null>(null);
-	readonly #key: string;
-	readonly #subject: () => unknown;
+export class AdminAction<K extends KindResultKey> extends FormAction<ActionResults[K]> {
+	readonly #key: K;
 	#destroyed = false;
 
-	/**
-	 * Create it while a component initialises. subject is what the form acts on. An error hides
-	 * once a poll changes it, so it never describes a stale state.
-	 */
-	constructor(key: string, subject: () => unknown = () => null) {
+	/** Create it while a component initialises. subject is what the form acts on. */
+	constructor(key: K, subject?: () => unknown) {
+		super(subject);
 		this.#key = key;
-		this.#subject = subject;
 		// The refresh after a request can remove the component, and its props go stale with it.
 		$effect(() => () => (this.#destroyed = true));
 	}
 
-	get error(): string | null {
-		return this.#current()?.message ?? null;
-	}
-
-	/** The failed result, for forms that show errors field by field. */
-	get failed(): T | undefined {
-		return this.#current()?.result;
-	}
-
-	clearError() {
-		this.#failure = null;
-	}
-
 	submit(
-		onsuccess: (result: T, formData: FormData) => void,
+		onsuccess: (result: ActionResults[K], formData: FormData) => void,
 		onfailure?: (message: string) => void
 	): SubmitFunction {
 		return ({ formData }) => {
 			formData.set('nickname', nickname.value ?? '');
-			this.busy = true;
-			this.#failure = null;
+			this.start();
 			return async ({ result }) => {
 				if (result.type === 'redirect') return applyAction(result);
 				const message = result.type === 'success' ? null : adminFailureMessage(result, this.#key);
 				// Before the refresh, so a parent can keep in view an item the refresh removes.
 				if (message) onfailure?.(message);
-				// Refresh either way: a failure usually means someone else changed the same thing.
-				await refreshGameData().catch(() => {});
-				this.busy = false;
+				await this.refresh();
 				if (result.type === 'success') {
-					onsuccess(result.data?.[this.#key] as T, formData);
+					onsuccess(resultUnder(result.data, this.#key) as ActionResults[K], formData);
 					return;
 				}
-				this.#failure = {
+				this.recordFailure(
 					message,
-					result: result.type === 'failure' ? (result.data?.[this.#key] as T) : undefined,
-					subject: this.#destroyed ? null : this.#subject()
-				};
+					result.type === 'failure' ? resultUnder(result.data, this.#key) : undefined,
+					this.#destroyed ? null : this.currentSubject()
+				);
 			};
 		};
-	}
-
-	#current(): Failure<T> | null {
-		const failure = this.#failure;
-		return failure && failure.subject === this.#subject() ? failure : null;
 	}
 }

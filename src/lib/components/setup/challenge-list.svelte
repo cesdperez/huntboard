@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
+	import { resultUnder } from '#lib/action-results.js';
 	import { Points } from '#lib/components/points/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import type { ChallengeEditInput } from '#lib/domain/challenge-edit.js';
 	import { plural } from '#lib/plural.js';
-	import type { ChallengesFormResult } from '#lib/server/challenge-setup.js';
 	import type { ChallengeWithClaimCount } from '#lib/server/db/types.js';
 	import { groupBySection } from '#lib/group-by-section.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { challenges }: { challenges: ChallengeWithClaimCount[] } = $props();
 
-	const result = $derived(page.form?.challenges as ChallengesFormResult | undefined);
+	const result = $derived(resultUnder(page.form, 'challenges'));
 
 	let editingId = $state<number | null>(null);
 	let pending = $state(false);

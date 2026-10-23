@@ -2,11 +2,11 @@
 	import { untrack } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
+	import { resultUnder } from '#lib/action-results.js';
 	import { Points } from '#lib/components/points/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/plural.js';
-	import type { ChallengesFormResult } from '#lib/server/challenge-setup.js';
 	import { groupBySection } from '#lib/group-by-section.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
@@ -25,12 +25,12 @@
 
 	let { hasChallenges }: { hasChallenges: boolean } = $props();
 
-	const result = $derived(page.form?.challenges as ChallengesFormResult | undefined);
+	const result = $derived(resultUnder(page.form, 'challenges'));
 	const previewResult = $derived(result?.kind === 'preview' ? result : null);
 	const preview = $derived(previewResult?.preview ?? null);
 	const imported = $derived(result?.kind === 'imported' ? result.count : null);
 
-	const initial = page.form?.challenges as ChallengesFormResult | undefined;
+	const initial = resultUnder(page.form, 'challenges');
 	// A first list starts from the example, so the format can be learned by editing it.
 	let text = $state(
 		initial?.kind === 'preview' ? initial.text : untrack(() => (hasChallenges ? '' : EXAMPLE))
@@ -51,7 +51,8 @@
 			const { result } = settled;
 			await updateOrRetry(settled, { reset: false });
 			pending = false;
-			if (result.type === 'success' && result.data?.challenges?.kind === 'imported') text = '';
+			const challenges = result.type === 'success' ? resultUnder(result.data, 'challenges') : null;
+			if (challenges?.kind === 'imported') text = '';
 		};
 	};
 

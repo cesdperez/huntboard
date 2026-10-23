@@ -2,12 +2,12 @@
 	import { browser } from '$app/env';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
+	import { resultUnder } from '#lib/action-results.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { localInputToUtc, utcToLocalInput } from '#lib/local-time.js';
 	import { THEMES, resolveTheme, supportedModes, type Theme } from '#lib/themes/index.js';
-	import type { GameSettingsFormData } from '#lib/server/actions/game-settings.js';
 	import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/game-settings.js';
 	import type { GameRow } from '#lib/server/db/types.js';
 	import { updateOrRetry } from './update-or-retry.js';
@@ -25,7 +25,7 @@
 	const timeZone = browser ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
 
 	let submitting = $state(false);
-	const result = $derived(page.form?.gameSettings as GameSettingsFormData | undefined);
+	const result = $derived(resultUnder(page.form, 'gameSettings'));
 	const errors = $derived(result?.errors ?? {});
 
 	function modeHint(theme: Theme): string {

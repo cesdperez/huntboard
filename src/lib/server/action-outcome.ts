@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import type { ActionKey, ActionResults } from '#lib/action-results.js';
 
 /** What a use case decided: the HTTP status and the result the page reads. 200 means success. */
 export interface ActionOutcome<R> {
@@ -16,7 +17,10 @@ export function error(status: number, message: string): ActionOutcome<ErrorResul
 }
 
 /** The form action response that puts the result under `page.form[key]`. */
-export function respond<K extends string, R>(key: K, { status, result }: ActionOutcome<R>) {
-	const data = { [key]: result } as Record<K, R>;
+export function respond<K extends ActionKey>(
+	key: K,
+	{ status, result }: ActionOutcome<ActionResults[K]>
+) {
+	const data = { [key]: result } as Record<K, ActionResults[K]>;
 	return status === 200 ? data : fail(status, data);
 }

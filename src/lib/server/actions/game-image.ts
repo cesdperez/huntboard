@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { respond } from '#lib/server/action-outcome.js';
 import { requireAdminGame } from '#lib/server/admin-game.js';
-import { removeGameImage, saveGameImage, type GameImageFormResult } from '#lib/server/images.js';
+import { removeGameImage, saveGameImage } from '#lib/server/images.js';
 import type { AdminActions } from './types.js';
 
 /** Setup tab actions. Names start with "gameImage" so they cannot collide with other sections. */
@@ -15,6 +15,6 @@ export const gameImageActions = {
 	gameImageRemove: async ({ params }) => {
 		const game = await requireAdminGame(params.token);
 		await removeGameImage(env.DB, env.IMAGES, game.id);
-		return { gameImage: {} satisfies GameImageFormResult };
+		return respond('gameImage', { status: 200, result: {} });
 	}
 } satisfies AdminActions;
