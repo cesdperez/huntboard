@@ -59,13 +59,14 @@ export function buildImportPlan(diff: ReimportDiff): ImportPlan {
 	};
 }
 
-/** Deletions with claims missing from the preview the admin confirmed, because claims came in since. */
+/** Deletions with more claims than the preview the admin confirmed, because claims came in since. */
 export function unacknowledgedDeletions(
 	diff: ReimportDiff,
-	acknowledgedIds: readonly number[]
+	acknowledgedClaimCounts: ReadonlyMap<number, number>
 ): DeletedChallengeWithClaims[] {
-	const acknowledged = new Set(acknowledgedIds);
-	return diff.deletedWithClaims.filter(({ id }) => !acknowledged.has(id));
+	return diff.deletedWithClaims.filter(
+		({ id, claimCount }) => claimCount > (acknowledgedClaimCounts.get(id) ?? 0)
+	);
 }
 
 /** What confirming the pasted text would do, as described in docs/challenge-format.md. */

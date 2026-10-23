@@ -1,14 +1,14 @@
 import { applyAction, type SubmitFunction } from '$app/forms';
 import { nickname } from '#lib/components/nickname/index.js';
 import { FormAction } from '#lib/components/form-action.svelte.js';
-import { resultUnder, type ActionResults, type KindResultKey } from '#lib/action-results.js';
+import { resultUnder, type ActionResults, type ErrorResultKey } from '#lib/action-results.js';
 import { adminFailureMessage } from './admin-message.js';
 
 /**
  * Busy and error state of an admin form, and its enhance callback. The action puts its result
  * under `key`. Every admin form sends the viewer's nickname, so the server knows who did it.
  */
-export class AdminAction<K extends KindResultKey> extends FormAction<ActionResults[K]> {
+export class AdminAction<K extends ErrorResultKey> extends FormAction<ActionResults[K]> {
 	readonly #key: K;
 	#destroyed = false;
 

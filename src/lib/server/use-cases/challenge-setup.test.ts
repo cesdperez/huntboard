@@ -151,11 +151,37 @@ describe('importChallenges', () => {
 		const outcome = await importChallenges(
 			db,
 			game.id,
-			form({ text: '- Bake a cake [5]\n', acknowledged: ['junk', String(swim.id)] })
+			form({ text: '- Bake a cake [5]\n', acknowledged: ['junk', `${swim.id}:1`] })
 		);
 
 		expect(outcome).toEqual({ status: 200, result: { kind: 'imported', count: 1 } });
 		expect(await titles()).toEqual(['Bake a cake']);
+	});
+
+	it('refuses to delete a challenge that got more claims than the admin confirmed', async () => {
+		const rats = await seedTeam(db, game.id);
+		const mice = await seedTeam(db, game.id);
+		const swim = await seedChallenge(db, game.id, { title: 'Swim in a fountain' });
+		await seedClaim(db, rats.id, swim.id);
+		await seedClaim(db, mice.id, swim.id);
+		const text = '- Bake a cake [5]\n';
+
+		const outcome = await importChallenges(
+			db,
+			game.id,
+			form({ text, acknowledged: `${swim.id}:1` })
+		);
+
+		expect(outcome).toEqual({
+			status: 409,
+			result: {
+				kind: 'preview',
+				text,
+				preview: await previewOf(text),
+				error: 'Claims came in since the preview. Check the list below and confirm again.'
+			}
+		});
+		expect(await titles()).toEqual(['Swim in a fountain']);
 	});
 });
 

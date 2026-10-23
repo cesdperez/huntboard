@@ -13,7 +13,7 @@ import { parseChallenges } from '#lib/domain/challenge-parser.js';
 import { diffReimport } from '#lib/domain/reimport-diff.js';
 import type { ActionOutcome } from './action-outcome.js';
 import { applyChallengeImport, getImportSource, updateChallenge } from '../db/challenges.js';
-import { readString } from '../http/form.js';
+import { readId, readString } from '../http/form.js';
 
 /** What the challenges actions return under `page.form.challenges`. */
 export type ChallengesFormResult =
@@ -61,7 +61,7 @@ export async function importChallenges(
 	if (challenges.length === 0) return rejectText(400, text, null, EMPTY_ERROR);
 
 	const diff = diffReimport(existing, challenges);
-	if (unacknowledgedDeletions(diff, readAcknowledgedIds(data)).length > 0) {
+	if (unacknowledgedDeletions(diff, readAcknowledgedClaimCounts(data)).length > 0) {
 		return rejectText(
 			409,
 			text,
@@ -88,7 +88,7 @@ export async function editChallenge(
 	gameId: number,
 	data: FormData
 ): Promise<ChallengesOutcome> {
-	const id = Number(readString(data, 'id'));
+	const id = readId(data, 'id');
 	const values: ChallengeEditInput = {
 		title: readString(data, 'title'),
 		description: readString(data, 'description'),
@@ -96,11 +96,11 @@ export async function editChallenge(
 		min: readString(data, 'min'),
 		max: readString(data, 'max')
 	};
-	const editFailed = (status: number, errors: ChallengeEditErrors, failedId = id) => ({
+	const editFailed = (status: number, errors: ChallengeEditErrors) => ({
 		status,
-		result: { kind: 'edit-failed' as const, id: failedId, values, errors }
+		result: { kind: 'edit-failed' as const, id: id ?? 0, values, errors }
 	});
-	if (!Number.isInteger(id) || id <= 0) return editFailed(400, { title: MISSING_ERROR }, 0);
+	if (id === null) return editFailed(400, { title: MISSING_ERROR });
 
 	const validated = validateChallengeEdit(values);
 	if (!validated.ok) return editFailed(400, validated.errors);
@@ -130,11 +130,17 @@ function textError(text: string): string | null {
 	return null;
 }
 
-function readAcknowledgedIds(data: FormData): number[] {
-	return data
-		.getAll('acknowledged')
-		.map(Number)
-		.filter((id) => Number.isInteger(id) && id > 0);
+/** Each `acknowledged` field is `id:claimCount`, the claims the admin saw in the preview. */
+function readAcknowledgedClaimCounts(data: FormData): Map<number, number> {
+	const counts = new Map<number, number>();
+	for (const value of data.getAll('acknowledged')) {
+		if (typeof value !== 'string') continue;
+		const [id, claimCount] = value.split(':').map(Number);
+		if (Number.isInteger(id) && id > 0 && Number.isInteger(claimCount) && claimCount >= 0) {
+			counts.set(id, claimCount);
+		}
+	}
+	return counts;
 }
 
 function rejectText(

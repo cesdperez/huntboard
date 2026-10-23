@@ -1,5 +1,5 @@
 import type { ActionResult } from '$app/forms';
-import { resultUnder, type ActionResults, type KindResultKey } from '#lib/action-results.js';
+import { resultUnder, type ActionResults, type ErrorResultKey } from '#lib/action-results.js';
 import { RETRY } from '#lib/components/team/action-message.js';
 
 const DEAD_ADMIN_LINK =
@@ -9,7 +9,7 @@ const DEAD_ADMIN_LINK =
  * What to show after an admin action, or null when it went through or its form shows the
  * errors field by field. key is where the action puts its result, like `judge`.
  */
-export function adminFailureMessage(result: ActionResult, key: KindResultKey): string | null {
+export function adminFailureMessage(result: ActionResult, key: ErrorResultKey): string | null {
 	switch (result.type) {
 		case 'success':
 		case 'redirect':
@@ -17,9 +17,9 @@ export function adminFailureMessage(result: ActionResult, key: KindResultKey): s
 		case 'error':
 			return result.status === 404 ? DEAD_ADMIN_LINK : RETRY;
 		case 'failure': {
-			const data: ActionResults[KindResultKey] | undefined = resultUnder(result.data, key);
+			const data: ActionResults[ErrorResultKey] | undefined = resultUnder(result.data, key);
 			if (!data) return RETRY;
-			return data.kind === 'error' ? (data.message ?? RETRY) : null;
+			return data.kind === 'error' ? data.message : null;
 		}
 	}
 }

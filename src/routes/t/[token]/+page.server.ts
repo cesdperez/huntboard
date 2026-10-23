@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { GAME_DATA } from '#lib/domain/game-data.js';
-import { respond } from '#lib/server/use-cases/action-outcome.js';
+import { respond } from '#lib/server/actions/respond.js';
 import { applyGameTheme } from '#lib/server/pages/game-theme.js';
 import { requireTeamLink } from '#lib/server/http/team-link.js';
 import { getTeamPage } from '#lib/server/pages/team-page.js';

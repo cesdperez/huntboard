@@ -22,9 +22,9 @@ export interface ActionResults {
 
 export type ActionKey = keyof ActionResults;
 
-/** Keys whose results have a `kind`, so a failure can carry `{ kind: 'error', message }`. */
-export type KindResultKey = {
-	[K in ActionKey]: ActionResults[K] extends { kind: string } ? K : never;
+/** Keys whose results include `{ kind: 'error', message }`, so a failure can carry a message. */
+export type ErrorResultKey = {
+	[K in ActionKey]: [Extract<ActionResults[K], { kind: 'error' }>] extends [never] ? never : K;
 }[ActionKey];
 
 /** The result an action put under key, read from `page.form` or an enhance result's data. */

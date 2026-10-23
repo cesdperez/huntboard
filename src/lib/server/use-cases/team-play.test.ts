@@ -179,12 +179,15 @@ describe('undoOwnClaim', () => {
 		});
 	});
 
-	it('says the claim is gone when a teammate already undid it', async () => {
+	it('says the claim is gone when a teammate undid it or a re-import deleted it', async () => {
 		const outcome = await undoOwnClaim(db, { team: rats, game }, form({ claimId: '9999' }), DURING);
 
 		expect(outcome).toEqual({
 			status: 404,
-			result: { kind: 'error', message: 'This claim was already undone.' }
+			result: {
+				kind: 'error',
+				message: 'This claim is not in this game any more. Reload the page.'
+			}
 		});
 	});
 });

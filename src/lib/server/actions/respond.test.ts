@@ -1,6 +1,7 @@
 import { isActionFailure } from '@sveltejs/kit';
 import { describe, expect, it } from 'vitest';
-import { error, respond } from './action-outcome.js';
+import { error } from '#lib/server/use-cases/action-outcome.js';
+import { respond } from './respond.js';
 
 describe('respond', () => {
 	it('puts a success under the key', () => {

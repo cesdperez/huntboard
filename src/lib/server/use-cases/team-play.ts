@@ -87,7 +87,7 @@ export async function undoOwnClaim(
 		case 'conflict':
 			return error(409, conflictMessage(result.claim));
 		default:
-			return error(404, 'This claim was already undone.');
+			return error(404, 'This claim is not in this game any more. Reload the page.');
 	}
 }
 

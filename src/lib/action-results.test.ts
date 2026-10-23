@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { resultUnder, type KindResultKey } from './action-results.js';
+import { resultUnder, type ErrorResultKey } from './action-results.js';
 
 describe('resultUnder', () => {
 	it('reads the result under the key', () => {
@@ -12,4 +12,4 @@ describe('resultUnder', () => {
 });
 
 // Checked by pnpm check, not at run time.
-expectTypeOf<KindResultKey>().toEqualTypeOf<'challenges' | 'judge' | 'team' | 'teamScores'>();
+expectTypeOf<ErrorResultKey>().toEqualTypeOf<'judge' | 'team' | 'teamScores'>();

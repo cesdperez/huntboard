@@ -1,7 +1,8 @@
 import { env } from 'cloudflare:workers';
 import type { ActionKey, ActionResults } from '#lib/action-results.js';
-import { respond, type ActionOutcome } from '#lib/server/use-cases/action-outcome.js';
+import type { ActionOutcome } from '#lib/server/use-cases/action-outcome.js';
 import { requireAdminGame } from '#lib/server/http/admin-game.js';
+import { respond } from './respond.js';
 import type { AdminAction } from './types.js';
 
 export type AdminUseCase<R> = (

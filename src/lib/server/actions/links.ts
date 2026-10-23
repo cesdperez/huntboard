@@ -1,10 +1,10 @@
 import { env } from 'cloudflare:workers';
 import { redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
-import { respond } from '../use-cases/action-outcome.js';
+import { respond } from './respond.js';
 import { requireAdminGame } from '../http/admin-game.js';
 import { rotateAdminToken, rotateScoreboardToken, rotateTeamToken } from '../db/links.js';
-import { readString } from '../http/form.js';
+import { readId } from '../http/form.js';
 import type { AdminActions } from './types.js';
 
 /** Which link a rotate action replaced: 'scoreboard' or `team-${id}`. */
@@ -32,9 +32,9 @@ export const linksActions = {
 
 	linksRotateTeam: async ({ params, request }) => {
 		const game = await requireAdminGame(params.token);
-		const teamId = Number(readString(await request.formData(), 'teamId'));
-		const token = Number.isInteger(teamId) ? await rotateTeamToken(env.DB, game.id, teamId) : null;
-		if (!token) {
+		const teamId = readId(await request.formData(), 'teamId');
+		const token = teamId === null ? null : await rotateTeamToken(env.DB, game.id, teamId);
+		if (teamId === null || !token) {
 			return respond('links', {
 				status: 404,
 				result: { error: 'That team is no longer in this game. Reload the page.' }

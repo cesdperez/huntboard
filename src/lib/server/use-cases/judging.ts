@@ -14,6 +14,8 @@ type JudgeOutcome = ActionOutcome<JudgeFormResult>;
 
 const NO_NICKNAME = 'Set your nickname first, so everyone knows who judged this.';
 const NOT_POINTS = 'Enter a whole number of points.';
+// Says nothing about the cause: an undo and a re-import that deletes the challenge both remove claims.
+const CLAIM_GONE = 'This claim is not in this game any more. Reload the page.';
 
 /** Scores a claim the judge saw as `from`: pending (first judge wins) or scored (a fix). */
 export async function scoreClaim(
@@ -66,14 +68,9 @@ async function judge(
 	verdict: Verdict
 ): Promise<JudgeOutcome> {
 	const from = data.get('from') === 'scored' ? 'scored' : 'pending';
-	// A team can undo only a pending claim. A scored one goes only with its challenge on re-import.
-	const notFound =
-		from === 'pending'
-			? 'The team undid this claim before it was judged.'
-			: 'This claim is not in this game any more. Reload the page.';
 	const claimId = readId(data, 'claimId');
-	if (claimId === null) return error(404, notFound);
-	return toOutcome(await judgeClaim(db, gameId, { claimId, from, verdict, judgedBy }), notFound);
+	if (claimId === null) return error(404, CLAIM_GONE);
+	return toOutcome(await judgeClaim(db, gameId, { claimId, from, verdict, judgedBy }), CLAIM_GONE);
 }
 
 type Refusal = ActionOutcome<ErrorResult>;

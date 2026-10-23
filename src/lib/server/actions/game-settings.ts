@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { respond } from '#lib/server/use-cases/action-outcome.js';
+import { respond } from './respond.js';
 import { requireAdminGame } from '#lib/server/http/admin-game.js';
 import { updateGameSettings } from '#lib/server/db/games.js';
 import { resetGameWithImages } from '#lib/server/use-cases/images.js';

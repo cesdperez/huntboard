@@ -82,13 +82,33 @@ describe('unacknowledgedDeletions', () => {
 	const diff = diffReimport(existing, []);
 
 	it('lists deletions with claims the admin did not see in the preview', () => {
-		expect(unacknowledgedDeletions(diff, [1])).toEqual([
+		expect(unacknowledgedDeletions(diff, new Map([[1, 1]]))).toEqual([
 			{ id: 2, title: 'Claimed twice', claimCount: 1 }
 		]);
 	});
 
+	it('lists an acknowledged deletion that gained claims since the preview', () => {
+		expect(
+			unacknowledgedDeletions(
+				diff,
+				new Map([
+					[1, 0],
+					[2, 1]
+				])
+			)
+		).toEqual([{ id: 1, title: 'Claimed once', claimCount: 1 }]);
+	});
+
 	it('is empty when every deletion with claims was acknowledged', () => {
-		expect(unacknowledgedDeletions(diff, [2, 1])).toEqual([]);
+		expect(
+			unacknowledgedDeletions(
+				diff,
+				new Map([
+					[2, 1],
+					[1, 1]
+				])
+			)
+		).toEqual([]);
 	});
 });
 

@@ -215,7 +215,7 @@
 		>
 			<input type="hidden" name="text" value={previewResult?.text ?? ''} />
 			{#each preview.deletedWithClaims as deleted (deleted.id)}
-				<input type="hidden" name="acknowledged" value={deleted.id} />
+				<input type="hidden" name="acknowledged" value="{deleted.id}:{deleted.claimCount}" />
 			{/each}
 			<Button type="submit" variant="primary" size="lg" disabled={pending || !canImport}>
 				{#if deletedClaimCount > 0}

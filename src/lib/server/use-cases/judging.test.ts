@@ -102,24 +102,11 @@ describe('scoreClaim', () => {
 		expect(outcome.status).toBe(409);
 	});
 
-	it('says the team undid a claim that is gone', async () => {
+	it.each(['pending', 'scored'])('says a %s claim that is gone left the game', async (from) => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: '9999', from: 'pending', points: '8', nickname: 'Alex' })
-		);
-
-		expect(outcome).toEqual({
-			status: 404,
-			result: { kind: 'error', message: 'The team undid this claim before it was judged.' }
-		});
-	});
-
-	it('says a scored claim that is gone left the game, since a team cannot undo it', async () => {
-		const outcome = await scoreClaim(
-			db,
-			game.id,
-			form({ claimId: '9999', from: 'scored', points: '8', nickname: 'Alex' })
+			form({ claimId: '9999', from, points: '8', nickname: 'Alex' })
 		);
 
 		expect(outcome).toEqual({
