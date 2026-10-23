@@ -67,6 +67,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await admin.getByLabel('Start').fill(start);
 		await admin.getByLabel('End').fill(end);
 		await admin.getByLabel('Late penalty per minute').fill(String(PENALTY_PER_MINUTE));
+		await admin.getByLabel('Control flag').check();
 		await admin.getByRole('button', { name: 'Save game' }).click();
 		await expect(admin.getByText('Saved.')).toBeVisible();
 	});
@@ -95,6 +96,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 	const scoreboard = await openAs(browser, null, { width: 1920, height: 1080 });
 	await test.step('the scoreboard lists every team at 0 points', async () => {
 		await scoreboard.goto(scoreboardUrl);
+		await expect(scoreboard.locator('html')).toHaveAttribute('data-game-theme', 'flag');
 		await expect(standings(scoreboard)).toHaveText(TEAMS.map((name) => rowText('1st', name, '0')));
 		await expect(scoreboard.getByText(/^Ends in \d+:\d\d:\d\d$/)).toBeVisible();
 	});

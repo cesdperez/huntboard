@@ -28,7 +28,7 @@
 	<h2 id="reset-heading" class="type-heading">Reset</h2>
 	<p id="reset-hint" class="type-secondary">
 		Start over with a blank game. Deletes all teams, challenges, claims and scores, and clears the
-		times and late penalty. The game name and the admin and scoreboard links stay.
+		times and late penalty. The game name, the theme and the admin and scoreboard links stay.
 	</p>
 	<form method="POST" action="?/gameSettingsReset" use:enhance={submit}>
 		<Button

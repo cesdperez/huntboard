@@ -1,13 +1,14 @@
 import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/game-settings.js';
+import { isThemeId } from '#lib/themes/index.js';
 import type { GameSettings } from './db/games.js';
 import { readString, readUtcTime } from './form.js';
 
 export type GameSettingsErrors = Partial<Record<keyof GameSettings, string>>;
 
-type GameTimes = Pick<GameSettings, 'starts_at' | 'ends_at'>;
+type KeptWhenAbsent = Pick<GameSettings, 'starts_at' | 'ends_at' | 'theme'>;
 
-/** Times are absent when the form had none to send, so the stored times stay as they are. */
-export type ParsedGameSettings = Omit<GameSettings, keyof GameTimes> & Partial<GameTimes>;
+/** Times and theme are absent when the form had none to send, so the stored ones stay as they are. */
+export type ParsedGameSettings = Omit<GameSettings, keyof KeptWhenAbsent> & Partial<KeptWhenAbsent>;
 
 export type GameSettingsResult =
 	{ ok: true; settings: ParsedGameSettings } | { ok: false; errors: GameSettingsErrors };
@@ -46,11 +47,17 @@ export function parseGameSettings(data: FormData): GameSettingsResult {
 		errors.late_penalty_per_minute = 'Enter a whole number of points, 0 or more.';
 	}
 
+	const theme = data.get('theme');
+	if (typeof theme === 'string' && !isThemeId(theme)) {
+		errors.theme = 'Pick one of the listed themes.';
+	}
+
 	if (Object.keys(errors).length > 0) return { ok: false, errors };
 	const settings: ParsedGameSettings = { name, late_penalty_per_minute: latePenalty };
 	if (data.has('starts_at') || data.has('ends_at')) {
 		settings.starts_at = startsAt ?? null;
 		settings.ends_at = endsAt ?? null;
 	}
+	if (typeof theme === 'string') settings.theme = theme;
 	return { ok: true, settings };
 }

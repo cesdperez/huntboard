@@ -1,32 +1,94 @@
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
+	import { resolve } from '$app/paths';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { Marker, type MarkerState } from '#lib/components/marker/index.js';
 	import { Points } from '#lib/components/points/index.js';
+	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
+	import type { TeamChallenge } from '#lib/domain/team-board.js';
+	import { THEMES, resolveTheme, supportedModes, type ColorMode } from '#lib/themes/index.js';
+	import type { PageProps } from './$types';
 
-	type Theme = 'system' | 'light' | 'dark';
+	let { data }: PageProps = $props();
 
-	let theme = $state<Theme>('system');
 	let sheetOpen = $state(false);
 
-	$effect(() => {
-		const root = document.documentElement;
-		if (theme === 'system') delete root.dataset.theme;
-		else root.dataset.theme = theme;
-		return () => delete root.dataset.theme;
-	});
+	const theme = $derived(resolveTheme(data.gameTheme));
+	const modeOptions = $derived<(ColorMode | null)[]>(
+		supportedModes(theme).length > 1 ? [null, 'light', 'dark'] : supportedModes(theme)
+	);
 
-	const colors = [
+	function preview(themeId: string, mode: ColorMode | null | undefined): string {
+		const query = `theme=${encodeURIComponent(themeId)}${mode ? `&mode=${mode}` : ''}`;
+		return `${resolve('/dev/design')}?${query}`;
+	}
+
+	const palette = [
 		{ token: '--paper', use: 'Page background' },
 		{ token: '--surface', use: 'Sheets, rows, inputs' },
 		{ token: '--ink', use: 'Text, outlines, icons' },
 		{ token: '--muted', use: 'Secondary text, open markers' },
 		{ token: '--line', use: 'Dividers, input borders' },
-		{ token: '--flag', use: 'Markers, primary action' },
-		{ token: '--on-flag', use: 'Text on flag orange' },
 		{ token: '--danger', use: 'Reject, penalties' },
 		{ token: '--scrim', use: 'Overlay behind sheets' }
+	];
+
+	const roles = [
+		{ token: '--marker', use: 'Pending and scored markers, the Queue badge' },
+		{ token: '--on-marker', use: 'Points on a scored marker' },
+		{ token: '--action', use: 'The primary button' },
+		{ token: '--on-action', use: 'Label on the primary button' },
+		{ token: '--own', use: "Bar on the team's own row" },
+		{ token: '--own-row', use: "Background of the team's own row" },
+		{ token: '--strip', use: 'Sticky team strip' },
+		{ token: '--on-strip', use: 'Text on the strip' },
+		{ token: '--on-strip-muted', use: 'Secondary text on the strip' },
+		{ token: '--strip-line', use: 'Dividers on the strip' },
+		{ token: '--strip-score', use: 'Total on the strip' },
+		{ token: '--score', use: 'Score totals' },
+		{ token: '--section', use: 'Band behind team page section headings' },
+		{ token: '--on-section', use: 'Section heading text' },
+		{ token: '--waiting', use: 'Waiting for a judge' }
+	];
+
+	const sampleChallenges: TeamChallenge[] = [
+		{
+			id: 1,
+			title: 'Free Marktplaats item',
+			description: null,
+			section: 'Around town',
+			minPoints: 30,
+			maxPoints: 100,
+			claim: {
+				id: 1,
+				status: 'pending',
+				note: null,
+				markedBy: 'Ana',
+				markedAt: '2026-10-23T11:50:00.000Z',
+				points: null,
+				judgedBy: null,
+				judgeNote: null
+			}
+		},
+		{
+			id: 2,
+			title: 'Free dessert',
+			description: null,
+			section: 'Around town',
+			minPoints: 10,
+			maxPoints: 15,
+			claim: {
+				id: 2,
+				status: 'rejected',
+				note: null,
+				markedBy: 'Bo',
+				markedAt: '2026-10-23T11:20:00.000Z',
+				points: null,
+				judgedBy: 'Sam',
+				judgeNote: 'No proof received'
+			}
+		}
 	];
 
 	const radii = [
@@ -44,8 +106,8 @@
 	];
 
 	const typeScale = [
-		{ role: 'Score totals, ranks', className: 'type-score', sample: '1st 145' },
-		{ role: 'Screen title', className: 'type-title', sample: 'Canal Rats' },
+		{ role: 'Score totals, ranks, in --font-display', className: 'type-score', sample: '1st 145' },
+		{ role: 'Screen title, in --font-display', className: 'type-title', sample: 'Canal Rats' },
 		{ role: 'Section heading', className: 'type-heading', sample: 'Around town' },
 		{ role: 'Body, challenge titles', className: 'type-body', sample: 'Swim in a fountain' },
 		{ role: 'Secondary text', className: 'type-secondary', sample: 'Rejected: no proof received' },
@@ -75,24 +137,36 @@
 <main class="mx-auto flex max-w-content flex-col gap-10 px-gutter pt-6 pb-16">
 	<header class="flex flex-col gap-4">
 		<h1 class="type-title">Design system</h1>
-		<div class="flex gap-2" role="group" aria-label="Theme">
-			{#each ['system', 'light', 'dark'] as const as option (option)}
+		<nav class="flex flex-wrap gap-2" aria-label="Theme">
+			{#each THEMES as option (option.id)}
 				<Button
-					variant={theme === option ? 'primary' : 'secondary'}
-					aria-pressed={theme === option}
-					class="flex-1 capitalize"
-					onclick={() => (theme = option)}
+					href={preview(option.id, data.colorMode)}
+					variant={theme.id === option.id ? 'primary' : 'secondary'}
+					aria-current={theme.id === option.id ? 'page' : undefined}
+					class="flex-1"
 				>
-					{option}
+					{option.name}
 				</Button>
 			{/each}
-		</div>
+		</nav>
+		<nav class="flex gap-2" aria-label="Mode">
+			{#each modeOptions as mode (mode)}
+				{@const current = (data.colorMode ?? null) === mode || modeOptions.length === 1}
+				<Button
+					href={preview(theme.id, mode)}
+					variant={current ? 'primary' : 'secondary'}
+					aria-current={current ? 'page' : undefined}
+					class="flex-1 capitalize"
+				>
+					{mode ?? 'system'}
+				</Button>
+			{/each}
+		</nav>
 	</header>
 
-	<section class="flex flex-col gap-3">
-		<h2 class="type-heading">Colour</h2>
+	{#snippet swatches(tokens: { token: string; use: string }[])}
 		<ul class="flex flex-col">
-			{#each colors as color (color.token)}
+			{#each tokens as color (color.token)}
 				<li class="flex min-h-row items-center gap-3 border-b">
 					<span
 						class="size-marker-lg shrink-0 rounded-control border"
@@ -105,6 +179,59 @@
 				</li>
 			{/each}
 		</ul>
+	{/snippet}
+
+	<section class="flex flex-col gap-3">
+		<h2 class="type-heading">Colour</h2>
+		{@render swatches(palette)}
+	</section>
+
+	<section class="flex flex-col gap-3">
+		<h2 class="type-heading">Roles</h2>
+		{@render swatches(roles)}
+	</section>
+
+	<section class="flex flex-col gap-3">
+		<h2 class="type-heading">Team page</h2>
+		<div class="flex flex-col border surface-strip shadow-strip">
+			<div class="flex min-h-row items-center gap-3 px-gutter pt-2">
+				<span class="type-score text-[28px]">2nd</span>
+				<span class="min-w-0 flex-1">
+					<span class="block truncate type-heading">Canal Rats</span>
+					<span class="block truncate type-secondary">Ana, Bo</span>
+				</span>
+				<Points value={145} variant="total" />
+			</div>
+			<p class="px-gutter pb-2 type-secondary tabular-nums">Ends in 1:42:10</p>
+			<ol class="mx-gutter mb-4 flex flex-col border-t">
+				<li
+					class="flex min-h-touch items-center gap-3 border-b border-l-4 border-l-transparent pl-2"
+				>
+					<span class="w-10 shrink-0 tabular-nums">1st</span>
+					<span class="min-w-0 flex-1 truncate">Night Owls</span>
+					<Points value={180} />
+				</li>
+				<li
+					class="flex min-h-touch items-center gap-3 border-b border-l-4 border-l-own bg-own-row pl-2 font-semibold"
+				>
+					<span class="w-10 shrink-0 tabular-nums">2nd</span>
+					<span class="min-w-0 flex-1 truncate">Canal Rats</span>
+					<Points value={145} />
+				</li>
+			</ol>
+		</div>
+		<div class="flex flex-col">
+			<h3
+				class="-mx-gutter mt-4 bg-section px-gutter py-1 font-display type-heading text-on-section"
+			>
+				Around town
+			</h3>
+			<ul class="flex flex-col border-t">
+				{#each sampleChallenges as challenge (challenge.id)}
+					<ChallengeRow {challenge} onselect={() => {}} />
+				{/each}
+			</ul>
+		</div>
 	</section>
 
 	<section class="flex flex-col gap-3">
