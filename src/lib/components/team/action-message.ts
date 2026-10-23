@@ -1,5 +1,5 @@
 import type { ActionResult } from '$app/forms';
-import { DEAD_LINK_MESSAGE } from '#lib/dead-link.js';
+import { DEAD_LINK_MESSAGE } from '#lib/domain/dead-link.js';
 import type { GamePhase } from '#lib/domain/game-window.js';
 import { resultUnder } from '#lib/action-results.js';
 

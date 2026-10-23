@@ -7,9 +7,9 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import type { ChallengeEditInput } from '#lib/domain/challenge-edit.js';
-	import { plural } from '#lib/plural.js';
+	import { plural } from '#lib/format/plural.js';
 	import type { ChallengeWithClaimCount } from '#lib/server/db/types.js';
-	import { groupBySection } from '#lib/group-by-section.js';
+	import { groupBySection } from '#lib/format/group-by-section.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { challenges }: { challenges: ChallengeWithClaimCount[] } = $props();

@@ -1,4 +1,4 @@
-import { collapseSpaces } from '../text.js';
+import { collapseSpaces } from '../format/text.js';
 import type { ChallengeFields } from './challenge-import.js';
 import { titleKey } from './challenge-parser.js';
 

@@ -1,4 +1,4 @@
-import type { ImageBucket } from '../image-store.js';
+import type { ImageBucket } from '../storage/image-store.js';
 
 interface StoredObject {
 	bytes: Uint8Array<ArrayBuffer>;

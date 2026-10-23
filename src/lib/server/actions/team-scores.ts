@@ -4,7 +4,7 @@ import {
 	correctArrival,
 	recordArrival,
 	removeAdjustment
-} from '#lib/server/team-scores.js';
+} from '#lib/server/use-cases/team-scores.js';
 import { adminAction } from './admin-action.js';
 import type { AdminActions } from './types.js';
 

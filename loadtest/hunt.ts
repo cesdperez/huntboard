@@ -1,4 +1,4 @@
-import { POLL_INTERVAL_MS } from '../src/lib/live-updates.ts';
+import { POLL_INTERVAL_MS } from '../src/lib/client/live-updates.ts';
 import type { AppClient } from './http.ts';
 
 /** The game the hunt plays, per docs/decisions.md "Free-tier budget". */

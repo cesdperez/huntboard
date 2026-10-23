@@ -1,4 +1,4 @@
-import { MS_PER_MINUTE } from '../duration.js';
+import { MS_PER_MINUTE } from '../format/duration.js';
 
 export type ClaimStatus = 'pending' | 'scored' | 'rejected';
 

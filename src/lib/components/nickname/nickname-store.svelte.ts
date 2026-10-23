@@ -1,4 +1,4 @@
-import { normalizeNickname } from '#lib/nickname.js';
+import { normalizeNickname } from '#lib/domain/nickname.js';
 
 const STORAGE_KEY = 'huntboard.nickname';
 

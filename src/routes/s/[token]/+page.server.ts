@@ -1,9 +1,9 @@
 import { env } from 'cloudflare:workers';
 import { error } from '@sveltejs/kit';
-import { GAME_DATA } from '#lib/live-updates.js';
+import { GAME_DATA } from '#lib/client/live-updates.js';
 import { getGameByScoreboardToken } from '#lib/server/db/links.js';
-import { applyGameTheme } from '#lib/server/game-theme.js';
-import { getCachedScoreboardPage } from '#lib/server/scoreboard-page.js';
+import { applyGameTheme } from '#lib/server/pages/game-theme.js';
+import { getCachedScoreboardPage } from '#lib/server/pages/scoreboard-page.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, depends, url, locals }) => {

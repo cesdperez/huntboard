@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { GAME_DATA } from '#lib/live-updates.js';
+import { GAME_DATA } from '#lib/client/live-updates.js';
 import { judgingActions } from '#lib/server/actions/judging.js';
 import { listPendingClaims } from '#lib/server/db/judging.js';
 import type { Actions, PageServerLoad } from './$types';

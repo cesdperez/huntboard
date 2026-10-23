@@ -3,8 +3,8 @@
 	import QueueItem from '#lib/components/admin/queue-item.svelte';
 	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { emptyQueueMessage } from '#lib/domain/claim-messages.js';
-	import { getGameClock } from '#lib/game-clock.svelte.js';
-	import { startPolling } from '#lib/live-updates.js';
+	import { getGameClock } from '#lib/client/game-clock.svelte.js';
+	import { startPolling } from '#lib/client/live-updates.js';
 	import type { PendingClaimRow } from '#lib/server/db/judging.js';
 	import type { PageProps } from './$types';
 

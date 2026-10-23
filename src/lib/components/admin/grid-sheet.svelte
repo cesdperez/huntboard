@@ -2,7 +2,7 @@
 	import { Marker, markerLabel } from '#lib/components/marker/index.js';
 	import { Points } from '#lib/components/points/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
-	import { formatClockTime } from '#lib/clock-time.js';
+	import { formatClockTime } from '#lib/format/clock-time.js';
 	import type { GridRow, GridTeam } from '#lib/domain/judging-grid.js';
 	import JudgePanel, { type JudgeTarget } from './judge-panel.svelte';
 

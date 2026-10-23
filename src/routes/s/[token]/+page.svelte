@@ -5,10 +5,10 @@
 	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { GameImageHeader, TeamAvatar } from '#lib/components/images/index.js';
 	import { CountingPoints } from '#lib/components/points/index.js';
-	import { GameClock } from '#lib/game-clock.svelte.js';
-	import { startPolling } from '#lib/live-updates.js';
-	import { ordinal } from '#lib/ordinal.js';
-	import { REORDER_MS, motionMs } from '#lib/score-motion.js';
+	import { GameClock } from '#lib/client/game-clock.svelte.js';
+	import { startPolling } from '#lib/client/live-updates.js';
+	import { ordinal } from '#lib/format/ordinal.js';
+	import { REORDER_MS, motionMs } from '#lib/client/score-motion.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import type { PageProps } from './$types';
 

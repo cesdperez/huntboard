@@ -2,7 +2,7 @@ import {
 	editChallenge,
 	importChallenges,
 	previewChallengeImport
-} from '#lib/server/challenge-setup.js';
+} from '#lib/server/use-cases/challenge-setup.js';
 import { adminAction } from './admin-action.js';
 import type { AdminActions } from './types.js';
 

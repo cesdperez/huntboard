@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
-import { measureD1Usage } from '#lib/server/d1-usage.js';
-import { rejection, securityHeaders } from '#lib/server/request-guard.js';
+import { measureD1Usage } from '#lib/server/http/d1-usage.js';
+import { rejection, securityHeaders } from '#lib/server/http/request-guard.js';
 import { htmlAttributes, resolveAppearance } from '#lib/themes/index.js';
 
 const guard: Handle = async ({ event, resolve }) => {

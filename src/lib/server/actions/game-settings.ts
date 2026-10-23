@@ -1,9 +1,9 @@
 import { env } from 'cloudflare:workers';
-import { respond } from '#lib/server/action-outcome.js';
-import { requireAdminGame } from '#lib/server/admin-game.js';
+import { respond } from '#lib/server/use-cases/action-outcome.js';
+import { requireAdminGame } from '#lib/server/http/admin-game.js';
 import { updateGameSettings } from '#lib/server/db/games.js';
-import { resetGameWithImages } from '#lib/server/images.js';
-import { parseGameSettings, type GameSettingsErrors } from '#lib/server/game-settings-form.js';
+import { resetGameWithImages } from '#lib/server/use-cases/images.js';
+import { parseGameSettings, type GameSettingsErrors } from '#lib/server/http/game-settings-form.js';
 import type { AdminActions } from './types.js';
 
 /** What the game settings actions put under page.form.gameSettings. */

@@ -1,10 +1,15 @@
 import { env } from 'cloudflare:workers';
-import { GAME_DATA } from '#lib/live-updates.js';
-import { respond } from '#lib/server/action-outcome.js';
-import { applyGameTheme } from '#lib/server/game-theme.js';
-import { requireTeamLink } from '#lib/server/team-link.js';
-import { getTeamPage } from '#lib/server/team-page.js';
-import { markDone, renameOwnTeam, saveOwnAvatar, undoOwnClaim } from '#lib/server/team-play.js';
+import { GAME_DATA } from '#lib/client/live-updates.js';
+import { respond } from '#lib/server/use-cases/action-outcome.js';
+import { applyGameTheme } from '#lib/server/pages/game-theme.js';
+import { requireTeamLink } from '#lib/server/http/team-link.js';
+import { getTeamPage } from '#lib/server/pages/team-page.js';
+import {
+	markDone,
+	renameOwnTeam,
+	saveOwnAvatar,
+	undoOwnClaim
+} from '#lib/server/use-cases/team-play.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, depends, locals }) => {

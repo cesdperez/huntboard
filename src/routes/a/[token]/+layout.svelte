@@ -7,7 +7,7 @@
 	import { AppBar } from '#lib/components/event/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import { Toast } from '#lib/components/toast/index.js';
-	import { GameClock, setGameClock } from '#lib/game-clock.svelte.js';
+	import { GameClock, setGameClock } from '#lib/client/game-clock.svelte.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
 	import type { LayoutProps } from './$types';

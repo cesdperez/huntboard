@@ -13,7 +13,7 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { clampPoints, parsePoints, quickPointValues } from '#lib/domain/points.js';
-	import { REASON_MAX_LENGTH } from '#lib/reason.js';
+	import { REASON_MAX_LENGTH } from '#lib/domain/reason.js';
 	import { AdminAction } from './admin-action.svelte.js';
 
 	type Props = {

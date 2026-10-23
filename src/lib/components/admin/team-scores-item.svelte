@@ -8,11 +8,11 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
-	import { formatClockTime } from '#lib/clock-time.js';
-	import { localInputToUtc, utcToLocalInput } from '#lib/local-time.js';
-	import { ordinal } from '#lib/ordinal.js';
-	import { REASON_MAX_LENGTH } from '#lib/reason.js';
-	import type { TeamScoresRow } from '#lib/server/judging-pages.js';
+	import { formatClockTime } from '#lib/format/clock-time.js';
+	import { localInputToUtc, utcToLocalInput } from '#lib/format/local-time.js';
+	import { ordinal } from '#lib/format/ordinal.js';
+	import { REASON_MAX_LENGTH } from '#lib/domain/reason.js';
+	import type { TeamScoresRow } from '#lib/server/pages/judging-pages.js';
 	import { AdminAction } from './admin-action.svelte.js';
 
 	type Props = {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { AppBar, PageBanner } from '#lib/components/event/index.js';
-	import { GAME_NAME_MAX_LENGTH } from '#lib/game-settings.js';
+	import { GAME_NAME_MAX_LENGTH } from '#lib/domain/game-settings.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';

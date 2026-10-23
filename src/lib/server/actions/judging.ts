@@ -1,4 +1,4 @@
-import { rejectClaim, scoreClaim, scoreOpenCell } from '#lib/server/judging.js';
+import { rejectClaim, scoreClaim, scoreOpenCell } from '#lib/server/use-cases/judging.js';
 import { adminAction } from './admin-action.js';
 import type { AdminActions } from './types.js';
 

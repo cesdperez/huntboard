@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { checkConnection, connection, retryPage } from '#lib/components/connection/index.js';
 	import { AppBar } from '#lib/components/event/index.js';
-	import { startPolling } from '#lib/live-updates.js';
+	import { startPolling } from '#lib/client/live-updates.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 
 	const notFound = $derived(page.status === 404);

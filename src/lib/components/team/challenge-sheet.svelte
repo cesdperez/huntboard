@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { CLAIM_NOTE_MAX_LENGTH } from '#lib/claim-note.js';
+	import { CLAIM_NOTE_MAX_LENGTH } from '#lib/domain/claim-note.js';
 	import { Marker, markerLabel } from '#lib/components/marker/index.js';
 	import { nickname } from '#lib/components/nickname/index.js';
 	import { Points } from '#lib/components/points/index.js';
@@ -10,7 +10,7 @@
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { claimLine } from '#lib/domain/claim-messages.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
-	import type { GameClock } from '#lib/game-clock.svelte.js';
+	import type { GameClock } from '#lib/client/game-clock.svelte.js';
 	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = {

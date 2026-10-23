@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
-	import { COUNT_UP_MS, motionMs } from '#lib/score-motion.js';
+	import { COUNT_UP_MS, motionMs } from '#lib/client/score-motion.js';
 	import Points from './points.svelte';
 
 	type Props = { value: number; class?: string };

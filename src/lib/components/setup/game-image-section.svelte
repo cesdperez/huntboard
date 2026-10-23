@@ -6,8 +6,8 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
-	import { GAME_IMAGE_SPEC, resizeImage } from '#lib/image-resize.js';
-	import { IMAGE_LABEL_MAX_LENGTH, imageSrc } from '#lib/images.js';
+	import { GAME_IMAGE_SPEC, resizeImage } from '#lib/client/image-resize.js';
+	import { IMAGE_LABEL_MAX_LENGTH, imageSrc } from '#lib/domain/images.js';
 	import type { GameRow } from '#lib/server/db/types.js';
 	import { updateOrRetry } from './update-or-retry.js';
 

@@ -4,8 +4,8 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
-	import type { GameClock } from '#lib/game-clock.svelte.js';
-	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
+	import type { GameClock } from '#lib/client/game-clock.svelte.js';
+	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
 	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = {

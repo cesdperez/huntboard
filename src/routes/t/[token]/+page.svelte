@@ -11,9 +11,9 @@
 	import SectionHeading from '#lib/components/team/section-heading.svelte';
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
 	import { Toast } from '#lib/components/toast/index.js';
-	import { GameClock } from '#lib/game-clock.svelte.js';
-	import { groupBySection } from '#lib/group-by-section.js';
-	import { startPolling } from '#lib/live-updates.js';
+	import { GameClock } from '#lib/client/game-clock.svelte.js';
+	import { groupBySection } from '#lib/format/group-by-section.js';
+	import { startPolling } from '#lib/client/live-updates.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import type { PageProps } from './$types';
 

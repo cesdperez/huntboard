@@ -1,4 +1,4 @@
-import { collapseSpaces } from '../text.js';
+import { collapseSpaces } from '../format/text.js';
 
 export interface ParsedChallenge {
 	title: string;

@@ -4,7 +4,7 @@
 	import ClockIcon from '@lucide/svelte/icons/clock';
 	import { GameImageSheet } from '#lib/components/images/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import type { GameImage } from '#lib/images.js';
+	import type { GameImage } from '#lib/domain/images.js';
 	import { cn } from '#lib/utils.js';
 
 	type Props = {

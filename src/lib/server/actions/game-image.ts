@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
-import { respond } from '#lib/server/action-outcome.js';
-import { requireAdminGame } from '#lib/server/admin-game.js';
-import { removeGameImage, saveGameImage } from '#lib/server/images.js';
+import { respond } from '#lib/server/use-cases/action-outcome.js';
+import { requireAdminGame } from '#lib/server/http/admin-game.js';
+import { removeGameImage, saveGameImage } from '#lib/server/use-cases/images.js';
 import type { AdminActions } from './types.js';
 
 /** Setup tab actions. Names start with "gameImage" so they cannot collide with other sections. */

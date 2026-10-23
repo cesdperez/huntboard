@@ -7,9 +7,9 @@
 	import { CountingPoints, Points } from '#lib/components/points/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { Standing } from '#lib/domain/scoring.js';
-	import { ordinal } from '#lib/ordinal.js';
-	import { plural } from '#lib/plural.js';
-	import { REORDER_MS, motionMs } from '#lib/score-motion.js';
+	import { ordinal } from '#lib/format/ordinal.js';
+	import { plural } from '#lib/format/plural.js';
+	import { REORDER_MS, motionMs } from '#lib/client/score-motion.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
 

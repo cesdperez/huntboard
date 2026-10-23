@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
-import { POLL_INTERVAL_MS } from '../src/lib/live-updates.js';
+import { POLL_INTERVAL_MS } from '../src/lib/client/live-updates.js';
 
 // A short game played end to end: 4 teams, 10 challenges, every kind of judging, a late arrival
 // and a tie. The final totals are worked out by hand in FINAL_STANDINGS.

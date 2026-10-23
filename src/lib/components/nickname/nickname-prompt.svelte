@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { NICKNAME_MAX_LENGTH } from '#lib/nickname.js';
+	import { NICKNAME_MAX_LENGTH } from '#lib/domain/nickname.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';

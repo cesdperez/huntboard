@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { imageSrc, initialOf } from '#lib/images.js';
+	import { imageSrc, initialOf } from '#lib/domain/images.js';
 	import { cn } from '#lib/utils.js';
 
 	type Props = {

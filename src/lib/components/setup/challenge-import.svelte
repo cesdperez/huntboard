@@ -6,8 +6,8 @@
 	import { Points } from '#lib/components/points/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
-	import { plural } from '#lib/plural.js';
-	import { groupBySection } from '#lib/group-by-section.js';
+	import { plural } from '#lib/format/plural.js';
+	import { groupBySection } from '#lib/format/group-by-section.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	const EXAMPLE = `# Around town

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
-	import type { GameImage } from '#lib/images.js';
+	import type { GameImage } from '#lib/domain/images.js';
 	import { cn } from '#lib/utils.js';
 	import GameImageSheet from './game-image-sheet.svelte';
 

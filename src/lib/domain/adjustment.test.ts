@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { REASON_MAX_LENGTH } from '../reason.js';
+import { REASON_MAX_LENGTH } from './reason.js';
 import { ADJUSTMENT_MAX_POINTS, validateAdjustment } from './adjustment.js';
 
 describe('validateAdjustment', () => {

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/env';
-	import { formatClockTime } from '#lib/clock-time.js';
+	import { formatClockTime } from '#lib/format/clock-time.js';
 	import TeamScoresItem from '#lib/components/admin/team-scores-item.svelte';
 	import { refreshGameData } from '#lib/components/connection/index.js';
-	import { startPolling } from '#lib/live-updates.js';
-	import { plural } from '#lib/plural.js';
+	import { startPolling } from '#lib/client/live-updates.js';
+	import { plural } from '#lib/format/plural.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

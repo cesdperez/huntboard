@@ -1,4 +1,4 @@
-import { normalizeReason, REASON_MAX_LENGTH, REASON_TOO_LONG } from '../reason.js';
+import { normalizeReason, REASON_MAX_LENGTH, REASON_TOO_LONG } from './reason.js';
 import { parsePoints } from './points.js';
 
 // Keeps any realistic sum of adjustments far below Number.MAX_SAFE_INTEGER.

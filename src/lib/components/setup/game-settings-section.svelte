@@ -6,9 +6,9 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
-	import { localInputToUtc, utcToLocalInput } from '#lib/local-time.js';
+	import { localInputToUtc, utcToLocalInput } from '#lib/format/local-time.js';
 	import { THEMES, resolveTheme, supportedModes, type Theme } from '#lib/themes/index.js';
-	import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/game-settings.js';
+	import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/domain/game-settings.js';
 	import type { GameRow } from '#lib/server/db/types.js';
 	import { updateOrRetry } from './update-or-retry.js';
 

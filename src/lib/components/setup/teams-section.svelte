@@ -10,10 +10,10 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
-	import { plural } from '#lib/plural.js';
+	import { plural } from '#lib/format/plural.js';
 	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
-	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
-	import { suggestTeamName } from '#lib/team-name-suggestion.js';
+	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
+	import { suggestTeamName } from '#lib/domain/team-name-suggestion.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { game, teams }: { game: GameRow; teams: TeamWithClaimCount[] } = $props();

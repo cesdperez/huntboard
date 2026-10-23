@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
-import { GAME_DATA } from '#lib/live-updates.js';
+import { GAME_DATA } from '#lib/client/live-updates.js';
 import { judgingActions } from '#lib/server/actions/judging.js';
-import { getGridPage } from '#lib/server/judging-pages.js';
+import { getGridPage } from '#lib/server/pages/judging-pages.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ parent, depends }) => {

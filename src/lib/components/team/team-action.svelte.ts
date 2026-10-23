@@ -1,7 +1,7 @@
 import type { SubmitFunction } from '$app/forms';
 import { FormAction } from '#lib/components/form-action.svelte.js';
 import { toast } from '#lib/components/toast/index.js';
-import type { GameClock } from '#lib/game-clock.svelte.js';
+import type { GameClock } from '#lib/client/game-clock.svelte.js';
 import { actionFailureMessage } from './action-message.js';
 
 /**

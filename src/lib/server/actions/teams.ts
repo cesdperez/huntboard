@@ -6,7 +6,7 @@ import {
 	moveTeamUp,
 	removeTeam,
 	removeTeamPicture
-} from '#lib/server/team-setup.js';
+} from '#lib/server/use-cases/team-setup.js';
 import { adminAction } from './admin-action.js';
 import type { AdminActions } from './types.js';
 

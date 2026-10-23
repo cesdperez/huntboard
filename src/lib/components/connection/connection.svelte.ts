@@ -1,6 +1,6 @@
 import { invalidate } from '$app/navigation';
-import { isReachable, refreshIfReachable } from '#lib/connection.js';
-import { GAME_DATA } from '#lib/live-updates.js';
+import { isReachable, refreshIfReachable } from '#lib/client/connection.js';
+import { GAME_DATA } from '#lib/client/live-updates.js';
 
 /** Whether the last check reached the server. Only set in the browser, so it stays true on the server. */
 class Connection {

@@ -2,7 +2,7 @@
 	import { Points } from '#lib/components/points/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { PendingClaimRow } from '#lib/server/db/judging.js';
-	import { timeAgo } from '#lib/time-ago.js';
+	import { timeAgo } from '#lib/format/time-ago.js';
 	import JudgePanel from './judge-panel.svelte';
 
 	type Props = {

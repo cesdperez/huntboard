@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import type { GameClock } from '#lib/game-clock.svelte.js';
-	import { AVATAR_SPEC, resizeImage } from '#lib/image-resize.js';
+	import type { GameClock } from '#lib/client/game-clock.svelte.js';
+	import { AVATAR_SPEC, resizeImage } from '#lib/client/image-resize.js';
 	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = { hasAvatar: boolean; clock: GameClock };

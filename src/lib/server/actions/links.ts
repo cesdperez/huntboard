@@ -1,10 +1,10 @@
 import { env } from 'cloudflare:workers';
 import { redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
-import { respond } from '../action-outcome.js';
-import { requireAdminGame } from '../admin-game.js';
+import { respond } from '../use-cases/action-outcome.js';
+import { requireAdminGame } from '../http/admin-game.js';
 import { rotateAdminToken, rotateScoreboardToken, rotateTeamToken } from '../db/links.js';
-import { readString } from '../form.js';
+import { readString } from '../http/form.js';
 import type { AdminActions } from './types.js';
 
 /** Which link a rotate action replaced: 'scoreboard' or `team-${id}`. */

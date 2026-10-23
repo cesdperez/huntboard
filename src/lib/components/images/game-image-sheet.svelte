@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
-	import type { GameImage } from '#lib/images.js';
+	import type { GameImage } from '#lib/domain/images.js';
 
 	type Props = { image: GameImage; open: boolean };
 

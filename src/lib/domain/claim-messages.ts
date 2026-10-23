@@ -1,4 +1,4 @@
-import { plural } from '../plural.js';
+import { plural } from '../format/plural.js';
 import type { GamePhase, GameWindow } from './game-window.js';
 import type { ClaimStatus } from './scoring.js';
 import type { TeamClaim } from './team-board.js';

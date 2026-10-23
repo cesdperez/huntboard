@@ -5,8 +5,8 @@
 	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { Marker, markerLabel } from '#lib/components/marker/index.js';
 	import { Points } from '#lib/components/points/index.js';
-	import { groupBySection } from '#lib/group-by-section.js';
-	import { startPolling } from '#lib/live-updates.js';
+	import { groupBySection } from '#lib/format/group-by-section.js';
+	import { startPolling } from '#lib/client/live-updates.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
