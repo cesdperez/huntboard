@@ -11,7 +11,15 @@ import {
 const ENDS_AT = '2026-06-01T19:00:00.000Z';
 
 function team(id: number, overrides: Partial<ScoringTeam> = {}): ScoringTeam {
-	return { id, name: `Team ${id}`, members: '', position: id, arrivedAt: null, ...overrides };
+	return {
+		id,
+		name: `Team ${id}`,
+		members: '',
+		avatarKey: null,
+		position: id,
+		arrivedAt: null,
+		...overrides
+	};
 }
 
 function scored(teamId: number, points: number): ScoringClaim {
@@ -97,6 +105,7 @@ describe('computeScoreboard', () => {
 			teamId: 1,
 			name: 'Team 1',
 			members: '',
+			avatarKey: null,
 			claimPoints: 35,
 			adjustmentPoints: 2,
 			minutesLate: 3,
@@ -260,17 +269,36 @@ describe('computeScoreboard', () => {
 describe('toStandings', () => {
 	const game = { endsAt: ENDS_AT, latePenaltyPerMinute: 2 };
 
-	it('keeps only the team id, rank, name, members and total, in scoreboard order', () => {
+	it('keeps only the team id, rank, name, members, picture and total, in scoreboard order', () => {
 		const scores = computeScoreboard({
 			game,
-			teams: [team(1, { arrivedAt: '2026-06-01T19:02:00.000Z' }), team(2, { members: 'Ana, Bo' })],
+			teams: [
+				team(1, { arrivedAt: '2026-06-01T19:02:00.000Z' }),
+				team(2, { members: 'Ana, Bo', avatarKey: '1/owls.webp' })
+			],
 			claims: [scored(1, 20), scored(2, 30)],
 			adjustments: [{ teamId: 1, points: 4 }]
 		});
 
 		expect(toStandings(scores, null)).toEqual([
-			{ teamId: 2, rank: 1, name: 'Team 2', members: 'Ana, Bo', total: 30, own: false },
-			{ teamId: 1, rank: 2, name: 'Team 1', members: '', total: 20, own: false }
+			{
+				teamId: 2,
+				rank: 1,
+				name: 'Team 2',
+				members: 'Ana, Bo',
+				avatarKey: '1/owls.webp',
+				total: 30,
+				own: false
+			},
+			{
+				teamId: 1,
+				rank: 2,
+				name: 'Team 1',
+				members: '',
+				avatarKey: null,
+				total: 20,
+				own: false
+			}
 		]);
 	});
 

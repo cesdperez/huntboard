@@ -13,6 +13,8 @@ export interface ScoringTeam {
 	name: string;
 	/** Free text naming the people on the team. Empty when not set. */
 	members: string;
+	/** Image key of the team picture, or null without one. */
+	avatarKey: string | null;
 	/** Admin-set display order, used to order tied teams. */
 	position: number;
 	/** UTC ISO timestamp, or null when no arrival is recorded. */
@@ -35,6 +37,7 @@ export interface TeamScore {
 	teamId: number;
 	name: string;
 	members: string;
+	avatarKey: string | null;
 	claimPoints: number;
 	adjustmentPoints: number;
 	minutesLate: number;
@@ -95,6 +98,7 @@ export interface Standing {
 	rank: number;
 	name: string;
 	members: string;
+	avatarKey: string | null;
 	total: number;
 	/** True on the viewing team's own row. */
 	own: boolean;
@@ -106,6 +110,7 @@ export function toStandings(scores: TeamScore[], ownTeamId: number | null): Stan
 		rank: score.rank,
 		name: score.name,
 		members: score.members,
+		avatarKey: score.avatarKey,
 		total: score.total,
 		own: score.teamId === ownTeamId
 	}));
@@ -123,6 +128,7 @@ function scoreTeam(
 		teamId: team.id,
 		name: team.name,
 		members: team.members,
+		avatarKey: team.avatarKey,
 		claimPoints,
 		adjustmentPoints,
 		minutesLate: late,

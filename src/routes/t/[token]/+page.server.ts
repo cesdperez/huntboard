@@ -6,6 +6,7 @@ import { getTeamPage } from '#lib/server/team-page.js';
 import {
 	markDone,
 	renameOwnTeam,
+	saveOwnAvatar,
 	undoOwnClaim,
 	type TeamActionOutcome
 } from '#lib/server/team-play.js';
@@ -35,5 +36,10 @@ export const actions = {
 	rename: async ({ params, request }) => {
 		const link = await requireTeamLink(params.token);
 		return respond(await renameOwnTeam(env.DB, link, await request.formData()));
+	},
+
+	avatar: async ({ params, request }) => {
+		const link = await requireTeamLink(params.token);
+		return respond(await saveOwnAvatar(env.DB, env.IMAGES, link, await request.formData()));
 	}
 } satisfies Actions;

@@ -158,15 +158,24 @@ describe('deleteTeam', () => {
 		const b = await seedTeam(db, game.id, { name: 'B' });
 		await seedTeam(db, game.id, { name: 'C' });
 
-		expect(await deleteTeam(db, game.id, b.id)).toBe('deleted');
+		expect(await deleteTeam(db, game.id, b.id)).toEqual({ status: 'deleted', avatarKey: null });
 		expect(await names()).toEqual(['0:A', '1:C']);
+	});
+
+	it('returns the picture key of the deleted team, so its image can go too', async () => {
+		const rats = await seedTeam(db, game.id, { avatar_key: '1/rats.webp' });
+
+		expect(await deleteTeam(db, game.id, rats.id)).toEqual({
+			status: 'deleted',
+			avatarKey: '1/rats.webp'
+		});
 	});
 
 	it('keeps a team that has any claim, even a rejected one', async () => {
 		const rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
 		await seedClaim(db, rats.id, (await seedChallenge(db, game.id)).id, { status: 'rejected' });
 
-		expect(await deleteTeam(db, game.id, rats.id)).toBe('has-claims');
+		expect(await deleteTeam(db, game.id, rats.id)).toEqual({ status: 'has-claims' });
 		expect(await names()).toEqual(['0:Canal Rats']);
 	});
 
@@ -174,7 +183,7 @@ describe('deleteTeam', () => {
 		const other = await createGame(db, 'Other hunt');
 		const elsewhere = await seedTeam(db, other.id);
 
-		expect(await deleteTeam(db, game.id, elsewhere.id)).toBe('not-found');
+		expect(await deleteTeam(db, game.id, elsewhere.id)).toEqual({ status: 'not-found' });
 		expect(await listTeamsWithClaimCounts(db, other.id)).toHaveLength(1);
 	});
 });

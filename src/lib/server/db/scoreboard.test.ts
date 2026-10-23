@@ -42,7 +42,14 @@ describe('getScoreboardInput', () => {
 		const { teams } = await getScoreboardInput(db, game);
 
 		expect(teams).toEqual([
-			{ id: owls.id, name: 'Night Owls', members: 'Ana, Bo', position: 0, arrivedAt: null },
+			{
+				id: owls.id,
+				name: 'Night Owls',
+				members: 'Ana, Bo',
+				avatarKey: null,
+				position: 0,
+				arrivedAt: null
+			},
 			expect.objectContaining({ name: 'Canal Rats', arrivedAt: '2026-06-01T21:03:00.000Z' })
 		]);
 	});

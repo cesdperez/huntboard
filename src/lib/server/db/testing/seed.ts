@@ -14,7 +14,8 @@ export async function seedTeam(
 		members: fields.members ?? '',
 		token: fields.token ?? `team-token-${gameId}-${position}`,
 		position,
-		arrived_at: fields.arrived_at ?? null
+		arrived_at: fields.arrived_at ?? null,
+		avatar_key: fields.avatar_key ?? null
 	});
 }
 

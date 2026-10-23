@@ -10,6 +10,9 @@ export interface GameRow {
 	ends_at: string | null;
 	late_penalty_per_minute: number;
 	created_at: string;
+	/** Key in the IMAGES bucket, or null without a game image. */
+	image_key: string | null;
+	image_label: string;
 }
 
 export interface TeamRow {
@@ -20,6 +23,8 @@ export interface TeamRow {
 	token: string;
 	position: number;
 	arrived_at: string | null;
+	/** Key in the IMAGES bucket, or null without a team picture. */
+	avatar_key: string | null;
 }
 
 export interface ChallengeRow {

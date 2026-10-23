@@ -7,7 +7,9 @@ import { deleteTeam } from './db/teams.js';
 import { createTestDb } from './db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from './db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from './db/types.js';
-import { markDone, renameOwnTeam, undoOwnClaim } from './team-play.js';
+import { NOT_AN_IMAGE } from './image-upload.js';
+import { markDone, renameOwnTeam, saveOwnAvatar, undoOwnClaim } from './team-play.js';
+import { MemoryBucket } from './testing/memory-bucket.js';
 
 const DURING = new Date('2026-06-01T18:00:00.000Z');
 const BEFORE = new Date('2026-06-01T15:00:00.000Z');
@@ -249,5 +251,81 @@ describe('renameOwnTeam', () => {
 			result: { kind: 'error', message: 'Give the team a name of at most 40 characters.' }
 		});
 		expect((await getTeamByToken(db, rats.token))?.name).toBe('Canal Rats');
+	});
+});
+
+describe('saveOwnAvatar', () => {
+	const WEBP = new TextEncoder().encode('RIFF\x24\x00\x00\x00WEBPVP8 ');
+	let bucket: MemoryBucket;
+
+	beforeEach(() => {
+		bucket = new MemoryBucket();
+	});
+
+	function avatarForm(bytes: Uint8Array<ArrayBuffer>, type: string) {
+		const data = new FormData();
+		data.set('avatar', new Blob([bytes], { type }), 'avatar');
+		return data;
+	}
+
+	it('stores the picture under the game and replaces the old one, outside the game window too', async () => {
+		const ended = { ...game, starts_at: null, ends_at: null };
+		await bucket.put(`${game.id}/oldoldoldoldoldoldoldo.webp`, WEBP);
+		await db
+			.prepare('UPDATE team SET avatar_key = ? WHERE id = ?')
+			.bind(`${game.id}/oldoldoldoldoldoldoldo.webp`, rats.id)
+			.run();
+
+		const outcome = await saveOwnAvatar(
+			db,
+			bucket.asBucket(),
+			{ team: rats, game: ended },
+			avatarForm(WEBP, 'image/webp')
+		);
+
+		expect(outcome).toEqual({ status: 200, result: { kind: 'avatar-saved' } });
+		const key = (await getTeamByToken(db, rats.token))?.avatar_key;
+		expect(key).toMatch(new RegExp(`^${game.id}/.+\\.webp$`));
+		expect(bucket.keys()).toEqual([key]);
+	});
+
+	it('refuses a file that is not a JPEG or WebP image', async () => {
+		const outcome = await saveOwnAvatar(
+			db,
+			bucket.asBucket(),
+			{ team: rats, game },
+			avatarForm(new TextEncoder().encode('<svg/>'), 'image/svg+xml')
+		);
+
+		expect(outcome).toEqual({ status: 400, result: { kind: 'error', message: NOT_AN_IMAGE } });
+		expect(bucket.keys()).toEqual([]);
+	});
+
+	it('asks for a picture when none is sent', async () => {
+		const outcome = await saveOwnAvatar(
+			db,
+			bucket.asBucket(),
+			{ team: rats, game },
+			new FormData()
+		);
+
+		expect(outcome).toEqual({
+			status: 400,
+			result: { kind: 'error', message: 'Choose a picture first.' }
+		});
+	});
+
+	it('reports a team deleted since its link was opened and keeps no picture', async () => {
+		await deleteTeam(db, game.id, rats.id);
+
+		const outcome = await saveOwnAvatar(
+			db,
+			bucket.asBucket(),
+			{ team: rats, game },
+			avatarForm(WEBP, 'image/webp')
+		);
+
+		expect(outcome.status).toBe(404);
+		expect(bucket.keys()).toEqual([]);
 	});
 });
