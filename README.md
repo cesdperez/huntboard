@@ -73,7 +73,7 @@ pnpm exec wrangler d1 create huntboard
 pnpm exec wrangler r2 bucket create huntboard-images
 ```
 
-The bucket holds the game images and team pictures. `wrangler deploy` fails while the bucket named in `wrangler.jsonc` does not exist, so create it before the first deploy that includes the `IMAGES` binding.
+The bucket holds the game images and team pictures. `wrangler deploy` fails while the bucket named in `wrangler.jsonc` does not exist, so create it before the first deploy.
 
 Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, in place of the zeros, and commit it. Then:
 

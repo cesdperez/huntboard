@@ -88,7 +88,7 @@ The organiser keeps the challenge list secret and writes it in their own tools. 
 
 ## Proof stays outside the app
 
-Photos and videos keep going to WhatsApp, and some proof arrives in person (furniture). Storing media for 40 people is a separate project. The claim note is enough to link a claim to the proof.
+Photos and videos keep going to WhatsApp, and some proof arrives in person (furniture). Storing proof for 40 people is a separate project. The claim note is enough to link a claim to the proof.
 
 ## Two images: a game image and team pictures
 
@@ -106,7 +106,7 @@ Challenge choice is the strategy, so every team sees the full list with point ra
 ## Stack
 
 - **SvelteKit + TypeScript**, deployed to Cloudflare Workers with `@sveltejs/adapter-cloudflare`.
-- **D1** (SQLite) for storage.
+- **D1** (SQLite) for storage, **R2** for the game image and team pictures.
 - **pnpm**.
 - **Tailwind + shadcn-svelte** for components, only where they save time (buttons, dialogs, tables).
 - **Vitest** for the challenge parser and scoring rules. These are pure functions and the easiest place to get things wrong.
@@ -170,6 +170,6 @@ A per-link Worker limiter was removed. From one IP it allowed no more than the W
 
 A game stores a theme id, and the admin picks it in Setup. Themes are registered in code, not stored as data, so each one is a reviewed set of tokens and fonts that keeps the rules in DESIGN.md. Only the team page and the scoreboard use it. Admin pages keep the default, so judging looks the same in every game. An id that is no longer registered reads as the default, so removing a theme never breaks a game. Reset keeps the theme, like the name.
 
-## Nothing event-specific in the app
+## Events bring their mood through a theme, their people through game data
 
-The app never mentions specific people or a specific event. Names, themes and inside jokes live only in the challenge text the organiser writes.
+A theme may be made for one event, such as a Scottish birthday, and ships as one registered theme among the general ones. It carries only a palette, fonts and decoration. The app's code and copy never name specific people: names, faces and inside jokes come from the game name, the game image and the challenge text the organiser writes.
