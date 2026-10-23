@@ -10,6 +10,7 @@
 	import { ordinal } from '#lib/ordinal.js';
 	import { plural } from '#lib/plural.js';
 	import { REORDER_MS, motionMs } from '#lib/score-motion.js';
+	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
 
 	type Props = {
@@ -29,19 +30,24 @@
 	const own = $derived(standings.find((row) => row.own));
 	// Initials appear only once some team has a picture, so a game without pictures looks as before.
 	const showAvatars = $derived(standings.some((row) => row.avatarKey));
+	const event = $derived(pageLayout() === 'event');
 </script>
 
 <header data-sticky-strip class="sticky top-0 z-30 border-b surface-strip shadow-strip">
 	<div class="mx-auto max-w-content">
 		<button
 			type="button"
-			class="flex min-h-row w-full items-center gap-3 px-gutter pt-2 text-left"
+			class={cn(
+				'flex min-h-row w-full items-center gap-3 px-gutter pt-2 text-left',
+				event && 'pb-2'
+			)}
 			aria-expanded={expanded}
 			aria-controls="team-standings"
 			onclick={() => (expanded = !expanded)}
 		>
 			{#if own}
 				<span class="type-rank">{ordinal(own.rank)}</span>
+				{#if event}<span aria-hidden="true" class="h-10 w-px shrink-0 bg-line"></span>{/if}
 			{/if}
 			{#if showAvatars}
 				<TeamAvatar
@@ -51,8 +57,15 @@
 				/>
 			{/if}
 			<span class="min-w-0 flex-1">
-				<span class="block truncate type-heading">{teamName}</span>
-				{#if members}<span class="block truncate type-secondary">{members}</span>{/if}
+				{#if event}
+					<span class="block truncate font-display text-[22px] leading-tight font-bold"
+						>{teamName}</span
+					>
+					<span class="block truncate type-secondary tabular-nums">{countdown ?? ' '}</span>
+				{:else}
+					<span class="block truncate type-heading">{teamName}</span>
+					{#if members}<span class="block truncate type-secondary">{members}</span>{/if}
+				{/if}
 			</span>
 			<CountingPoints value={own?.total ?? 0} />
 			<ChevronDownIcon
@@ -61,7 +74,9 @@
 			/>
 			<span class="sr-only">{expanded ? 'Hide' : 'Show'} the scoreboard</span>
 		</button>
-		<p class="px-gutter pb-2 type-secondary tabular-nums">{countdown ?? ' '}</p>
+		{#if !event}
+			<p class="px-gutter pb-2 type-secondary tabular-nums">{countdown ?? ' '}</p>
+		{/if}
 		<OfflineNotice class="px-gutter pb-2" />
 
 		{#if expanded}

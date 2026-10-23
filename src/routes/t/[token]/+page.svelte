@@ -1,22 +1,26 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { refreshGameData } from '#lib/components/connection/index.js';
+	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { GameImageHeader } from '#lib/components/images/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import AvatarForm from '#lib/components/team/avatar-form.svelte';
 	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
 	import ChallengeSheet from '#lib/components/team/challenge-sheet.svelte';
 	import RenameSheet from '#lib/components/team/rename-sheet.svelte';
+	import SectionHeading from '#lib/components/team/section-heading.svelte';
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
 	import { Toast } from '#lib/components/toast/index.js';
 	import { GameClock } from '#lib/game-clock.svelte.js';
 	import { groupBySection } from '#lib/group-by-section.js';
 	import { startPolling } from '#lib/live-updates.js';
+	import { pageLayout } from '#lib/themes/page-layout.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
 	const clock = new GameClock(() => data.game);
+	const event = $derived(pageLayout() === 'event');
 
 	// The id outlives the open flag, so the sheet keeps its content while it slides away.
 	let selectedId = $state<number | null>(null);
@@ -45,14 +49,24 @@
 </svelte:head>
 
 <div class="min-h-dvh">
-	<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
-		<p class="truncate type-secondary">{data.game.name}</p>
-		<NicknameButton />
-	</div>
-	{#if data.game.image}
-		<div class="mx-auto max-w-content px-gutter pb-2">
-			<GameImageHeader image={data.game.image} />
+	{#if event}
+		<AppBar><NicknameButton /></AppBar>
+		<EventBanner
+			name={data.game.name}
+			day={clock.startDay}
+			countdown={clock.countdown}
+			image={data.game.image}
+		/>
+	{:else}
+		<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
+			<p class="truncate type-secondary">{data.game.name}</p>
+			<NicknameButton />
 		</div>
+		{#if data.game.image}
+			<div class="mx-auto max-w-content px-gutter pb-2">
+				<GameImageHeader image={data.game.image} />
+			</div>
+		{/if}
 	{/if}
 
 	<TeamStrip
@@ -73,13 +87,9 @@
 			{#each groupBySection(data.challenges) as group, groupIndex (groupIndex)}
 				<section class="flex flex-col">
 					{#if group.section}
-						<h2
-							class="-mx-gutter mt-4 bg-section px-gutter py-1 font-display type-heading text-on-section"
-						>
-							{group.section}
-						</h2>
+						<SectionHeading section={group.section} />
 					{/if}
-					<ul class="flex flex-col border-t">
+					<ul class={['flex flex-col', !event && 'border-t']}>
 						{#each group.items as challenge (challenge.id)}
 							<ChallengeRow {challenge} onselect={() => select(challenge.id)} />
 						{/each}

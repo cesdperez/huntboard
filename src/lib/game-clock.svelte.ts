@@ -1,5 +1,5 @@
 import { createContext } from 'svelte';
-import { formatClockTime } from '#lib/clock-time.js';
+import { formatClockTime, formatDay } from '#lib/clock-time.js';
 import { claimsClosedMessage } from '#lib/domain/claim-messages.js';
 import { countdownLine } from '#lib/domain/countdown.js';
 import { gamePhase, type GamePhase, type GameWindow } from '#lib/domain/game-window.js';
@@ -36,6 +36,12 @@ export class GameClock {
 
 	get countdown(): string | null {
 		return this.now && countdownLine(this.#window(), this.now, this.formatTime);
+	}
+
+	/** The day the game starts, like "24 October", or null without a start time. */
+	get startDay(): string | null {
+		const { startsAt } = this.#window();
+		return this.now && startsAt ? formatDay(startsAt, this.now) : null;
 	}
 
 	/** Why claims are closed now, or null while they are open or the clock has not started. */

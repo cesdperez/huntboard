@@ -1,11 +1,16 @@
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
 	import { resolve } from '$app/paths';
+	import favicon from '#lib/assets/favicon.svg';
+	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { Marker, type MarkerState } from '#lib/components/marker/index.js';
 	import { Points } from '#lib/components/points/index.js';
 	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
+	import SectionHeading from '#lib/components/team/section-heading.svelte';
+	import TeamStrip from '#lib/components/team/team-strip.svelte';
+	import type { Standing } from '#lib/domain/scoring.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import { THEMES, resolveTheme, supportedModes, type ColorMode } from '#lib/themes/index.js';
 	import type { PageProps } from './$types';
@@ -46,17 +51,56 @@
 		{ token: '--on-strip-muted', use: 'Secondary text on the strip' },
 		{ token: '--strip-line', use: 'Dividers on the strip' },
 		{ token: '--strip-score', use: 'Total on the strip' },
+		{ token: '--strip-own-row', use: "Background of the team's own row on the strip" },
+		{ token: '--strip-danger', use: 'Errors on the strip' },
 		{ token: '--score', use: 'Score totals' },
 		{ token: '--section', use: 'Band behind team page section headings' },
 		{ token: '--on-section', use: 'Section heading text' },
-		{ token: '--waiting', use: 'Waiting for a judge' }
+		{ token: '--waiting', use: 'Waiting for a judge' },
+		{ token: '--app-bar', use: 'Event layout app bar' },
+		{ token: '--on-app-bar', use: 'Text on the app bar' },
+		{ token: '--banner', use: 'Event banner' },
+		{ token: '--on-banner', use: 'Text on the event banner' },
+		{ token: '--section-rule', use: 'Rule beside event layout section headings' }
+	];
+
+	const sampleImage = { src: favicon, label: 'Birthday invitation' };
+
+	const sampleStandings: Standing[] = [
+		{
+			teamId: 1,
+			rank: 1,
+			name: 'Night Owls',
+			members: 'Cas, Dee',
+			avatarKey: null,
+			total: 180,
+			own: false
+		},
+		{
+			teamId: 2,
+			rank: 2,
+			name: 'Canal Rats',
+			members: 'Ana, Bo',
+			avatarKey: null,
+			total: 145,
+			own: true
+		}
 	];
 
 	const sampleChallenges: TeamChallenge[] = [
 		{
+			id: 3,
+			title: 'Make a birthday card',
+			description: 'Get creative, any material counts.',
+			section: 'Around town',
+			minPoints: 5,
+			maxPoints: 20,
+			claim: null
+		},
+		{
 			id: 1,
 			title: 'Free Marktplaats item',
-			description: null,
+			description: 'Find something given away for free and bring it to the meeting point.',
 			section: 'Around town',
 			minPoints: 30,
 			maxPoints: 100,
@@ -72,9 +116,27 @@
 			}
 		},
 		{
+			id: 4,
+			title: 'Swim in a fountain',
+			description: 'Get a team member in a public fountain.',
+			section: 'Around town',
+			minPoints: 25,
+			maxPoints: 25,
+			claim: {
+				id: 4,
+				status: 'scored',
+				note: null,
+				markedBy: 'Ana',
+				markedAt: '2026-10-23T11:10:00.000Z',
+				points: 25,
+				judgedBy: 'Sam',
+				judgeNote: null
+			}
+		},
+		{
 			id: 2,
 			title: 'Free dessert',
-			description: null,
+			description: 'Get a free dessert somewhere in town.',
 			section: 'Around town',
 			minPoints: 10,
 			maxPoints: 15,
@@ -106,7 +168,13 @@
 	];
 
 	const typeScale = [
-		{ role: 'Score totals, ranks, in --font-display', className: 'type-score', sample: '1st 145' },
+		{ role: 'Score totals, in --font-score', className: 'type-score', sample: '145' },
+		{ role: 'Ranks, in --font-display', className: 'type-rank', sample: '1st' },
+		{
+			role: 'Event banner title, in --font-banner',
+			className: 'font-banner text-[44px] leading-none uppercase',
+			sample: 'Birthday hunt'
+		},
 		{ role: 'Screen title, in --font-display', className: 'type-title', sample: 'Canal Rats' },
 		{ role: 'Section heading', className: 'type-heading', sample: 'Around town' },
 		{ role: 'Body, challenge titles', className: 'type-body', sample: 'Swim in a fountain' },
@@ -170,7 +238,7 @@
 				<li class="flex min-h-row items-center gap-3 border-b">
 					<span
 						class="size-marker-lg shrink-0 rounded-control border"
-						style:background-color="var({color.token})"
+						style:background="var({color.token})"
 					></span>
 					<span class="flex min-w-0 flex-col">
 						<code class="text-[15px] font-semibold">{color.token}</code>
@@ -193,40 +261,37 @@
 
 	<section class="flex flex-col gap-3">
 		<h2 class="type-heading">Team page</h2>
-		<div class="flex flex-col border surface-strip shadow-strip">
-			<div class="flex min-h-row items-center gap-3 px-gutter pt-2">
-				<span class="type-score text-[28px]">2nd</span>
-				<span class="min-w-0 flex-1">
-					<span class="block truncate type-heading">Canal Rats</span>
-					<span class="block truncate type-secondary">Ana, Bo</span>
-				</span>
-				<Points value={145} variant="total" />
+		{#if theme.layout === 'event'}
+			<div class="-mx-gutter flex flex-col gap-4">
+				<div>
+					<AppBar><Button variant="ghost">Ana</Button></AppBar>
+					<EventBanner
+						name="Birthday hunt"
+						day="24 October"
+						countdown="Ends in 1:42:10"
+						image={sampleImage}
+					/>
+				</div>
+				<EventBanner
+					name="Birthday hunt"
+					day="24 October"
+					countdown="Starts in 0:42:10"
+					image={null}
+				/>
 			</div>
-			<p class="px-gutter pb-2 type-secondary tabular-nums">Ends in 1:42:10</p>
-			<ol class="mx-gutter mb-4 flex flex-col border-t">
-				<li
-					class="flex min-h-touch items-center gap-3 border-b border-l-4 border-l-transparent pl-2"
-				>
-					<span class="w-10 shrink-0 tabular-nums">1st</span>
-					<span class="min-w-0 flex-1 truncate">Night Owls</span>
-					<Points value={180} />
-				</li>
-				<li
-					class="flex min-h-touch items-center gap-3 border-b border-l-4 border-l-own bg-own-row pl-2 font-semibold"
-				>
-					<span class="w-10 shrink-0 tabular-nums">2nd</span>
-					<span class="min-w-0 flex-1 truncate">Canal Rats</span>
-					<Points value={145} />
-				</li>
-			</ol>
+		{/if}
+		<div class="-mx-gutter">
+			<TeamStrip
+				teamName="Canal Rats"
+				members="Ana, Bo"
+				standings={sampleStandings}
+				countdown="Ends in 1:42:10"
+				onrename={() => {}}
+			/>
 		</div>
 		<div class="flex flex-col">
-			<h3
-				class="-mx-gutter mt-4 bg-section px-gutter py-1 font-display type-heading text-on-section"
-			>
-				Around town
-			</h3>
-			<ul class="flex flex-col border-t">
+			<SectionHeading section="Around town" />
+			<ul class={['flex flex-col', theme.layout === 'plain' && 'border-t']}>
 				{#each sampleChallenges as challenge (challenge.id)}
 					<ChallengeRow {challenge} onselect={() => {}} />
 				{/each}
