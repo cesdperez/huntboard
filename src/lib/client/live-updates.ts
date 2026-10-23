@@ -1,6 +1,3 @@
-/** Load functions that show live game state call depends(GAME_DATA), so invalidating it refreshes them. */
-export const GAME_DATA = 'huntboard:game';
-
 /** Sets the D1 rows read budget, see docs/decisions.md "Live updates by polling". */
 export const POLL_INTERVAL_MS = 60_000;
 

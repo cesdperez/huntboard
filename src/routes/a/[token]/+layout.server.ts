@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { GAME_DATA } from '#lib/client/live-updates.js';
+import { GAME_DATA } from '#lib/domain/game-data.js';
 import { requireAdminGame } from '#lib/server/http/admin-game.js';
 import { getAdminLayout } from '#lib/server/pages/admin-layout.js';
 import type { LayoutServerLoad } from './$types';
