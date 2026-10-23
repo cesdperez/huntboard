@@ -1,3 +1,4 @@
+import type { GameImage } from '#lib/images.js';
 import { computeScoreboard, toStandings, type Standing } from '#lib/domain/scoring.js';
 import { teamBoard, type TeamChallenge } from '#lib/domain/team-board.js';
 import { listChallenges } from './db/challenges.js';
@@ -6,6 +7,7 @@ import { getGameById } from './db/games.js';
 import { getTeamByToken } from './db/links.js';
 import { getScoreboardInput } from './db/scoreboard.js';
 import type { GameRow, TeamRow } from './db/types.js';
+import { gameImage } from './game-image-view.js';
 
 export interface TeamLink {
 	team: TeamRow;
@@ -21,8 +23,8 @@ export async function findTeamLink(db: D1Database, token: string): Promise<TeamL
 
 /** What the team page sends to the browser. Times are UTC ISO strings. */
 export interface TeamPageData {
-	team: { name: string; members: string };
-	game: { name: string; startsAt: string | null; endsAt: string | null };
+	team: { name: string; members: string; avatarKey: string | null };
+	game: { name: string; startsAt: string | null; endsAt: string | null; image: GameImage | null };
 	standings: Standing[];
 	challenges: TeamChallenge[];
 }
@@ -39,8 +41,13 @@ export async function getTeamPage(
 		getScoreboardInput(db, game)
 	]);
 	return {
-		team: { name: team.name, members: team.members },
-		game: { name: game.name, startsAt: game.starts_at, endsAt: game.ends_at },
+		team: { name: team.name, members: team.members, avatarKey: team.avatar_key },
+		game: {
+			name: game.name,
+			startsAt: game.starts_at,
+			endsAt: game.ends_at,
+			image: gameImage(game)
+		},
 		standings: toStandings(computeScoreboard(scoreboard), team.id),
 		challenges: teamBoard(challenges, claims)
 	};

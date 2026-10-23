@@ -46,7 +46,7 @@ export async function updateGameSettings(
 	return game;
 }
 
-/** Returns the game to how /new created it, except that the name, theme and links stay. */
+/** Returns the game to how /new created it, except that the name, theme and links stay. The caller deletes the images. */
 export async function resetGame(db: D1Database, gameId: number): Promise<GameRow> {
 	// Claims, adjustments and arrivals go with their team through ON DELETE CASCADE.
 	const [, , reset] = await db.batch<GameRow>([
@@ -54,7 +54,8 @@ export async function resetGame(db: D1Database, gameId: number): Promise<GameRow
 		db.prepare('DELETE FROM challenge WHERE game_id = ?').bind(gameId),
 		db
 			.prepare(
-				`UPDATE game SET starts_at = NULL, ends_at = NULL, late_penalty_per_minute = 0
+				`UPDATE game SET starts_at = NULL, ends_at = NULL, late_penalty_per_minute = 0,
+					image_key = NULL, image_label = ''
 				WHERE id = ? RETURNING *`
 			)
 			.bind(gameId)

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createGame, updateGameSettings } from './db/games.js';
+import { setGameImage, setTeamAvatar } from './db/images.js';
 import { createTestDb } from './db/testing/test-db.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from './db/types.js';
@@ -43,16 +44,29 @@ describe('getTeamPage', () => {
 
 		const page = await getTeamPage(db, rats, game);
 
-		expect(page.team).toEqual({ name: 'Canal Rats', members: '' });
+		expect(page.team).toEqual({ name: 'Canal Rats', members: '', avatarKey: null });
 		expect(page.game).toEqual({
 			name: 'Canal hunt',
 			startsAt: '2026-06-01T16:00:00.000Z',
-			endsAt: '2026-06-01T21:00:00.000Z'
+			endsAt: '2026-06-01T21:00:00.000Z',
+			image: null
 		});
 		expect(page.challenges.map((c) => [c.title, c.section, c.claim?.status ?? 'open'])).toEqual([
 			['Swim in a fountain', 'Water', 'pending'],
 			['Bake a cake', null, 'open']
 		]);
+	});
+
+	it('shows the team picture and the game image', async () => {
+		await setTeamAvatar(db, game.id, rats.id, `${game.id}/rats.webp`);
+		await setGameImage(db, game.id, `${game.id}/poster.webp`, 'Map');
+		const link = (await findTeamLink(db, rats.token))!;
+
+		const page = await getTeamPage(db, link.team, link.game);
+
+		expect(page.team.avatarKey).toBe(`${game.id}/rats.webp`);
+		expect(page.game.image).toEqual({ src: `/images/${game.id}/poster.webp`, label: 'Map' });
+		expect(page.standings.find((row) => row.own)?.avatarKey).toBe(`${game.id}/rats.webp`);
 	});
 
 	it('ranks every team by total and marks this team row', async () => {
@@ -62,8 +76,24 @@ describe('getTeamPage', () => {
 		const page = await getTeamPage(db, rats, game);
 
 		expect(page.standings).toEqual([
-			{ teamId: owls.id, rank: 1, name: 'Night Owls', members: '', total: 9, own: false },
-			{ teamId: rats.id, rank: 2, name: 'Canal Rats', members: '', total: 4, own: true }
+			{
+				teamId: owls.id,
+				rank: 1,
+				name: 'Night Owls',
+				members: '',
+				avatarKey: null,
+				total: 9,
+				own: false
+			},
+			{
+				teamId: rats.id,
+				rank: 2,
+				name: 'Canal Rats',
+				members: '',
+				avatarKey: null,
+				total: 4,
+				own: true
+			}
 		]);
 	});
 

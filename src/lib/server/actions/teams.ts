@@ -7,8 +7,9 @@ import {
 	normalizeTeamName
 } from '#lib/team-name.js';
 import { requireAdminGame } from '#lib/server/admin-game.js';
-import { addTeam, deleteTeam, moveTeam, updateTeam } from '#lib/server/db/teams.js';
+import { addTeam, moveTeam, updateTeam } from '#lib/server/db/teams.js';
 import { readId, readString } from '#lib/server/form.js';
+import { deleteTeamWithAvatar, removeTeamAvatar } from '#lib/server/images.js';
 import type { AdminAction, AdminActions } from './types.js';
 
 /** What the teams actions return under `page.form.teams`. Errors without a teamId belong to the add form. */
@@ -76,7 +77,7 @@ export const teamsActions = {
 		const teamId = readId(await request.formData(), 'teamId');
 		if (teamId === null) return teamsFail(400, { error: MISSING_ERROR });
 
-		const result = await deleteTeam(env.DB, game.id, teamId);
+		const result = await deleteTeamWithAvatar(env.DB, env.IMAGES, game.id, teamId);
 		if (result === 'has-claims') {
 			return teamsFail(409, {
 				error: 'This team has claims, so it cannot be deleted. Rename it instead.',
@@ -85,5 +86,16 @@ export const teamsActions = {
 		}
 		if (result === 'not-found') return teamsFail(404, { error: MISSING_ERROR, teamId });
 		return { teams: {} satisfies TeamsFormResult };
+	},
+
+	teamsAvatarRemove: async ({ params, request }) => {
+		const game = await requireAdminGame(params.token);
+		const teamId = readId(await request.formData(), 'teamId');
+		if (teamId === null) return teamsFail(400, { error: MISSING_ERROR });
+
+		if (!(await removeTeamAvatar(env.DB, env.IMAGES, game.id, teamId))) {
+			return teamsFail(404, { error: MISSING_ERROR, teamId });
+		}
+		return { teams: { teamId } satisfies TeamsFormResult };
 	}
 } satisfies AdminActions;

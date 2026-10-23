@@ -70,7 +70,10 @@ The app runs on the Cloudflare free tier. A human runs these commands once, from
 ```sh
 pnpm exec wrangler login
 pnpm exec wrangler d1 create huntboard
+pnpm exec wrangler r2 bucket create huntboard-images
 ```
+
+The bucket holds the game images and team pictures. `wrangler deploy` fails while the bucket named in `wrangler.jsonc` does not exist, so create it before the first deploy that includes the `IMAGES` binding.
 
 Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, in place of the zeros, and commit it. Then:
 
@@ -97,3 +100,5 @@ Rehearsal games stay in the database. Delete them before the event:
 ```sh
 pnpm exec wrangler d1 execute huntboard --remote --command "DELETE FROM game WHERE name LIKE 'Rehearsal %'"
 ```
+
+Their images stay in R2 under `<game id>/`. Reset a rehearsal game from its Setup tab before deleting it to remove them too.

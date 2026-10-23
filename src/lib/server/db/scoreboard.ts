@@ -15,7 +15,7 @@ export async function getScoreboardInput(
 	const [teams, claims, adjustments] = await db.batch([
 		db
 			.prepare(
-				`SELECT id, name, members, position, arrived_at AS arrivedAt
+				`SELECT id, name, members, avatar_key AS avatarKey, position, arrived_at AS arrivedAt
 				FROM team WHERE game_id = ? ORDER BY position, id`
 			)
 			.bind(game.id),

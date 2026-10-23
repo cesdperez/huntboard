@@ -6,6 +6,7 @@ import {
 	resetGame,
 	updateGameSettings
 } from './games.js';
+import { setGameImage } from './images.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import { createTestDb } from './testing/test-db.js';
 
@@ -132,8 +133,9 @@ describe('resetGame', () => {
 		expect(await resetGame(db, game.id)).toMatchObject({ name: 'Canal hunt', theme: 'night' });
 	});
 
-	it('removes teams, challenges, claims and adjustments and clears the schedule', async () => {
+	it('removes teams, challenges, claims and adjustments and clears the schedule and image', async () => {
 		const game = await seedPlayedGame('Canal hunt');
+		await setGameImage(db, game.id, `${game.id}/poster.webp`, 'Invitation');
 
 		const reset = await resetGame(db, game.id);
 
@@ -141,7 +143,9 @@ describe('resetGame', () => {
 			...game,
 			starts_at: null,
 			ends_at: null,
-			late_penalty_per_minute: 0
+			late_penalty_per_minute: 0,
+			image_key: null,
+			image_label: ''
 		});
 		for (const table of ['team', 'challenge', 'claim', 'adjustment']) {
 			expect(await count(table)).toBe(0);

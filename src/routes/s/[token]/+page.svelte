@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import { OfflineNotice, refreshGameData } from '#lib/components/connection/index.js';
+	import { GameImageHeader, TeamAvatar } from '#lib/components/images/index.js';
 	import { CountingPoints } from '#lib/components/points/index.js';
 	import { GameClock } from '#lib/game-clock.svelte.js';
 	import { startPolling } from '#lib/live-updates.js';
@@ -12,6 +13,8 @@
 	let { data }: PageProps = $props();
 
 	const clock = new GameClock(() => data.game);
+	// Initials appear only once some team has a picture, so a game without pictures looks as before.
+	const showAvatars = $derived(data.standings.some((row) => row.avatarKey));
 
 	onMount(() => {
 		const stopClock = clock.start();
@@ -36,6 +39,9 @@
 		<h1 class="scoreboard-title type-title">{data.game.name}</h1>
 		<p class="scoreboard-status type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
 		<OfflineNotice />
+		{#if data.game.image}
+			<GameImageHeader image={data.game.image} class="scoreboard-image mt-2" />
+		{/if}
 	</header>
 
 	{#if data.standings.length === 0}
@@ -52,6 +58,13 @@
 					<span class="scoreboard-rank w-16 shrink-0 type-score text-[28px]"
 						>{ordinal(row.rank)}</span
 					>
+					{#if showAvatars}
+						<TeamAvatar
+							name={row.name}
+							avatarKey={row.avatarKey}
+							class="scoreboard-avatar size-10 text-[17px]"
+						/>
+					{/if}
 					<span class="min-w-0 flex-1">
 						<span class="scoreboard-name block truncate">{row.name}</span>
 						{#if row.members}<span class="scoreboard-members block type-secondary"
@@ -91,6 +104,26 @@
 		.scoreboard-rank {
 			width: calc(var(--score-size) * 1.6);
 			font-size: calc(var(--score-size) * 0.6);
+		}
+
+		.scoreboard :global(.scoreboard-avatar) {
+			width: calc(var(--score-size) * 0.9);
+			height: calc(var(--score-size) * 0.9);
+			font-size: calc(var(--score-size) * 0.4);
+		}
+
+		.scoreboard :global(.scoreboard-image) {
+			gap: calc(var(--score-size) * 0.3);
+			font-size: calc(var(--score-size) * 0.25);
+		}
+
+		.scoreboard :global(.scoreboard-image .game-image-thumb) {
+			width: calc(var(--score-size) * 0.7);
+			height: calc(var(--score-size) * 0.7);
+		}
+
+		.scoreboard :global(.scoreboard-image .game-image-view) {
+			font-size: inherit;
 		}
 
 		.scoreboard-name {

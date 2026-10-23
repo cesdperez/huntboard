@@ -1,6 +1,7 @@
 import { CLAIM_NOTE_MAX_LENGTH } from '#lib/claim-note.js';
 import { DEAD_LINK_MESSAGE } from '#lib/dead-link.js';
 import { gamePhase, type GamePhase } from '#lib/domain/game-window.js';
+import { AVATAR_MAX_BYTES } from '#lib/images.js';
 import { normalizeNickname } from '#lib/nickname.js';
 import {
 	TEAM_MEMBERS_ERROR,
@@ -9,9 +10,12 @@ import {
 	normalizeTeamName
 } from '#lib/team-name.js';
 import { markClaim, undoClaim } from './db/claims.js';
+import { setTeamAvatar } from './db/images.js';
 import { updateTeam } from './db/teams.js';
 import { conflictMessage } from './conflict-message.js';
 import { readId, readString } from './form.js';
+import { replaceImage, type ImageBucket } from './image-store.js';
+import { readImageUpload } from './image-upload.js';
 import type { TeamLink } from './team-page.js';
 
 /**
@@ -22,6 +26,7 @@ export type TeamFormResult =
 	| { kind: 'marked' }
 	| { kind: 'undone' }
 	| { kind: 'renamed' }
+	| { kind: 'avatar-saved' }
 	| { kind: 'closed'; phase: Exclude<GamePhase, 'during'> }
 	| { kind: 'error'; message: string };
 
@@ -102,6 +107,24 @@ export async function renameOwnTeam(
 		return error(404, DEAD_LINK_MESSAGE);
 	}
 	return { status: 200, result: { kind: 'renamed' } };
+}
+
+/** Allowed outside the game window, like a rename. */
+export async function saveOwnAvatar(
+	db: D1Database,
+	bucket: ImageBucket,
+	{ team, game }: TeamLink,
+	data: FormData
+): Promise<TeamActionOutcome> {
+	const read = await readImageUpload(data, 'avatar', AVATAR_MAX_BYTES);
+	if (read.status === 'missing') return error(400, 'Choose a picture first.');
+	if (read.status === 'invalid') return error(400, read.message);
+
+	const stored = await replaceImage(bucket, game.id, read.upload, (key) =>
+		setTeamAvatar(db, game.id, team.id, key)
+	);
+	if (!stored) return error(404, DEAD_LINK_MESSAGE);
+	return { status: 200, result: { kind: 'avatar-saved' } };
 }
 
 function closedOutcome(game: TeamLink['game'], now: Date): TeamActionOutcome | null {
