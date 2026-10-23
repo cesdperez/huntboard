@@ -20,6 +20,9 @@
 
 	let { name, day, countdown, image, heading = false, class: className }: Props = $props();
 
+	// Longer game names take a smaller title, so they wrap into a few lines, not a column of words.
+	const LONG_NAME = 16;
+
 	let open = $state(false);
 </script>
 
@@ -29,16 +32,22 @@
 		data-image={image ? '' : undefined}
 	>
 		{#if image}
-			<img
-				src={image.src}
-				alt=""
-				decoding="async"
-				class="event-banner-thumb h-30 w-24 rounded-sm border-2 border-ink object-cover object-top"
-			/>
+			<!-- A second way to open the sheet for thumbs, hidden from keyboards and screen readers,
+			     which get the View button. -->
+			<button
+				type="button"
+				tabindex="-1"
+				aria-hidden="true"
+				class="event-banner-thumb overflow-hidden rounded-sm border-2 border-ink"
+				onclick={() => (open = true)}
+			>
+				<img src={image.src} alt="" decoding="async" class="size-full object-cover object-top" />
+			</button>
 		{/if}
 		<svelte:element
 			this={heading ? 'h1' : 'p'}
-			class="event-banner-title self-end font-banner text-[44px] leading-[0.9] break-words uppercase"
+			class="event-banner-title self-end font-banner leading-[0.85] break-words uppercase"
+			data-long={name.length > LONG_NAME || undefined}
 		>
 			{name}
 		</svelte:element>
@@ -80,7 +89,7 @@
 	.event-banner-grid[data-image] {
 		grid-template-columns: auto minmax(0, 1fr) 48px;
 		grid-template-areas:
-			'thumb title art'
+			'thumb title title'
 			'thumb meta art'
 			'thumb view view';
 	}
@@ -88,10 +97,17 @@
 	.event-banner-thumb {
 		grid-area: thumb;
 		align-self: start;
+		width: 96px;
+		height: 120px;
 	}
 
 	.event-banner-title {
 		grid-area: title;
+		font-size: clamp(48px, 17vw, 80px);
+	}
+
+	.event-banner-title[data-long] {
+		font-size: 40px;
 	}
 
 	.event-banner-meta {

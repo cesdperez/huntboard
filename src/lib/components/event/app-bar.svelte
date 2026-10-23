@@ -19,7 +19,7 @@
 			className
 		)}
 	>
-		<p class="font-display text-[20px] leading-none font-bold">Huntboard</p>
+		<p class="app-bar-wordmark font-display text-[20px] leading-none font-bold">Huntboard</p>
 		{@render children?.()}
 	</div>
 </div>

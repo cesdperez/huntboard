@@ -110,9 +110,7 @@
 						{#if layout === 'event'}
 							<span class="flex shrink-0 flex-col items-end">
 								<CountingPoints value={row.total} class="scoreboard-total" />
-								<span aria-hidden="true" class="scoreboard-unit text-[13px] leading-none text-muted"
-									>points</span
-								>
+								<span class="scoreboard-unit text-[15px] leading-none text-muted">points</span>
 							</span>
 						{:else}
 							<CountingPoints value={row.total} class="scoreboard-total" />
@@ -185,31 +183,48 @@
 			font-size: inherit;
 		}
 
-		/* The banner follows the screen height, not the total size, so few teams cannot push the list off it. */
+		/* The app bar and banner follow the screen height, not the total size, so few teams cannot
+		   push the list off it. The game name gets one wide row, the details stack beside it. */
 		.scoreboard :global(.scoreboard-app-bar) {
 			max-width: none;
+			min-height: 6dvh;
 			padding-inline: 6vw;
+		}
+
+		.scoreboard :global(.scoreboard-app-bar .app-bar-wordmark) {
+			font-size: 3dvh;
 		}
 
 		.scoreboard :global(.scoreboard-banner .event-banner-grid) {
 			max-width: none;
 			padding-inline: 6vw;
-			padding-block: 2dvh;
-			column-gap: 2dvh;
-			row-gap: 1dvh;
-			grid-template-columns: minmax(0, 1fr) 9dvh;
+			padding-block: 2.5dvh;
+			column-gap: 3dvh;
+			row-gap: 1.5dvh;
+			align-items: center;
+			grid-template-columns: minmax(0, 1fr) auto 12dvh;
+			grid-template-areas: 'title meta art';
 		}
 
 		.scoreboard :global(.scoreboard-banner .event-banner-grid[data-image]) {
-			grid-template-columns: auto minmax(0, 1fr) 9dvh;
+			grid-template-columns: auto minmax(0, 1fr) auto 12dvh;
+			grid-template-areas:
+				'thumb title meta art'
+				'thumb title view art';
 		}
 
 		.scoreboard :global(.scoreboard-banner .event-banner-title) {
-			font-size: 8dvh;
+			align-self: center;
+			font-size: min(16dvh, 9vw);
+		}
+
+		.scoreboard :global(.scoreboard-banner .event-banner-title[data-long]) {
+			font-size: min(9dvh, 5vw);
 		}
 
 		.scoreboard :global(.scoreboard-banner .event-banner-meta) {
-			font-size: 2.4dvh;
+			align-self: end;
+			font-size: 2.8dvh;
 		}
 
 		.scoreboard :global(.scoreboard-banner .event-banner-icon) {
@@ -218,14 +233,18 @@
 		}
 
 		.scoreboard :global(.scoreboard-banner .event-banner-thumb) {
-			width: 13dvh;
-			height: 17dvh;
+			width: 15dvh;
+			height: 19dvh;
 		}
 
 		.scoreboard :global(.scoreboard-banner .event-banner-view) {
-			justify-self: start;
-			min-height: 5dvh;
-			font-size: 2.2dvh;
+			align-self: start;
+			min-height: 5.5dvh;
+			font-size: 2.4dvh;
+		}
+
+		.scoreboard :global(.scoreboard-banner .event-banner-art) {
+			align-self: stretch;
 		}
 
 		.scoreboard-name {
@@ -242,7 +261,7 @@
 		}
 
 		.scoreboard-unit {
-			font-size: max(13px, calc(var(--score-size) * 0.22));
+			font-size: max(15px, calc(var(--score-size) * 0.24));
 		}
 	}
 </style>
