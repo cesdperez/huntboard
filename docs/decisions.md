@@ -173,3 +173,7 @@ A game stores a theme id, and the admin picks it in Setup. Themes are registered
 ## Events bring their mood through a theme, their people through game data
 
 A theme may be made for one event, such as a Scottish birthday, and ships as one registered theme among the general ones. It carries only a palette, fonts and decoration. The app's code and copy never name specific people: names, faces and inside jokes come from the game name, the game image and the challenge text the organiser writes.
+
+## Event themes change structure through a named layout
+
+An event theme may need more than tokens: a banner, a different strip, descriptive rows. The registry entry names a layout (`plain` or `event`), and components switch on it. Theme CSS stays tokens only, so a second event theme reuses the structure with its own palette, fonts and drawings, and `flag` cannot change by accident. Pages without a game theme get `plain`, so admin pages never switch.

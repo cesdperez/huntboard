@@ -61,11 +61,11 @@ A square, 28px on lists and 40px in the grid on phone. It encodes the claim stat
 
 ## Typography
 
-One family: **Archivo** (variable, Google Fonts), using its width axis as the active element. It fills both font tokens: `--font-sans` for everything, and `--font-display` for screen titles, ranks, totals and team page section headings. The widths come from `--stretch-display` (125), `--stretch-condensed` (87) and `--stretch-compressed` (70), so a theme with a font that has no width axis can set them to `normal`.
+One family: **Archivo** (variable, Google Fonts), using its width axis as the active element. It fills every font token: `--font-sans` for everything, `--font-display` for screen titles, ranks and team page section headings, and `--font-score` for totals, which `flag` points at `--font-display`. The widths come from `--stretch-display` (125), `--stretch-condensed` (87) and `--stretch-compressed` (70), so a theme with a font that has no width axis can set them to `normal`.
 
 | Role | Setting | Size (phone) |
 |---|---|---|
-| Score totals, ranks | Archivo Expanded (`wdth` 125), weight 800, tabular | 40px, scaling with `clamp()` up to 8vw on the big screen |
+| Score totals, ranks (`type-score`, `type-rank`) | Archivo Expanded (`wdth` 125), weight 800, tabular | 40px, scaling with `clamp()` up to 8vw on the big screen |
 | Screen title | Archivo Expanded, weight 700 | 24px |
 | Section heading | Archivo, weight 700 | 17px |
 | Body, challenge titles | Archivo, weight 450 | 17px, line-height 1.4 |
@@ -75,7 +75,7 @@ One family: **Archivo** (variable, Google Fonts), using its width axis as the ac
 Rules:
 
 - Numbers that change (totals, points, countdowns) always use `font-variant-numeric: tabular-nums` so they do not jitter when they update.
-- Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings.
+- Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings. A theme may set the game name in its event banner in capitals, as decoration.
 - Inputs are at least 16px so iOS does not zoom on focus.
 - One exception to the single family: a pasted line quoted back in a parse error uses the system monospace font, so brackets, dashes and indentation read exactly as typed.
 - Body text lines stay under 70 characters. On wide screens the content column is capped, not stretched.
@@ -196,7 +196,7 @@ The admin picks a theme for the game in Setup. It changes the team page and the 
 
 A theme is two things:
 
-- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each, and the font stylesheets it loads.
+- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each, the font stylesheets it loads, and its [layout](#layouts).
 - A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
 
 The server writes `data-game-theme` on `<html>`, so the first paint and the sheets portalled to `<body>` already wear the theme. A stored id that is no longer registered shows `flag`.
@@ -219,11 +219,25 @@ Components use roles, never a theme's own colour names.
 | `--score` | `--ink` | Score totals |
 | `--section`, `--on-section` | transparent, `--ink` | Band behind team page section headings, and their text |
 | `--waiting` | `--muted` | "Waiting for a judge" under a pending row |
+| `--strip-own-row`, `--strip-danger` | `--own-row`, `--danger` | The own row and errors inside the strip |
+| `--app-bar`, `--on-app-bar` | `--ink`, `--paper` | Event layout: the app bar background (a colour or a gradient) and its text |
+| `--banner`, `--on-banner` | `--flag`, `--on-flag` | Event layout: the event banner and its text |
+| `--banner-art` | none | Event layout: an image drawn in the banner's own column, never behind text |
+| `--section-rule`, `--section-ornament` | `--line`, none | Event layout: the rule after a section heading and the image before it |
 | `--font-sans` | Archivo | All text without a display role |
-| `--font-display` | Archivo | Screen titles, ranks, totals, team page section headings |
+| `--font-display` | Archivo | Screen titles, ranks, team page section headings, team name in the event strip |
+| `--font-score` | `--font-display` | Score totals |
+| `--font-banner` | `--font-display` | Event layout: the game name in the banner |
 | `--stretch-display`, `--stretch-condensed`, `--stretch-compressed` | 125%, 87%, 70% | Width of display type, point ranges, and marker points |
 
-Inside the strip, the strip roles stand in for `--surface`, `--ink`, `--muted`, `--line` and `--score`, so everything in it, the expanded scoreboard included, follows the strip.
+Inside the strip, the strip roles stand in for `--surface`, `--ink`, `--muted`, `--line`, `--score`, `--own-row` and `--danger`, so everything in it, the expanded scoreboard and a picture error included, follows the strip. The app bar and the banner do the same with `--ink` (and the banner with `--muted`), so buttons inside them take their text colour.
+
+### Layouts
+
+A theme's registry entry names its layout. Structure changes only through it; the theme CSS changes only tokens. Components read it with `pageLayout()` from `src/lib/themes/page-layout.ts`, so admin pages, `/new` and error pages, which carry no game theme, always get `plain`.
+
+- `plain`: the layout described above. `flag` uses it.
+- `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The banner shows the game name in `--font-banner`, the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which opens the same sheet as the event header. On the team page the strip shows the rank, a divider, the team name in `--font-display` with the countdown under it, the total and the chevron; members show in the expanded list. Section headings are 26px `--font-display` with `--section-ornament` before and a `--section-rule` line to the right edge. Rows lose the top border and add the description clamped to two lines, a "points" unit under the range and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and "points" under each total. On the big screen the banner sizes follow the screen height instead of the total size, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
 
 ### What a theme may change
 
@@ -234,9 +248,28 @@ Inside the strip, the strip roles stand in for `--surface`, `--ink`, `--muted`, 
 ### What a theme keeps
 
 - Marker shapes: the outline, the lower-right triangle, the full square and the diagonal cross. Only their colours change.
-- Layout, spacing, radii and touch sizes.
+- Spacing, radii and touch sizes. Layout changes only through the registered [layouts](#layouts).
 - WCAG AA for every text pair, checked in each mode the theme supports. That includes each `--on-` pair, `--waiting` on `--paper` and `--on-strip-muted` on `--strip` at 15px.
 - State told by shape and words, not colour alone. The own row keeps its bar and its semibold name.
+
+### Highland Bru
+
+`highland-bru`, light only, `event` layout. Made for a Scottish birthday whose invitation is orange with cobalt: the event brings the people through its game name and image, the theme brings only the mood.
+
+| Role | Value |
+|---|---|
+| `--paper`, `--surface` | Ivory `#FFF9EF`, `#FFFDF8` |
+| `--ink`, `--muted`, `--line` | `#151515`, `#5E564D`, `#E8DCC8` |
+| `--marker`, `--action`, `--own`, `--banner`, `--section-rule` | Orange `#FF741F`, with ink on it (6.8:1; white is 2.7:1 and fails) |
+| `--own-row` | `#FFE8D6` |
+| `--strip`, `--on-strip`, `--strip-score` | Cobalt `#124BCC`, white (7.2:1) |
+| `--on-strip-muted`, `--strip-own-row`, `--strip-danger` | `#D9E3FF` (5.6:1 at 15px), `#0C3A9E`, `#FFD1CC` (5.3:1) |
+| `--score` | Cobalt, 6.9:1 on ivory |
+| `--waiting`, `--danger` | `#B34700` (5.3:1), `#B3261E` (6.2:1) |
+| `--app-bar` | A dark green tartan of crossed red and blue stripes, drawn with gradients. White text stays above 8:1 on every stripe. |
+| `--banner-art`, `--section-ornament` | An ink thistle in the banner, a small orange thistle before each section heading |
+
+Fonts: Fraunces (bold serif) for `--font-display`, Barlow for `--font-sans`, Barlow Condensed for `--font-score`, and Jersey 10, a pixel face, for `--font-banner`, where the game name is set in capitals as decoration. None has a width axis, so the `--stretch-*` tokens are `normal`.
 
 ### Team pictures and the game image
 
