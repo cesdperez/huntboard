@@ -22,13 +22,26 @@
 	--on-strip-muted: var(--muted);
 	--strip-line: var(--line);
 	--strip-score: var(--ink);
+	--strip-own-row: var(--own-row);
+	--strip-danger: var(--danger);
 	--score: var(--ink);
 	--section: transparent;
 	--on-section: var(--ink);
 	--waiting: var(--muted);
 
+	/* Only the event layout shows these. */
+	--app-bar: var(--ink);
+	--on-app-bar: var(--paper);
+	--banner: var(--flag);
+	--on-banner: var(--on-flag);
+	--banner-art: none;
+	--section-rule: var(--line);
+	--section-ornament: none;
+
 	--font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
 	--font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+	--font-score: var(--font-display);
+	--font-banner: var(--font-display);
 	/* Archivo's width axis. A font without one ignores these. */
 	--stretch-display: 125%;
 	--stretch-condensed: 87%;

@@ -41,7 +41,7 @@
 			onclick={() => (expanded = !expanded)}
 		>
 			{#if own}
-				<span class="type-score text-[28px]">{ordinal(own.rank)}</span>
+				<span class="type-rank">{ordinal(own.rank)}</span>
 			{/if}
 			{#if showAvatars}
 				<TeamAvatar

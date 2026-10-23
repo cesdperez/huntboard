@@ -37,10 +37,12 @@
 	--radius: 10px;
 }
 
-/* Each theme sets the fonts. These only register the font-sans and font-display utilities. */
+/* Each theme sets the fonts. These only register the font-* utilities. */
 @theme {
 	--font-sans: ui-sans-serif, system-ui, sans-serif;
 	--font-display: var(--font-sans);
+	--font-score: var(--font-display);
+	--font-banner: var(--font-display);
 }
 
 @theme inline {
@@ -61,6 +63,7 @@
 	--color-section: var(--section);
 	--color-on-section: var(--on-section);
 	--color-waiting: var(--waiting);
+	--color-section-rule: var(--section-rule);
 
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
@@ -104,8 +107,17 @@
 }
 
 @utility type-score {
-	font-family: var(--font-display);
+	font-family: var(--font-score);
 	font-size: 40px;
+	line-height: 1;
+	font-weight: 800;
+	font-stretch: var(--stretch-display);
+	font-variant-numeric: tabular-nums;
+}
+
+@utility type-rank {
+	font-family: var(--font-display);
+	font-size: 28px;
 	line-height: 1;
 	font-weight: 800;
 	font-stretch: var(--stretch-display);
@@ -127,8 +139,24 @@
 	--muted: var(--on-strip-muted);
 	--line: var(--strip-line);
 	--score: var(--strip-score);
+	--own-row: var(--strip-own-row);
+	--danger: var(--strip-danger);
 	background-color: var(--strip);
 	color: var(--on-strip);
+}
+
+/* The event layout's app bar and banner. Like the strip, their tokens stand in for the page ones. */
+@utility surface-app-bar {
+	--ink: var(--on-app-bar);
+	background: var(--app-bar);
+	color: var(--on-app-bar);
+}
+
+@utility surface-banner {
+	--ink: var(--on-banner);
+	--muted: var(--on-banner);
+	background-color: var(--banner);
+	color: var(--on-banner);
 }
 
 @utility type-heading {

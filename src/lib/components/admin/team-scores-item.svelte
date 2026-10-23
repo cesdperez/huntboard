@@ -81,7 +81,7 @@
 
 <li class="flex flex-col gap-3 border-b py-4" aria-labelledby="{id}-name">
 	<div class="flex items-center gap-3">
-		<span class="min-w-12 shrink-0 type-score text-[28px]">{ordinal(team.rank)}</span>
+		<span class="min-w-12 shrink-0 type-rank">{ordinal(team.rank)}</span>
 		<div class="min-w-0 flex-1">
 			<h2 id="{id}-name" class="truncate type-heading">{team.name}</h2>
 			{#if team.members}<p class="truncate type-secondary">{team.members}</p>{/if}
