@@ -1,18 +1,16 @@
 import { parsePoints } from '#lib/domain/points.js';
 import { normalizeNickname } from '#lib/nickname.js';
 import { normalizeReason, REASON_MAX_LENGTH, REASON_TOO_LONG } from '#lib/reason.js';
+import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
 import { conflictMessage } from './conflict-message.js';
 import { judgeClaim, scoreWithoutClaim, type JudgeResult, type Verdict } from './db/judging.js';
 import { readId, readString } from './form.js';
 
 /** What a judging action returns under `judge`. Scored points are after clamping. */
 export type JudgeFormResult =
-	{ kind: 'scored'; points: number } | { kind: 'rejected' } | { kind: 'error'; message: string };
+	{ kind: 'scored'; points: number } | { kind: 'rejected' } | ErrorResult;
 
-export interface JudgeActionOutcome {
-	status: number;
-	result: JudgeFormResult;
-}
+type JudgeOutcome = ActionOutcome<JudgeFormResult>;
 
 const NO_NICKNAME = 'Set your nickname first, so everyone knows who judged this.';
 const NOT_POINTS = 'Enter a whole number of points.';
@@ -22,7 +20,7 @@ export async function scoreClaim(
 	db: D1Database,
 	gameId: number,
 	data: FormData
-): Promise<JudgeActionOutcome> {
+): Promise<JudgeOutcome> {
 	const score = readScore(data);
 	if (isRefusal(score)) return score;
 	return judge(db, gameId, data, score.judgedBy, { status: 'scored', points: score.points });
@@ -32,7 +30,7 @@ export async function rejectClaim(
 	db: D1Database,
 	gameId: number,
 	data: FormData
-): Promise<JudgeActionOutcome> {
+): Promise<JudgeOutcome> {
 	const judgeName = readJudge(data);
 	if (isRefusal(judgeName)) return judgeName;
 	const reason = normalizeReason(readString(data, 'reason'));
@@ -50,14 +48,14 @@ export async function scoreOpenCell(
 	db: D1Database,
 	gameId: number,
 	data: FormData
-): Promise<JudgeActionOutcome> {
+): Promise<JudgeOutcome> {
 	const score = readScore(data);
 	if (isRefusal(score)) return score;
 	const teamId = readId(data, 'teamId');
 	const challengeId = readId(data, 'challengeId');
 	if (teamId === null || challengeId === null) return error(404, OPEN_CELL_GONE);
 	const result = await scoreWithoutClaim(db, gameId, { teamId, challengeId, ...score });
-	return respond(result, OPEN_CELL_GONE);
+	return toOutcome(result, OPEN_CELL_GONE);
 }
 
 async function judge(
@@ -66,7 +64,7 @@ async function judge(
 	data: FormData,
 	judgedBy: string,
 	verdict: Verdict
-): Promise<JudgeActionOutcome> {
+): Promise<JudgeOutcome> {
 	const from = data.get('from') === 'scored' ? 'scored' : 'pending';
 	// A team can undo only a pending claim. A scored one goes only with its challenge on re-import.
 	const notFound =
@@ -75,10 +73,10 @@ async function judge(
 			: 'This claim is not in this game any more. Reload the page.';
 	const claimId = readId(data, 'claimId');
 	if (claimId === null) return error(404, notFound);
-	return respond(await judgeClaim(db, gameId, { claimId, from, verdict, judgedBy }), notFound);
+	return toOutcome(await judgeClaim(db, gameId, { claimId, from, verdict, judgedBy }), notFound);
 }
 
-type Refusal = JudgeActionOutcome;
+type Refusal = ActionOutcome<ErrorResult>;
 
 function isRefusal<T extends object>(read: T | Refusal): read is Refusal {
 	return 'status' in read;
@@ -96,7 +94,7 @@ function readScore(data: FormData): { judgedBy: string; points: number } | Refus
 	return points === null ? error(400, NOT_POINTS) : { judgedBy: judgeName.judgedBy, points };
 }
 
-function respond(result: JudgeResult, notFound: string): JudgeActionOutcome {
+function toOutcome(result: JudgeResult, notFound: string): JudgeOutcome {
 	switch (result.status) {
 		case 'judged':
 			return {
@@ -111,8 +109,4 @@ function respond(result: JudgeResult, notFound: string): JudgeActionOutcome {
 		case 'not-found':
 			return error(404, notFound);
 	}
-}
-
-function error(status: number, message: string): JudgeActionOutcome {
-	return { status, result: { kind: 'error', message } };
 }

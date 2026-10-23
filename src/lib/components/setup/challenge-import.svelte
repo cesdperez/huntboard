@@ -6,7 +6,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/plural.js';
-	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
+	import type { ChallengesFormResult } from '#lib/server/challenge-setup.js';
 	import { groupBySection } from '#lib/group-by-section.js';
 	import { updateOrRetry } from './update-or-retry.js';
 

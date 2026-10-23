@@ -1,5 +1,6 @@
 import { GAME_IMAGE_MAX_BYTES, IMAGE_LABEL_ERROR, IMAGE_LABEL_MAX_LENGTH } from '#lib/images.js';
 import { collapseSpaces } from '#lib/text.js';
+import type { ActionOutcome } from './action-outcome.js';
 import { resetGame } from './db/games.js';
 import { setGameImage, setGameImageLabel, setTeamAvatar } from './db/images.js';
 import { deleteTeam, type DeleteTeamResult } from './db/teams.js';
@@ -14,10 +15,7 @@ export interface GameImageFormResult {
 	error?: string;
 }
 
-export interface GameImageOutcome {
-	status: number;
-	result: GameImageFormResult;
-}
+type GameImageOutcome = ActionOutcome<GameImageFormResult>;
 
 /** Saves a new image with its label, or only the label when no file is sent. */
 export async function saveGameImage(

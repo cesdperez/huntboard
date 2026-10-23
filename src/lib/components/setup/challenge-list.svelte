@@ -7,7 +7,7 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import type { ChallengeEditInput } from '#lib/domain/challenge-edit.js';
 	import { plural } from '#lib/plural.js';
-	import type { ChallengesFormResult } from '#lib/server/actions/challenges.js';
+	import type { ChallengesFormResult } from '#lib/server/challenge-setup.js';
 	import type { ChallengeWithClaimCount } from '#lib/server/db/types.js';
 	import { groupBySection } from '#lib/group-by-section.js';
 	import { updateOrRetry } from './update-or-retry.js';

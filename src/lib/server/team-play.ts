@@ -9,6 +9,7 @@ import {
 	normalizeTeamMembers,
 	normalizeTeamName
 } from '#lib/team-name.js';
+import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
 import { markClaim, undoClaim } from './db/claims.js';
 import { setTeamAvatar } from './db/images.js';
 import { updateTeam } from './db/teams.js';
@@ -28,12 +29,9 @@ export type TeamFormResult =
 	| { kind: 'renamed' }
 	| { kind: 'avatar-saved' }
 	| { kind: 'closed'; phase: Exclude<GamePhase, 'during'> }
-	| { kind: 'error'; message: string };
+	| ErrorResult;
 
-export interface TeamActionOutcome {
-	status: number;
-	result: TeamFormResult;
-}
+type TeamOutcome = ActionOutcome<TeamFormResult>;
 
 const CHALLENGE_GONE = 'That challenge is not in this game any more.';
 
@@ -42,7 +40,7 @@ export async function markDone(
 	{ team, game }: TeamLink,
 	data: FormData,
 	now: Date
-): Promise<TeamActionOutcome> {
+): Promise<TeamOutcome> {
 	const closed = closedOutcome(game, now);
 	if (closed) return closed;
 
@@ -77,7 +75,7 @@ export async function undoOwnClaim(
 	{ team, game }: TeamLink,
 	data: FormData,
 	now: Date
-): Promise<TeamActionOutcome> {
+): Promise<TeamOutcome> {
 	const closed = closedOutcome(game, now);
 	if (closed) return closed;
 
@@ -98,7 +96,7 @@ export async function renameOwnTeam(
 	db: D1Database,
 	{ team, game }: TeamLink,
 	data: FormData
-): Promise<TeamActionOutcome> {
+): Promise<TeamOutcome> {
 	const name = normalizeTeamName(data.get('name'));
 	if (!name) return error(400, TEAM_NAME_ERROR);
 	const members = normalizeTeamMembers(data.get('members'));
@@ -115,7 +113,7 @@ export async function saveOwnAvatar(
 	bucket: ImageBucket,
 	{ team, game }: TeamLink,
 	data: FormData
-): Promise<TeamActionOutcome> {
+): Promise<TeamOutcome> {
 	const read = await readImageUpload(data, 'avatar', AVATAR_MAX_BYTES);
 	if (read.status === 'missing') return error(400, 'Choose a picture first.');
 	if (read.status === 'invalid') return error(400, read.message);
@@ -127,11 +125,7 @@ export async function saveOwnAvatar(
 	return { status: 200, result: { kind: 'avatar-saved' } };
 }
 
-function closedOutcome(game: TeamLink['game'], now: Date): TeamActionOutcome | null {
+function closedOutcome(game: TeamLink['game'], now: Date): TeamOutcome | null {
 	const phase = gamePhase({ startsAt: game.starts_at, endsAt: game.ends_at }, now);
 	return phase === 'during' ? null : { status: 403, result: { kind: 'closed', phase } };
-}
-
-function error(status: number, message: string): TeamActionOutcome {
-	return { status, result: { kind: 'error', message } };
 }

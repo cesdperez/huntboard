@@ -4,6 +4,7 @@ import {
 	type AdjustmentInput
 } from '#lib/domain/adjustment.js';
 import { normalizeNickname } from '#lib/nickname.js';
+import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
 import { addAdjustment, deleteAdjustment } from './db/adjustments.js';
 import { recordFirstArrival, setArrival } from './db/teams.js';
 import { readId, readString, readUtcTime } from './form.js';
@@ -14,12 +15,9 @@ export type TeamScoresFormResult =
 	| { kind: 'adjustment-invalid'; values: AdjustmentInput; errors: AdjustmentErrors }
 	| { kind: 'adjustment-removed' }
 	| { kind: 'arrival' }
-	| { kind: 'error'; message: string };
+	| ErrorResult;
 
-export interface TeamScoresOutcome {
-	status: number;
-	result: TeamScoresFormResult;
-}
+type TeamScoresOutcome = ActionOutcome<TeamScoresFormResult>;
 
 const TEAM_GONE = 'That team is not in this game any more. Reload the page.';
 
@@ -114,8 +112,4 @@ async function saveArrival(
 		return error(404, TEAM_GONE);
 	}
 	return { status: 200, result: { kind: 'arrival' } };
-}
-
-function error(status: number, message: string): TeamScoresOutcome {
-	return { status, result: { kind: 'error', message } };
 }

@@ -10,7 +10,7 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/plural.js';
-	import type { TeamsFormResult } from '#lib/server/actions/teams.js';
+	import type { TeamsFormResult } from '#lib/server/team-setup.js';
 	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
 	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/team-name.js';
 	import { suggestTeamName } from '#lib/team-name-suggestion.js';

@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { fail } from '@sveltejs/kit';
+import { respond } from '#lib/server/action-outcome.js';
 import { requireAdminGame } from '#lib/server/admin-game.js';
 import { removeGameImage, saveGameImage, type GameImageFormResult } from '#lib/server/images.js';
 import type { AdminActions } from './types.js';
@@ -8,13 +8,8 @@ import type { AdminActions } from './types.js';
 export const gameImageActions = {
 	gameImageSave: async ({ params, request }) => {
 		const game = await requireAdminGame(params.token);
-		const { status, result } = await saveGameImage(
-			env.DB,
-			env.IMAGES,
-			game,
-			await request.formData()
-		);
-		return status === 200 ? { gameImage: result } : fail(status, { gameImage: result });
+		const data = await request.formData();
+		return respond('gameImage', await saveGameImage(env.DB, env.IMAGES, game, data));
 	},
 
 	gameImageRemove: async ({ params }) => {
