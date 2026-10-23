@@ -42,9 +42,9 @@
 		align-items: center;
 		justify-content: center;
 		box-sizing: border-box;
-		width: var(--spacing-marker);
-		height: var(--spacing-marker);
-		border: 2px solid var(--muted);
+		width: var(--marker-size);
+		height: var(--marker-size);
+		border: 2px solid var(--marker-outline);
 		border-radius: var(--radius-marker);
 		background: transparent;
 		overflow: hidden;
@@ -82,7 +82,7 @@
 	}
 
 	.marker-points {
-		font-size: 12px;
+		font-size: var(--marker-points-size);
 		line-height: 1;
 		font-weight: 700;
 		font-stretch: var(--stretch-condensed);

@@ -24,6 +24,9 @@
 	--strip-paper: #0c3a9e;
 	--score: #124bcc;
 	--waiting: #b34700;
+	--marker-outline: #151515;
+	--marker-size: 32px;
+	--marker-points-size: 15px;
 
 	--app-bar:
 		repeating-linear-gradient(

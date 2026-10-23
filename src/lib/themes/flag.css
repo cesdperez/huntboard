@@ -29,6 +29,9 @@
 	--section: transparent;
 	--on-section: var(--ink);
 	--waiting: var(--muted);
+	--marker-outline: var(--muted);
+	--marker-size: var(--spacing-marker);
+	--marker-points-size: 12px;
 
 	/* Only the event layout shows these. */
 	--app-bar: var(--ink);
