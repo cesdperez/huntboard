@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
 	DEFAULT_THEME,
+	FLAG_THEME,
 	THEMES,
 	htmlAttributes,
 	isThemeId,
@@ -19,7 +20,7 @@ const night: Theme = {
 	fonts: [],
 	layout: 'plain'
 };
-const registry = [DEFAULT_THEME, night];
+const registry = [FLAG_THEME, night];
 
 describe('resolveTheme', () => {
 	it('finds a registered theme by id', () => {
@@ -27,6 +28,7 @@ describe('resolveTheme', () => {
 	});
 
 	it('falls back to the default theme for an unknown or missing id', () => {
+		expect(resolveTheme('tartan')).toBe(DEFAULT_THEME);
 		expect(resolveTheme('tartan', registry)).toBe(DEFAULT_THEME);
 		expect(resolveTheme(null, registry)).toBe(DEFAULT_THEME);
 		expect(resolveTheme(undefined, registry)).toBe(DEFAULT_THEME);
@@ -34,7 +36,14 @@ describe('resolveTheme', () => {
 
 	it('knows the flag and Highland Bru themes by default', () => {
 		expect(THEMES.map((theme) => theme.id)).toEqual(['flag', 'highland-bru']);
-		expect(resolveTheme('flag')).toBe(DEFAULT_THEME);
+		expect(resolveTheme('flag')).toBe(FLAG_THEME);
+	});
+
+	// Pages without a game wear the theme new games start in, so the app reads as one product.
+	it('defaults to Highland Bru while flag stays selectable', () => {
+		expect(DEFAULT_THEME.id).toBe('highland-bru');
+		expect(resolveTheme(undefined)).toBe(DEFAULT_THEME);
+		expect(resolveTheme('flag').id).toBe('flag');
 	});
 });
 
@@ -49,7 +58,7 @@ describe('isThemeId', () => {
 
 describe('supportedModes', () => {
 	it('lists the modes a theme declares', () => {
-		expect(supportedModes(DEFAULT_THEME)).toEqual(['light', 'dark']);
+		expect(supportedModes(FLAG_THEME)).toEqual(['light', 'dark']);
 		expect(supportedModes(night)).toEqual(['dark']);
 	});
 });
@@ -57,7 +66,7 @@ describe('supportedModes', () => {
 describe('resolveAppearance', () => {
 	it('follows the OS for a theme with both modes', () => {
 		expect(resolveAppearance('flag', undefined, registry)).toEqual({
-			theme: DEFAULT_THEME,
+			theme: FLAG_THEME,
 			mode: null
 		});
 	});
@@ -79,7 +88,7 @@ describe('resolveAppearance', () => {
 
 describe('htmlAttributes', () => {
 	it('names the theme, and the mode only when one is set', () => {
-		expect(htmlAttributes({ theme: DEFAULT_THEME, mode: null })).toBe('data-game-theme="flag"');
+		expect(htmlAttributes({ theme: FLAG_THEME, mode: null })).toBe('data-game-theme="flag"');
 		expect(htmlAttributes({ theme: night, mode: 'dark' })).toBe(
 			'data-game-theme="night" data-theme="dark"'
 		);
@@ -105,6 +114,6 @@ describe('Highland Bru theme', () => {
 
 		expect(supportedModes(theme)).toEqual(['light']);
 		expect(theme.layout).toBe('event');
-		expect(DEFAULT_THEME.layout).toBe('plain');
+		expect(FLAG_THEME.layout).toBe('plain');
 	});
 });

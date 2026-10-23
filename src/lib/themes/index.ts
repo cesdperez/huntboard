@@ -2,11 +2,11 @@ export type ColorMode = 'light' | 'dark';
 
 /**
  * `plain` is the flag layout. `event` adds an app bar and an event banner, descriptive challenge
- * rows with a points column, and a leaderboard heading. Admin pages always use `plain`.
+ * rows with a points column, and a leaderboard heading.
  */
 export type ThemeLayout = 'plain' | 'event';
 
-/** A look for the team and scoreboard pages. Its tokens live in <id>.css, imported by app.css. */
+/** A look for a game's pages. Its tokens live in <id>.css, imported by app.css. */
 export interface Theme {
 	id: string;
 	name: string;
@@ -23,7 +23,7 @@ export interface Appearance {
 	mode: ColorMode | null;
 }
 
-export const DEFAULT_THEME: Theme = {
+export const FLAG_THEME: Theme = {
 	id: 'flag',
 	name: 'Control flag',
 	modes: { light: { themeColor: '#f5f7fa' }, dark: { themeColor: '#0f1a30' } },
@@ -43,10 +43,10 @@ const HIGHLAND_BRU: Theme = {
 	layout: 'event'
 };
 
-export const THEMES: readonly Theme[] = [DEFAULT_THEME, HIGHLAND_BRU];
+export const THEMES: readonly Theme[] = [FLAG_THEME, HIGHLAND_BRU];
 
-/** The theme /new gives a game. Pages without a game, and unknown ids, still use DEFAULT_THEME. */
-export const NEW_GAME_THEME: Theme = HIGHLAND_BRU;
+/** The theme /new gives a game, and the one pages without a game wear. */
+export const DEFAULT_THEME: Theme = HIGHLAND_BRU;
 
 /** Ids stored before a theme was removed still open their game, in the default theme. */
 export function resolveTheme(id: string | null | undefined, themes = THEMES): Theme {

@@ -1,5 +1,5 @@
 import { generateToken } from '#lib/domain/token.js';
-import { NEW_GAME_THEME } from '#lib/themes/index.js';
+import { DEFAULT_THEME } from '#lib/themes/index.js';
 import type { GameRow } from './types.js';
 
 export async function createGame(db: D1Database, name: string): Promise<GameRow> {
@@ -7,7 +7,7 @@ export async function createGame(db: D1Database, name: string): Promise<GameRow>
 		.prepare(
 			'INSERT INTO game (name, admin_token, scoreboard_token, theme) VALUES (?, ?, ?, ?) RETURNING *'
 		)
-		.bind(name, generateToken(), generateToken(), NEW_GAME_THEME.id)
+		.bind(name, generateToken(), generateToken(), DEFAULT_THEME.id)
 		.first<GameRow>();
 	if (!game) throw new Error('Inserting a game returned no row');
 	return game;
