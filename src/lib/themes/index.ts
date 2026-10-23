@@ -36,7 +36,7 @@ export const DEFAULT_THEME: Theme = {
 const HIGHLAND_BRU: Theme = {
 	id: 'highland-bru',
 	name: 'Highland Bru',
-	modes: { light: { themeColor: '#fff9ef' } },
+	modes: { light: { themeColor: '#10241b' } },
 	fonts: [
 		'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600..900&family=Jersey+10&display=swap'
 	],

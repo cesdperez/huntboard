@@ -42,7 +42,9 @@
 			rgb(18 75 204 / 0.35) 21px 33px,
 			transparent 33px 44px
 		),
-		#10241b;
+		var(--app-bar-base);
+	/* The browser chrome colour, since the app bar is the top of the page. */
+	--app-bar-base: #10241b;
 	--on-app-bar: #ffffff;
 	--banner: #ff741f;
 	--on-banner: #151515;

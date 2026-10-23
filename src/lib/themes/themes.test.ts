@@ -87,13 +87,15 @@ describe('htmlAttributes', () => {
 });
 
 describe('registered themes', () => {
-	it.each(THEMES)('$id colours the browser chrome with its --paper in each mode', (theme) => {
+	// The browser chrome continues the top of the page: the paper, or the event layout's app bar.
+	it.each(THEMES)('$id colours the browser chrome like the top of its page', (theme) => {
 		const css = readFileSync(path.join(import.meta.dirname, `${theme.id}.css`), 'utf8');
-		const papers = [...css.matchAll(/--paper:\s*(#[0-9a-f]{6})/gi)].map((match) =>
-			match[1].toLowerCase()
+		const token = theme.layout === 'event' ? '--app-bar-base' : '--paper';
+		const colours = [...css.matchAll(new RegExp(`${token}:\\s*(#[0-9a-f]{6})`, 'gi'))].map(
+			(match) => match[1].toLowerCase()
 		);
 
-		expect(papers).toEqual(supportedModes(theme).map((mode) => theme.modes[mode]?.themeColor));
+		expect(colours).toEqual(supportedModes(theme).map((mode) => theme.modes[mode]?.themeColor));
 	});
 });
 
