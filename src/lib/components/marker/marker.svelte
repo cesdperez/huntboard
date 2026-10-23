@@ -67,14 +67,14 @@
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: var(--flag);
+		background: var(--marker);
 		clip-path: polygon(100% 0, 100% 100%, 0 100%);
 	}
 
 	.marker[data-state='scored'] {
-		border-color: var(--flag);
-		background: var(--flag);
-		color: var(--on-flag);
+		border-color: var(--marker);
+		background: var(--marker);
+		color: var(--on-marker);
 	}
 
 	.marker[data-state='rejected'] {
@@ -85,7 +85,7 @@
 		font-size: 12px;
 		line-height: 1;
 		font-weight: 700;
-		font-stretch: 87%;
+		font-stretch: var(--stretch-condensed);
 		font-variant-numeric: tabular-nums;
 	}
 
@@ -94,7 +94,7 @@
 	}
 
 	.marker-points[data-long] {
-		font-stretch: 70%;
+		font-stretch: var(--stretch-compressed);
 	}
 
 	.marker-cross {

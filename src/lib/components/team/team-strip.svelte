@@ -25,7 +25,7 @@
 	const own = $derived(standings.find((row) => row.own));
 </script>
 
-<header data-sticky-strip class="sticky top-0 z-30 border-b bg-surface shadow-strip">
+<header data-sticky-strip class="sticky top-0 z-30 border-b surface-strip shadow-strip">
 	<div class="mx-auto max-w-content">
 		<button
 			type="button"
@@ -59,7 +59,7 @@
 						<li
 							class={cn(
 								'relative flex min-h-touch items-center gap-3 border-b border-l-4 border-l-transparent bg-surface pl-2',
-								row.own && 'border-l-flag font-semibold'
+								row.own && 'border-l-own bg-own-row font-semibold'
 							)}
 							animate:flip={{ duration: motionMs(REORDER_MS) }}
 							style:z-index={standings.length - index}

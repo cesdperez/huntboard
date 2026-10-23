@@ -64,7 +64,11 @@
 			{#each groupBySection(data.challenges) as group, groupIndex (groupIndex)}
 				<section class="flex flex-col">
 					{#if group.section}
-						<h2 class="pt-5 pb-1 type-heading">{group.section}</h2>
+						<h2
+							class="-mx-gutter mt-4 bg-section px-gutter py-1 font-display type-heading text-on-section"
+						>
+							{group.section}
+						</h2>
 					{/if}
 					<ul class="flex flex-col border-t">
 						{#each group.items as challenge (challenge.id)}

@@ -1,8 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn-svelte/tailwind.css';
+@import './lib/themes/flag.css';
 
-/* Follows the OS theme; data-theme on <html> forces one. */
+/* Follows the OS colour scheme. data-theme on <html> forces one: a single-mode theme or a preview. */
 @custom-variant dark {
 	&:where([data-theme='dark'], [data-theme='dark'] *) {
 		@slot;
@@ -14,47 +15,6 @@
 	}
 }
 
-:root {
-	color-scheme: light;
-	--paper: #f5f7fa;
-	--surface: #ffffff;
-	--ink: #14213d;
-	--muted: #5b6578;
-	--line: #dde2ea;
-	--flag: #f25c05;
-	--on-flag: #14213d;
-	--danger: #c42847;
-	--scrim: rgb(20 33 61 / 0.4);
-}
-
-@media (prefers-color-scheme: dark) {
-	:root:not([data-theme='light']) {
-		color-scheme: dark;
-		--paper: #0f1a30;
-		--surface: #17233d;
-		--ink: #eef1f6;
-		--muted: #9aa4b8;
-		--line: #26324d;
-		--flag: #ff7a2e;
-		--on-flag: #14213d;
-		--danger: #ff6b85;
-		--scrim: rgb(5 10 20 / 0.6);
-	}
-}
-
-:root[data-theme='dark'] {
-	color-scheme: dark;
-	--paper: #0f1a30;
-	--surface: #17233d;
-	--ink: #eef1f6;
-	--muted: #9aa4b8;
-	--line: #26324d;
-	--flag: #ff7a2e;
-	--on-flag: #14213d;
-	--danger: #ff6b85;
-	--scrim: rgb(5 10 20 / 0.6);
-}
-
 /* shadcn-svelte semantic names, mapped onto the design tokens so generated components fit. */
 :root {
 	--background: var(--paper);
@@ -63,8 +23,8 @@
 	--card-foreground: var(--ink);
 	--popover: var(--surface);
 	--popover-foreground: var(--ink);
-	--primary: var(--flag);
-	--primary-foreground: var(--on-flag);
+	--primary: var(--action);
+	--primary-foreground: var(--on-action);
 	--secondary: var(--surface);
 	--secondary-foreground: var(--ink);
 	--accent: var(--paper);
@@ -77,18 +37,30 @@
 	--radius: 10px;
 }
 
-@theme inline {
-	--font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+/* Each theme sets the fonts. These only register the font-sans and font-display utilities. */
+@theme {
+	--font-sans: ui-sans-serif, system-ui, sans-serif;
+	--font-display: var(--font-sans);
+}
 
+@theme inline {
 	--color-paper: var(--paper);
 	--color-surface: var(--surface);
 	--color-ink: var(--ink);
 	--color-muted: var(--muted);
 	--color-line: var(--line);
-	--color-flag: var(--flag);
-	--color-on-flag: var(--on-flag);
 	--color-danger: var(--danger);
 	--color-scrim: var(--scrim);
+	--color-marker: var(--marker);
+	--color-on-marker: var(--on-marker);
+	--color-action: var(--action);
+	--color-on-action: var(--on-action);
+	--color-own: var(--own);
+	--color-own-row: var(--own-row);
+	--color-score: var(--score);
+	--color-section: var(--section);
+	--color-on-section: var(--on-section);
+	--color-waiting: var(--waiting);
 
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
@@ -132,18 +104,31 @@
 }
 
 @utility type-score {
+	font-family: var(--font-display);
 	font-size: 40px;
 	line-height: 1;
 	font-weight: 800;
-	font-stretch: 125%;
+	font-stretch: var(--stretch-display);
 	font-variant-numeric: tabular-nums;
 }
 
 @utility type-title {
+	font-family: var(--font-display);
 	font-size: 24px;
 	line-height: 1.2;
 	font-weight: 700;
-	font-stretch: 125%;
+	font-stretch: var(--stretch-display);
+}
+
+/* The sticky team strip. Its own tokens stand in for the page ones, so everything inside follows. */
+@utility surface-strip {
+	--surface: var(--strip);
+	--ink: var(--on-strip);
+	--muted: var(--on-strip-muted);
+	--line: var(--strip-line);
+	--score: var(--strip-score);
+	background-color: var(--strip);
+	color: var(--on-strip);
 }
 
 @utility type-heading {
@@ -169,7 +154,7 @@
 	font-size: 15px;
 	line-height: 1.4;
 	font-weight: 600;
-	font-stretch: 87%;
+	font-stretch: var(--stretch-condensed);
 	font-variant-numeric: tabular-nums;
 }
 
