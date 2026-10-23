@@ -162,7 +162,9 @@ The scoreboard caches its standings per game for 15 seconds, so extra scoreboard
 The free tier fails closed: past a daily limit, requests fail until 00:00 UTC, which ends a running game. Two layers keep a stranger or a leaked link from spending the allowance:
 
 - The Worker is served only on `huntboard.checho.xyz`. The `workers.dev` hostname and preview URLs are off, so no route skips the zone's WAF.
-- A zone rate-limiting rule blocks an IP for 10 seconds after 20 dynamic requests in 10 seconds. Static assets are excluded. A venue where every player shares one IP stays far below it, and a single attacker IP is capped at about 170,000 requests a day instead of unlimited. The free plan allows only one such rule, with fixed 10-second periods.
+- A zone rate-limiting rule blocks an IP for 10 seconds after 300 requests in 10 seconds. It skips `/_app/`, `/themes/`, `/reachable.txt` and `/robots.txt`, which are static and never run the Worker. The free plan allows only one such rule, with fixed 10-second periods.
+
+The cap is high because a whole party often shares one Wi-Fi IP. Opening a page costs 2 to 10 counted requests: the page, Cloudflare's `/cdn-cgi/speculation`, and one per uploaded image not yet cached. With a cap of 20, about 8 phones opening their links together got the IP blocked, and a blocked poll swaps the page for the error page. One attacker IP is capped at the same rate, so it can still spend the daily Worker allowance in about an hour. A cap of 20 only stretched that to about 14 hours, so a lower cap protects little.
 
 There is no per-link Worker rate limiter. From one IP it would allow no more than the WAF rule does. Its counters are per location and eventually consistent, so requests run past it in production. A cap loose enough for a busy team is also above what the daily allowance can absorb from many IPs. A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
 
