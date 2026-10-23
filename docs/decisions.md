@@ -90,6 +90,15 @@ The organiser keeps the challenge list secret and writes it in their own tools. 
 
 Photos and videos keep going to WhatsApp, and some proof arrives in person (furniture). Storing media for 40 people is a separate project. The claim note is enough to link a claim to the proof.
 
+## Two images: a game image and team pictures
+
+The app stores one image per game (an invitation, poster or map) and one picture per team, and nothing else. Proof still stays outside the app. Images live in an R2 bucket, `IMAGES`, under keys that start with the game id and end in a random name. The database keeps only the key.
+
+- The browser shrinks every image before upload, so the server only checks it: size, declared type and the first bytes must agree on JPEG or WebP. The caps (256 KiB for a picture, 1.5 MiB for the game image) stay under the 2 MiB request body limit.
+- A replaced image gets a new key, so `/images/<key>` is cached for a year as immutable. Serving reads no D1 rows; the random key is as hard to guess as a link token.
+- The new object is stored before the database points at it. If saving the key fails, the object is deleted again. The old object is deleted after the database moved on; a failed delete only leaves an unreachable object.
+- Deleting a team deletes its picture. Reset game deletes every object under the game's prefix, which also sweeps anything a failed delete left behind.
+
 ## Teams see all challenges, but not each other's progress
 
 Challenge choice is the strategy, so every team sees the full list with point ranges. Other teams' claims are private. The scoreboard shows totals only. A big jump in points still hints at what a team did, which we accept.

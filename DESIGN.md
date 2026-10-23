@@ -85,7 +85,9 @@ The bottom third of the screen is where thumbs reach. Primary actions live there
 
 ```
 +--------------------------------+
-| 2nd   Canal Rats         145    |  sticky strip, tap to expand scoreboard
+| [img] Birthday invitation View >|  game image, only when set; scrolls away
++--------------------------------+
+| 2nd (o) Canal Rats       145    |  sticky strip, tap to expand scoreboard
 | Ends in 1:42:10                |
 +--------------------------------+
 | Around town                    |
@@ -100,7 +102,10 @@ The bottom third of the screen is where thumbs reach. Primary actions live there
 
 Tapping a row opens a bottom sheet with the description, the note field and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
 
-- The strip shows the rank in Archivo Expanded at 28px and the total at the full 40px, so the team name keeps room at 390px. Tapping it expands the scoreboard in place, with the team's own row marked by a flag-orange bar on its left edge. "Rename team" sits under that list.
+- The strip shows the rank in Archivo Expanded at 28px and the total at the full 40px, so the team name keeps room at 390px. Tapping it expands the scoreboard in place, with the team's own row marked by a flag-orange bar on its left edge. "Edit team" and "Add picture" sit side by side under that list.
+- "Add picture" opens the phone's photo picker and saves at once: no preview, no second tap. While it uploads the button reads "Saving picture". Once the team has a picture it reads "Change picture". The toast says "Picture saved". Teams cannot remove their picture; the organiser can.
+- A picture error shows in place under the two buttons, like a sheet error.
+- With a game image, the event header sits between the game name and the strip: a 48px thumbnail, the label and "View". It is not sticky, so the strip and the list keep their room at 390 × 844. Tapping it opens the image whole in a sheet, titled with the label.
 - A pending row reads "Waiting for a judge" under its title. A rejected row shows the reason in `--danger`.
 - The sheet moves focus to itself, not to the note field, so the phone keyboard opens only when the player taps the field.
 - Outside the game window the sheet keeps "Mark done" visible but disabled, with the closed message above it.
@@ -151,6 +156,10 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
 - Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
 
+Setup has a "Game image" section under the game settings: a preview of the current image, a file field ("Image", or "Replace image" once there is one), an optional label and "Save image". Saving without a file changes only the label. "Remove image" confirms first.
+
+In the Setup team list, a team's edit form shows its picture with "Remove picture", which confirms first. This is moderation: the team can add a new one.
+
 Setup ends with "Reset game", which returns the game to how `/new` created it: the name and the admin and scoreboard links stay, everything else goes. It confirms first, naming what gets deleted.
 
 ### Scoreboard
@@ -161,6 +170,8 @@ A ranked list. Rank and total in Archivo Expanded, team name in body weight. On 
 - Tied teams show the same rank and keep their setup order.
 - On the big screen every size follows one total size: 55% of the viewport height shared by the teams, counting at least 3, between 40px and 8vw. The 8vw cap keeps a name in view beside a four-digit total on a narrow or portrait screen, and the 3-team floor stops one or two teams from filling the screen with digits. Ranks are 0.6 of it, names 0.45, the title 0.45 and the status line 0.25, so 4 teams and 7 teams both fill a 1080px screen.
 - With no teams yet: "No teams yet. They show up here once the organiser adds them."
+- With a game image, the event header from the team page sits under the status line. On the big screen its thumbnail is 0.7 of the total size and its label 0.25, so it never pushes the list off a 800px screen.
+- Team pictures sit between rank and name: 40px on a phone, 0.9 of the total size on the big screen.
 
 ## Components
 
@@ -170,6 +181,16 @@ Built on shadcn-svelte where it saves time (Button, Sheet, Dialog, Input, Tabs),
 - Radii by hierarchy: sheets 16px on the top corners, buttons and inputs 10px, markers 3px, list rows 0 (rows are divided by `--line`, not boxed in cards).
 - No box shadows except on sheets and the sticky strip, where they show something floats above the page.
 - Buttons: one primary (filled `--flag`) per screen or sheet. Secondary buttons are `--ink` outlines. Destructive buttons are `--danger` outlines and confirm before acting.
+
+### Team pictures and the game image
+
+A team picture is a circle, so it never reads as a marker. Without a picture a team shows its initial in `--muted` on `--paper`, inside a `--line` border.
+
+- Pictures and initials appear only once at least one team in the game has a picture. A game without pictures looks exactly as before.
+- Sizes are fixed per place, so a loading picture never changes a row height or the reorder animation: 40px in the strip, 32px in the expanded list and the Setup team list, 40px on the scoreboard.
+- The picture is decorative: the team name is always beside it, so it has empty alt text.
+- The game image label names the image for everyone: it is the event header text, the sheet title and the alt text. Without a label it reads "Game image".
+- Images are shrunk in the browser before upload: team pictures to a 256px square cropped from the middle, the game image to 1600px on its long edge. A phone never uploads a full-size photo.
 
 ## Motion
 
@@ -191,6 +212,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - A page that cannot load at all says so plainly. Offline: "You are offline" with "This page loads again once you reconnect." Otherwise: "This page did not load" with "It tries again by itself. If it keeps happening, reload the page or tell your organiser." Both reload by themselves on the polling schedule once the server answers.
 - A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
 - An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast, the one toast that is not a confirmation.
+- A file the browser cannot open: "This file is not an image this browser can read. Choose a JPEG, PNG or WebP image." A file that stays too large after shrinking: "This image stays too large even when shrunk. Choose another one." Both show in place before anything is sent.
 
 ## Accessibility floor
 
