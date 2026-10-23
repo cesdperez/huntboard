@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -10,6 +10,7 @@ import {
 	resolveAppearance,
 	resolveTheme,
 	supportedModes,
+	themeImages,
 	type Theme
 } from './index.js';
 
@@ -105,6 +106,14 @@ describe('registered themes', () => {
 		);
 
 		expect(colours).toEqual(supportedModes(theme).map((mode) => theme.modes[mode]?.themeColor));
+	});
+
+	it.each(THEMES)('$id ships its icons and link preview image', (theme) => {
+		const staticDir = path.join(import.meta.dirname, '../../../static');
+
+		for (const file of Object.values(themeImages(theme))) {
+			expect(existsSync(path.join(staticDir, file)), file).toBe(true);
+		}
 	});
 });
 

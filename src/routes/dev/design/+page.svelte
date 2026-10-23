@@ -1,7 +1,6 @@
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
 	import { resolve } from '$app/paths';
-	import favicon from '#lib/assets/favicon.svg';
 	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
@@ -12,7 +11,13 @@
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
 	import type { Standing } from '#lib/domain/scoring.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
-	import { THEMES, resolveTheme, supportedModes, type ColorMode } from '#lib/themes/index.js';
+	import {
+		THEMES,
+		resolveTheme,
+		supportedModes,
+		themeImages,
+		type ColorMode
+	} from '#lib/themes/index.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -64,7 +69,7 @@
 		{ token: '--section-rule', use: 'Rule beside event layout section headings' }
 	];
 
-	const sampleImage = { src: favicon, label: 'Birthday invitation' };
+	const sampleImage = { src: themeImages(THEMES[0]).share, label: 'Birthday invitation' };
 
 	const sampleStandings: Standing[] = [
 		{

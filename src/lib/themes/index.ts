@@ -73,6 +73,16 @@ export function resolveAppearance(
 	return { theme, mode: requestedMode && modes.includes(requestedMode) ? requestedMode : null };
 }
 
+/** Paths under static/, drawn by scripts/theme-images.ts. `share` is the link preview image. */
+export function themeImages(theme: Theme) {
+	const dir = `/themes/${theme.id}`;
+	return {
+		icon: `${dir}/icon.svg`,
+		touchIcon: `${dir}/touch-icon.png`,
+		share: `${dir}/share.png`
+	};
+}
+
 /** The <html> attributes app.css reads: data-game-theme picks the tokens, data-theme the mode. */
 export function htmlAttributes({ theme, mode }: Appearance): string {
 	const attributes = `data-game-theme="${theme.id}"`;
