@@ -39,7 +39,8 @@
 			type="button"
 			class={cn(
 				'flex min-h-row w-full items-center gap-3 px-gutter pt-2 text-left',
-				event && 'pb-2'
+				// The page's outline would sit outside the strip, on the paper.
+				event && 'gap-2.5 pb-2 focus-visible:-outline-offset-4'
 			)}
 			aria-expanded={expanded}
 			aria-controls="team-standings"
@@ -58,10 +59,13 @@
 			{/if}
 			<span class="min-w-0 flex-1">
 				{#if event}
-					<span class="block truncate font-display text-[22px] leading-tight font-bold"
+					<span class="line-clamp-2 font-display text-[20px] leading-tight font-bold break-words"
 						>{teamName}</span
 					>
-					<span class="block truncate type-secondary tabular-nums">{countdown ?? ' '}</span>
+					<!-- Kept out of the button's name, which would otherwise change every second. -->
+					<span aria-hidden="true" class="block truncate type-secondary tabular-nums"
+						>{countdown ?? ' '}</span
+					>
 				{:else}
 					<span class="block truncate type-heading">{teamName}</span>
 					{#if members}<span class="block truncate type-secondary">{members}</span>{/if}
@@ -74,7 +78,9 @@
 			/>
 			<span class="sr-only">{expanded ? 'Hide' : 'Show'} the scoreboard</span>
 		</button>
-		{#if !event}
+		{#if event}
+			<p class="sr-only">{countdown}</p>
+		{:else}
 			<p class="px-gutter pb-2 type-secondary tabular-nums">{countdown ?? ' '}</p>
 		{/if}
 		<OfflineNotice class="px-gutter pb-2" />
@@ -87,7 +93,8 @@
 						<li
 							class={cn(
 								'relative flex min-h-touch items-center gap-3 border-b border-l-4 border-l-transparent bg-surface pl-2',
-								row.own && 'border-l-own bg-own-row font-semibold'
+								row.own && 'border-l-own bg-own-row font-semibold',
+								event && 'pr-2'
 							)}
 							animate:flip={{ duration: motionMs(REORDER_MS) }}
 							style:z-index={standings.length - index}

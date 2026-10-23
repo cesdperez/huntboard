@@ -20,6 +20,8 @@
 	--strip-score: #ffffff;
 	--strip-own-row: #0c3a9e;
 	--strip-danger: #ffd1cc;
+	/* Behind team initials on the strip. */
+	--strip-paper: #0c3a9e;
 	--score: #124bcc;
 	--waiting: #b34700;
 

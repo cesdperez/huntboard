@@ -142,6 +142,7 @@
 	--score: var(--strip-score);
 	--own-row: var(--strip-own-row);
 	--danger: var(--strip-danger);
+	--paper: var(--strip-paper);
 	background-color: var(--strip);
 	color: var(--on-strip);
 }

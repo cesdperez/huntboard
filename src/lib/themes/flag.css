@@ -24,6 +24,7 @@
 	--strip-score: var(--ink);
 	--strip-own-row: var(--own-row);
 	--strip-danger: var(--danger);
+	--strip-paper: var(--paper);
 	--score: var(--ink);
 	--section: transparent;
 	--on-section: var(--ink);
