@@ -1,10 +1,12 @@
+import type { GameImage } from '#lib/images.js';
 import { computeScoreboard, toStandings, type Standing } from '#lib/domain/scoring.js';
 import { getScoreboardInput } from './db/scoreboard.js';
 import type { GameRow } from './db/types.js';
+import { gameImage } from './game-image-view.js';
 
 /** What the public scoreboard sends to the browser: names and totals only. Times are UTC ISO strings. */
 export interface ScoreboardPageData {
-	game: { name: string; startsAt: string | null; endsAt: string | null };
+	game: { name: string; startsAt: string | null; endsAt: string | null; image: GameImage | null };
 	standings: Standing[];
 }
 
@@ -14,7 +16,12 @@ export async function getScoreboardPage(
 ): Promise<ScoreboardPageData> {
 	const scoreboard = await getScoreboardInput(db, game);
 	return {
-		game: { name: game.name, startsAt: game.starts_at, endsAt: game.ends_at },
+		game: {
+			name: game.name,
+			startsAt: game.starts_at,
+			endsAt: game.ends_at,
+			image: gameImage(game)
+		},
 		standings: toStandings(computeScoreboard(scoreboard), null)
 	};
 }

@@ -18,7 +18,7 @@
 		<span class="flex min-w-0 flex-1 flex-col">
 			<span class="break-words">{challenge.title}</span>
 			{#if claim?.status === 'pending'}
-				<span class="type-secondary">Waiting for a judge</span>
+				<span class="type-secondary text-waiting!">Waiting for a judge</span>
 			{:else if claim?.status === 'rejected'}
 				<span class="type-secondary text-danger!">
 					{claim.judgeNote

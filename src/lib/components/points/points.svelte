@@ -22,7 +22,11 @@
 
 <span
 	data-slot="points"
-	class={cn(variant === 'total' ? 'type-score' : 'type-range', 'whitespace-nowrap', className)}
+	class={cn(
+		variant === 'total' ? 'type-score text-score' : 'type-range',
+		'whitespace-nowrap',
+		className
+	)}
 	{...restProps}
 >
 	{#if label}

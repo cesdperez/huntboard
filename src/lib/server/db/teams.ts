@@ -118,7 +118,8 @@ export async function moveTeam(
 	return true;
 }
 
-export type DeleteTeamResult = 'deleted' | 'has-claims' | 'not-found';
+export type DeleteTeamResult =
+	{ status: 'deleted'; avatarKey: string | null } | { status: 'has-claims' | 'not-found' };
 
 /** Deletes a team only while it has no claims at all, then closes the gap in positions. */
 export async function deleteTeam(
@@ -126,22 +127,24 @@ export async function deleteTeam(
 	gameId: number,
 	teamId: number
 ): Promise<DeleteTeamResult> {
-	const [deleted] = await db.batch([
+	const [deleted] = await db.batch<{ avatar_key: string | null }>([
 		db
 			.prepare(
 				`DELETE FROM team WHERE id = ? AND game_id = ?
-				AND NOT EXISTS (SELECT 1 FROM claim WHERE claim.team_id = team.id)`
+				AND NOT EXISTS (SELECT 1 FROM claim WHERE claim.team_id = team.id)
+				RETURNING avatar_key`
 			)
 			.bind(teamId, gameId),
 		renumberTeams(db, gameId)
 	]);
-	if (deleted.meta.changes > 0) return 'deleted';
+	const row = deleted.results[0];
+	if (row) return { status: 'deleted', avatarKey: row.avatar_key };
 
 	const exists = await db
 		.prepare('SELECT 1 AS found FROM team WHERE id = ? AND game_id = ?')
 		.bind(teamId, gameId)
 		.first<number>('found');
-	return exists ? 'has-claims' : 'not-found';
+	return { status: exists ? 'has-claims' : 'not-found' };
 }
 
 function renumberTeams(db: D1Database, gameId: number): D1PreparedStatement {

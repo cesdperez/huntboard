@@ -1,0 +1,49 @@
+/* The default theme. It sits on :root, so admin pages and any token another theme leaves out use it. */
+:root {
+	color-scheme: light;
+	--paper: #f5f7fa;
+	--surface: #ffffff;
+	--ink: #14213d;
+	--muted: #5b6578;
+	--line: #dde2ea;
+	--flag: #f25c05;
+	--on-flag: #14213d;
+	--danger: #c42847;
+	--scrim: rgb(20 33 61 / 0.4);
+
+	--marker: var(--flag);
+	--on-marker: var(--on-flag);
+	--action: var(--flag);
+	--on-action: var(--on-flag);
+	--own: var(--flag);
+	--own-row: var(--strip);
+	--strip: var(--surface);
+	--on-strip: var(--ink);
+	--on-strip-muted: var(--muted);
+	--strip-line: var(--line);
+	--strip-score: var(--ink);
+	--score: var(--ink);
+	--section: transparent;
+	--on-section: var(--ink);
+	--waiting: var(--muted);
+
+	--font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+	/* Archivo's width axis. A font without one ignores these. */
+	--stretch-display: 125%;
+	--stretch-condensed: 87%;
+	--stretch-compressed: 70%;
+
+	@variant dark {
+		color-scheme: dark;
+		--paper: #0f1a30;
+		--surface: #17233d;
+		--ink: #eef1f6;
+		--muted: #9aa4b8;
+		--line: #26324d;
+		--flag: #ff7a2e;
+		--on-flag: #14213d;
+		--danger: #ff6b85;
+		--scrim: rgb(5 10 20 / 0.6);
+	}
+}

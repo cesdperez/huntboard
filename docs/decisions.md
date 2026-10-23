@@ -88,7 +88,16 @@ The organiser keeps the challenge list secret and writes it in their own tools. 
 
 ## Proof stays outside the app
 
-Photos and videos keep going to WhatsApp, and some proof arrives in person (furniture). Storing media for 40 people is a separate project. The claim note is enough to link a claim to the proof.
+Photos and videos keep going to WhatsApp, and some proof arrives in person (furniture). Storing proof for 40 people is a separate project. The claim note is enough to link a claim to the proof.
+
+## Two images: a game image and team pictures
+
+The app stores one image per game (an invitation, poster or map) and one picture per team, and nothing else. Proof still stays outside the app. Images live in an R2 bucket, `IMAGES`, under keys that start with the game id and end in a random name. The database keeps only the key.
+
+- The browser shrinks every image before upload, so the server only checks it: size, declared type and the first bytes must agree on JPEG or WebP. The caps (256 KiB for a picture, 1.5 MiB for the game image) stay under the 2 MiB request body limit.
+- A replaced image gets a new key, so `/images/<key>` is cached for a year as immutable. Serving reads no D1 rows; the random key is as hard to guess as a link token.
+- The new object is stored before the database points at it. If saving the key fails, the object is deleted again. The old object is deleted after the database moved on; a failed delete only leaves an unreachable object.
+- Deleting a team deletes its picture. Reset game deletes every object under the game's prefix, which also sweeps anything a failed delete left behind.
 
 ## Teams see all challenges, but not each other's progress
 
@@ -97,7 +106,7 @@ Challenge choice is the strategy, so every team sees the full list with point ra
 ## Stack
 
 - **SvelteKit + TypeScript**, deployed to Cloudflare Workers with `@sveltejs/adapter-cloudflare`.
-- **D1** (SQLite) for storage.
+- **D1** (SQLite) for storage, **R2** for the game image and team pictures.
 - **pnpm**.
 - **Tailwind + shadcn-svelte** for components, only where they save time (buttons, dialogs, tables).
 - **Vitest** for the challenge parser and scoring rules. These are pure functions and the easiest place to get things wrong.
@@ -157,6 +166,10 @@ The free tier fails closed: past a daily limit, requests fail until 00:00 UTC, w
 
 A per-link Worker limiter was removed. From one IP it allowed no more than the WAF rule does, and its counters are per location and eventually consistent, so requests ran past it in production. Its cap, 120 a minute, was also above what the daily allowance can absorb from many IPs. A distributed attack can still spend the Worker request allowance. Stopping that needs Cloudflare's paid DDoS and bot features, which this project does not use.
 
-## Nothing event-specific in the app
+## Visual themes live in code
 
-The app never mentions specific people or a specific event. Names, themes and inside jokes live only in the challenge text the organiser writes.
+A game stores a theme id, and the admin picks it in Setup. Themes are registered in code, not stored as data, so each one is a reviewed set of tokens and fonts that keeps the rules in DESIGN.md. Only the team page and the scoreboard use it. Admin pages keep the default, so judging looks the same in every game. An id that is no longer registered reads as the default, so removing a theme never breaks a game. Reset keeps the theme, like the name.
+
+## Events bring their mood through a theme, their people through game data
+
+A theme may be made for one event, such as a Scottish birthday, and ships as one registered theme among the general ones. It carries only a palette, fonts and decoration. The app's code and copy never name specific people: names, faces and inside jokes come from the game name, the game image and the challenge text the organiser writes.

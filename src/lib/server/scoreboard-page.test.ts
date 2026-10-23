@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createGame, updateGameSettings } from './db/games.js';
+import { createGame, getGameById, updateGameSettings } from './db/games.js';
+import { setGameImage, setTeamAvatar } from './db/images.js';
 import { createTestDb } from './db/testing/test-db.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './db/testing/seed.js';
 import type { GameRow, TeamRow } from './db/types.js';
@@ -16,7 +17,8 @@ beforeEach(async () => {
 		name: 'Canal hunt',
 		starts_at: '2026-06-01T16:00:00.000Z',
 		ends_at: '2026-06-01T21:00:00.000Z',
-		late_penalty_per_minute: 2
+		late_penalty_per_minute: 2,
+		theme: 'flag'
 	});
 	rats = await seedTeam(db, game.id, {
 		name: 'Canal Rats',
@@ -32,8 +34,33 @@ describe('getScoreboardPage', () => {
 		expect(page.game).toEqual({
 			name: 'Canal hunt',
 			startsAt: '2026-06-01T16:00:00.000Z',
-			endsAt: '2026-06-01T21:00:00.000Z'
+			endsAt: '2026-06-01T21:00:00.000Z',
+			image: null
 		});
+	});
+
+	it('shows the game image under its label, or a default label when it has none', async () => {
+		await setGameImage(db, game.id, `${game.id}/poster.webp`, 'Birthday invitation');
+		const labelled = await getScoreboardPage(db, (await getGameById(db, game.id))!);
+		await setGameImage(db, game.id, `${game.id}/poster.webp`, '');
+		const unlabelled = await getScoreboardPage(db, (await getGameById(db, game.id))!);
+
+		expect(labelled.game.image).toEqual({
+			src: `/images/${game.id}/poster.webp`,
+			label: 'Birthday invitation'
+		});
+		expect(unlabelled.game.image?.label).toBe('Game image');
+	});
+
+	it('carries each team picture key', async () => {
+		await setTeamAvatar(db, game.id, owls.id, `${game.id}/owls.webp`);
+
+		const page = await getScoreboardPage(db, game);
+
+		expect(page.standings.map((row) => [row.name, row.avatarKey])).toEqual([
+			['Night Owls', `${game.id}/owls.webp`],
+			['Canal Rats', null]
+		]);
 	});
 
 	it('ranks teams by total after the late penalty, ties sharing a rank, no row marked own', async () => {
@@ -44,8 +71,24 @@ describe('getScoreboardPage', () => {
 		const page = await getScoreboardPage(db, game);
 
 		expect(page.standings).toEqual([
-			{ teamId: rats.id, rank: 1, name: 'Canal Rats', members: '', total: 4, own: false },
-			{ teamId: owls.id, rank: 1, name: 'Night Owls', members: '', total: 4, own: false }
+			{
+				teamId: rats.id,
+				rank: 1,
+				name: 'Canal Rats',
+				members: '',
+				avatarKey: null,
+				total: 4,
+				own: false
+			},
+			{
+				teamId: owls.id,
+				rank: 1,
+				name: 'Night Owls',
+				members: '',
+				avatarKey: null,
+				total: 4,
+				own: false
+			}
 		]);
 	});
 

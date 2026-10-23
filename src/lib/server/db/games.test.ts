@@ -6,6 +6,7 @@ import {
 	resetGame,
 	updateGameSettings
 } from './games.js';
+import { setGameImage } from './images.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import { createTestDb } from './testing/test-db.js';
 
@@ -23,7 +24,8 @@ describe('createGame', () => {
 			name: 'Canal hunt',
 			starts_at: null,
 			ends_at: null,
-			late_penalty_per_minute: 0
+			late_penalty_per_minute: 0,
+			theme: 'flag'
 		});
 		expect(game.admin_token).toMatch(/^[A-Za-z0-9_-]{22}$/);
 		expect(game.scoreboard_token).toMatch(/^[A-Za-z0-9_-]{22}$/);
@@ -69,7 +71,8 @@ describe('updateGameSettings', () => {
 		name: 'Canal hunt at night',
 		starts_at: '2026-06-20T14:00:00.000Z',
 		ends_at: '2026-06-20T19:00:00.000Z',
-		late_penalty_per_minute: 5
+		late_penalty_per_minute: 5,
+		theme: 'night'
 	};
 
 	it('stores the settings and returns the updated game', async () => {
@@ -109,12 +112,13 @@ describe('resetGame', () => {
 		(await db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first<{ n: number }>())?.n;
 
 	async function seedPlayedGame(name: string) {
-		const game = await createGame(db, name);
-		await updateGameSettings(db, game.id, {
+		const created = await createGame(db, name);
+		const game = await updateGameSettings(db, created.id, {
 			name,
 			starts_at: '2026-06-01T10:00:00.000Z',
 			ends_at: '2026-06-01T15:00:00.000Z',
-			late_penalty_per_minute: 2
+			late_penalty_per_minute: 2,
+			theme: 'night'
 		});
 		const team = await seedTeam(db, game.id, { arrived_at: '2026-06-01T15:05:00.000Z' });
 		const challenge = await seedChallenge(db, game.id);
@@ -123,8 +127,15 @@ describe('resetGame', () => {
 		return game;
 	}
 
-	it('removes teams, challenges, claims and adjustments and clears the schedule', async () => {
+	it('keeps the theme, like the name', async () => {
 		const game = await seedPlayedGame('Canal hunt');
+
+		expect(await resetGame(db, game.id)).toMatchObject({ name: 'Canal hunt', theme: 'night' });
+	});
+
+	it('removes teams, challenges, claims and adjustments and clears the schedule and image', async () => {
+		const game = await seedPlayedGame('Canal hunt');
+		await setGameImage(db, game.id, `${game.id}/poster.webp`, 'Invitation');
 
 		const reset = await resetGame(db, game.id);
 
@@ -132,7 +143,9 @@ describe('resetGame', () => {
 			...game,
 			starts_at: null,
 			ends_at: null,
-			late_penalty_per_minute: 0
+			late_penalty_per_minute: 0,
+			image_key: null,
+			image_label: ''
 		});
 		for (const table of ['team', 'challenge', 'claim', 'adjustment']) {
 			expect(await count(table)).toBe(0);

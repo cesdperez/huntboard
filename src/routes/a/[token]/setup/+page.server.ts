@@ -1,5 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { challengesActions } from '#lib/server/actions/challenges.js';
+import { gameImageActions } from '#lib/server/actions/game-image.js';
 import { gameSettingsActions } from '#lib/server/actions/game-settings.js';
 import { linksActions } from '#lib/server/actions/links.js';
 import { teamsActions } from '#lib/server/actions/teams.js';
@@ -18,6 +19,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 export const actions = {
 	...gameSettingsActions,
+	...gameImageActions,
 	...teamsActions,
 	...challengesActions,
 	...linksActions

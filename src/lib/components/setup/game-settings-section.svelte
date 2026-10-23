@@ -6,6 +6,7 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { localInputToUtc, utcToLocalInput } from '#lib/local-time.js';
+	import { THEMES, resolveTheme, supportedModes, type Theme } from '#lib/themes/index.js';
 	import type { GameSettingsFormData } from '#lib/server/actions/game-settings.js';
 	import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/game-settings.js';
 	import type { GameRow } from '#lib/server/db/types.js';
@@ -16,6 +17,7 @@
 	// Reassigned from game after each save, and kept as typed after a failed one.
 	let name = $derived(game.name);
 	let penalty = $derived<number | null>(game.late_penalty_per_minute);
+	let themeId = $derived(resolveTheme(game.theme).id);
 	// The server only knows UTC, so the wall clock is left empty until the browser renders it.
 	let startsLocal = $derived(browser ? utcToLocalInput(game.starts_at) : '');
 	let endsLocal = $derived(browser ? utcToLocalInput(game.ends_at) : '');
@@ -25,6 +27,12 @@
 	let submitting = $state(false);
 	const result = $derived(page.form?.gameSettings as GameSettingsFormData | undefined);
 	const errors = $derived(result?.errors ?? {});
+
+	function modeHint(theme: Theme): string {
+		const modes = supportedModes(theme);
+		if (modes.length > 1) return 'Light or dark, following the phone';
+		return modes[0] === 'dark' ? 'Always dark' : 'Always light';
+	}
 </script>
 
 {#snippet fieldError(id: string, message: string | undefined)}
@@ -126,6 +134,32 @@
 			/>
 			{@render fieldError('game-late-penalty-error', errors.late_penalty_per_minute)}
 		</div>
+
+		<fieldset
+			class="flex flex-col gap-2"
+			aria-describedby={errors.theme ? 'game-theme-hint game-theme-error' : 'game-theme-hint'}
+		>
+			<legend class="mb-2 font-semibold">Theme</legend>
+			<p id="game-theme-hint" class="type-secondary">
+				How the team pages and the scoreboard look. Admin pages keep the default.
+			</p>
+			{#each THEMES as theme (theme.id)}
+				<label class="flex min-h-touch items-center gap-3">
+					<input
+						type="radio"
+						name="theme"
+						value={theme.id}
+						bind:group={themeId}
+						class="size-5 shrink-0"
+					/>
+					<span class="flex flex-col">
+						{theme.name}
+						<span class="type-secondary">{modeHint(theme)}</span>
+					</span>
+				</label>
+			{/each}
+			{@render fieldError('game-theme-error', errors.theme)}
+		</fieldset>
 
 		<div class="flex items-center gap-4">
 			<Button type="submit" size="lg" disabled={submitting}>Save game</Button>

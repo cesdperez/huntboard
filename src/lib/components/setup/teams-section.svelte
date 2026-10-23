@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
+	import { TeamAvatar } from '#lib/components/images/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
@@ -66,6 +67,19 @@
 		};
 	}
 
+	function confirmRemoveAvatar(team: TeamWithClaimCount): SubmitFunction {
+		return (input) => {
+			if (!confirm(`Remove the picture of ${team.name}? The team can add a new one.`)) {
+				input.cancel();
+				return;
+			}
+			return submit(input);
+		};
+	}
+
+	// Initials appear only once some team has a picture, so a game without pictures looks as before.
+	const showAvatars = $derived(teams.some((team) => team.avatar_key));
+
 	function rowError(team: TeamWithClaimCount) {
 		return result?.error && result.teamId === team.id ? result.error : null;
 	}
@@ -114,6 +128,20 @@
 								</Button>
 							</div>
 						</form>
+						{#if team.avatar_key}
+							<form
+								method="POST"
+								action="?/teamsAvatarRemove"
+								class="flex items-center gap-3"
+								use:enhance={confirmRemoveAvatar(team)}
+							>
+								<input type="hidden" name="teamId" value={team.id} />
+								<TeamAvatar name={team.name} avatarKey={team.avatar_key} class="size-12" />
+								<Button type="submit" variant="destructive" class="flex-1" disabled={pending}>
+									Remove picture
+								</Button>
+							</form>
+						{/if}
 						{#if team.claim_count === 0}
 							<form method="POST" action="?/teamsDelete" use:enhance={confirmDelete(team)}>
 								<input type="hidden" name="teamId" value={team.id} />
@@ -128,6 +156,13 @@
 						{/if}
 					{:else}
 						<div class="flex min-h-touch items-center gap-1">
+							{#if showAvatars}
+								<TeamAvatar
+									name={team.name}
+									avatarKey={team.avatar_key}
+									class="mr-2 size-8 text-[15px]"
+								/>
+							{/if}
 							<div class="min-w-0 flex-1">
 								<p class="truncate">{team.name}</p>
 								{#if team.members}<p class="truncate type-secondary">{team.members}</p>{/if}

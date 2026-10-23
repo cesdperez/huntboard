@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { refreshGameData } from '#lib/components/connection/index.js';
+	import { GameImageHeader } from '#lib/components/images/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
+	import AvatarForm from '#lib/components/team/avatar-form.svelte';
 	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
 	import ChallengeSheet from '#lib/components/team/challenge-sheet.svelte';
 	import RenameSheet from '#lib/components/team/rename-sheet.svelte';
@@ -47,6 +49,11 @@
 		<p class="truncate type-secondary">{data.game.name}</p>
 		<NicknameButton />
 	</div>
+	{#if data.game.image}
+		<div class="mx-auto max-w-content px-gutter pb-2">
+			<GameImageHeader image={data.game.image} />
+		</div>
+	{/if}
 
 	<TeamStrip
 		teamName={data.team.name}
@@ -54,7 +61,9 @@
 		standings={data.standings}
 		countdown={clock.countdown}
 		onrename={() => (renaming = true)}
-	/>
+	>
+		<AvatarForm hasAvatar={data.team.avatarKey !== null} {clock} />
+	</TeamStrip>
 
 	<main class="mx-auto max-w-content px-gutter pt-2 pb-24">
 		<h1 class="sr-only">{data.team.name} challenges</h1>
@@ -64,7 +73,11 @@
 			{#each groupBySection(data.challenges) as group, groupIndex (groupIndex)}
 				<section class="flex flex-col">
 					{#if group.section}
-						<h2 class="pt-5 pb-1 type-heading">{group.section}</h2>
+						<h2
+							class="-mx-gutter mt-4 bg-section px-gutter py-1 font-display type-heading text-on-section"
+						>
+							{group.section}
+						</h2>
 					{/if}
 					<ul class="flex flex-col border-t">
 						{#each group.items as challenge (challenge.id)}

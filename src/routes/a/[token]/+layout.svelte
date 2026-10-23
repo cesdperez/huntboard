@@ -71,7 +71,7 @@
 						{tab.label}
 						{#if tab.label === 'Queue' && data.pendingCount > 0}
 							<span
-								class="min-w-6 rounded-full bg-flag px-1.5 text-center text-[13px] leading-6 text-on-flag tabular-nums"
+								class="min-w-6 rounded-full bg-marker px-1.5 text-center text-[13px] leading-6 text-on-marker tabular-nums"
 							>
 								{data.pendingCount}<span class="sr-only"> to judge</span>
 							</span>

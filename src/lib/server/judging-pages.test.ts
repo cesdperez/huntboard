@@ -18,7 +18,8 @@ beforeEach(async () => {
 		name: 'Canal hunt',
 		starts_at: '2026-06-01T16:00:00.000Z',
 		ends_at: '2026-06-01T21:00:00.000Z',
-		late_penalty_per_minute: 2
+		late_penalty_per_minute: 2,
+		theme: 'flag'
 	});
 	rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
 	owls = await seedTeam(db, game.id, { name: 'Night Owls' });
@@ -69,6 +70,7 @@ describe('getTeamScoresPage', () => {
 				id: rats.id,
 				name: 'Canal Rats',
 				members: '',
+				avatarKey: null,
 				arrivedAt: '2026-06-01T21:03:30.000Z',
 				rank: 2,
 				claimPoints: 10,
@@ -82,6 +84,7 @@ describe('getTeamScoresPage', () => {
 				id: owls.id,
 				name: 'Night Owls',
 				members: '',
+				avatarKey: null,
 				arrivedAt: null,
 				rank: 1,
 				claimPoints: 8,

@@ -8,7 +8,8 @@ function form(fields: Record<string, string>): FormData {
 		name: 'Canal hunt',
 		starts_at: '2026-06-20T14:00:00.000Z',
 		ends_at: '2026-06-20T19:00:00.000Z',
-		late_penalty_per_minute: '5'
+		late_penalty_per_minute: '5',
+		theme: 'flag'
 	};
 	for (const [key, value] of Object.entries({ ...defaults, ...fields })) data.set(key, value);
 	return data;
@@ -22,7 +23,8 @@ describe('parseGameSettings', () => {
 				name: 'Canal hunt',
 				starts_at: '2026-06-20T14:00:00.000Z',
 				ends_at: '2026-06-20T19:00:00.000Z',
-				late_penalty_per_minute: 5
+				late_penalty_per_minute: 5,
+				theme: 'flag'
 			}
 		});
 	});
@@ -40,7 +42,24 @@ describe('parseGameSettings', () => {
 
 		expect(parseGameSettings(data)).toEqual({
 			ok: true,
-			settings: { name: 'Canal hunt', late_penalty_per_minute: 5 }
+			settings: { name: 'Canal hunt', late_penalty_per_minute: 5, theme: 'flag' }
+		});
+	});
+
+	it('leaves the theme out when the form sends none, so the stored theme stays', () => {
+		const data = form({});
+		data.delete('theme');
+
+		const result = parseGameSettings(data);
+
+		expect(result).toMatchObject({ ok: true });
+		expect(result.ok && 'theme' in result.settings).toBe(false);
+	});
+
+	it('rejects a theme that is not registered', () => {
+		expect(parseGameSettings(form({ theme: 'tartan' }))).toEqual({
+			ok: false,
+			errors: { theme: 'Pick one of the listed themes.' }
 		});
 	});
 

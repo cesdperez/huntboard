@@ -26,6 +26,11 @@ export class TeamAction {
 		this.#failure = null;
 	}
 
+	/** Shows an error found before sending, like a picture the browser cannot read. */
+	fail(message: string) {
+		this.#failure = { message, subject: this.#subject() };
+	}
+
 	/** On success, runs onsuccess with the sent form and shows `done` as a toast. */
 	submit(done: string, onsuccess: (formData: FormData) => void): SubmitFunction {
 		return ({ formData }) => {

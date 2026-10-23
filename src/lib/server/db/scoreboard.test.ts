@@ -14,7 +14,8 @@ beforeEach(async () => {
 		name: 'Canal hunt',
 		starts_at: '2026-06-01T16:00:00.000Z',
 		ends_at: '2026-06-01T21:00:00.000Z',
-		late_penalty_per_minute: 2
+		late_penalty_per_minute: 2,
+		theme: 'flag'
 	});
 });
 
@@ -42,7 +43,14 @@ describe('getScoreboardInput', () => {
 		const { teams } = await getScoreboardInput(db, game);
 
 		expect(teams).toEqual([
-			{ id: owls.id, name: 'Night Owls', members: 'Ana, Bo', position: 0, arrivedAt: null },
+			{
+				id: owls.id,
+				name: 'Night Owls',
+				members: 'Ana, Bo',
+				avatarKey: null,
+				position: 0,
+				arrivedAt: null
+			},
 			expect.objectContaining({ name: 'Canal Rats', arrivedAt: '2026-06-01T21:03:00.000Z' })
 		]);
 	});
