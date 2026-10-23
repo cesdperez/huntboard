@@ -34,9 +34,13 @@
 			{/if}
 		</span>
 		{#if event}
-			<span class="flex min-w-16 shrink-0 flex-col items-end">
-				<Points min={challenge.minPoints} max={challenge.maxPoints} />
-				<span aria-hidden="true" class="text-[13px] leading-none text-muted">points</span>
+			<span class="flex min-w-18 shrink-0 flex-col items-end">
+				<Points
+					class="text-[17px] leading-tight"
+					min={challenge.minPoints}
+					max={challenge.maxPoints}
+				/>
+				<span aria-hidden="true" class="text-[15px] leading-tight text-muted">points</span>
 			</span>
 			<ChevronRightIcon aria-hidden="true" class="-mr-1 size-5 shrink-0 text-muted" />
 		{:else}

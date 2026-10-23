@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
 	import type { HTMLAttributes } from 'svelte/elements';
 
@@ -11,11 +12,13 @@
 	let { value, min, max, variant = 'range', class: className, ...restProps }: Props = $props();
 
 	const formatted = (n: number) => (n < 0 ? `\u2212${-n}` : String(n));
+	// Thin spaces around the dash in the event layout's roomier points column.
+	const dash = $derived(pageLayout() === 'event' ? '\u2009\u2013\u2009' : '\u2013');
 
 	const low = $derived(value ?? min ?? 0);
 	const high = $derived(value ?? max ?? low);
 	const text = $derived(
-		low === high ? formatted(low) : `${formatted(low)}\u2013${formatted(high)}`
+		low === high ? formatted(low) : `${formatted(low)}${dash}${formatted(high)}`
 	);
 	const label = $derived(low === high ? undefined : `${low} to ${high} points`);
 </script>
@@ -31,6 +34,8 @@
 >
 	{#if label}
 		<span aria-hidden="true">{text}</span><span class="sr-only">{label}</span>
+	{:else if variant === 'range'}
+		{text} <span class="sr-only">points</span>
 	{:else}
 		{text}
 	{/if}
