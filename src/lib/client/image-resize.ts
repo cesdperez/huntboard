@@ -62,15 +62,10 @@ export async function resizeImage(file: File, spec: ImageSpec): Promise<ResizeRe
 		return { ok: false, message: UNREADABLE_IMAGE };
 	}
 	try {
-		const canvas = draw(bitmap, spec);
-		for (const quality of QUALITIES) {
-			const blob = await encode(canvas, quality);
-			if (blob.size <= spec.maxBytes) {
-				const extension = blob.type === 'image/webp' ? 'webp' : 'jpg';
-				return { ok: true, image: new File([blob], `image.${extension}`, { type: blob.type }) };
-			}
-		}
-		return { ok: false, message: OVERSIZED_IMAGE };
+		const blob = await encodeWithin(draw(bitmap, spec), spec.maxBytes);
+		if (!blob) return { ok: false, message: OVERSIZED_IMAGE };
+		const extension = blob.type === 'image/webp' ? 'webp' : 'jpg';
+		return { ok: true, image: new File([blob], `image.${extension}`, { type: blob.type }) };
 	} finally {
 		bitmap.close();
 	}
@@ -105,11 +100,25 @@ function draw(bitmap: ImageBitmap, spec: ImageSpec): HTMLCanvasElement {
 	return canvas;
 }
 
-async function encode(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
-	const webp = await toBlob(canvas, 'image/webp', quality);
-	// Browsers that cannot encode WebP hand back a PNG instead.
-	if (webp.type === 'image/webp') return webp;
+/** The best quality that fits, in WebP where the browser can encode it and JPEG otherwise. */
+async function encodeWithin(canvas: HTMLCanvasElement, maxBytes: number): Promise<Blob | null> {
+	let source = canvas;
+	let type = 'image/webp';
+	for (const quality of QUALITIES) {
+		let blob = await toBlob(source, type, quality);
+		// Browsers that cannot encode WebP hand back a PNG instead. Switching once spares every
+		// later quality step a wasted PNG encode.
+		if (blob.type !== type) {
+			source = flatten(canvas);
+			type = 'image/jpeg';
+			blob = await toBlob(source, type, quality);
+		}
+		if (blob.size <= maxBytes) return blob;
+	}
+	return null;
+}
 
+function flatten(canvas: HTMLCanvasElement): HTMLCanvasElement {
 	const flat = document.createElement('canvas');
 	flat.width = canvas.width;
 	flat.height = canvas.height;
@@ -119,7 +128,7 @@ async function encode(canvas: HTMLCanvasElement, quality: number): Promise<Blob>
 	context.fillStyle = '#ffffff';
 	context.fillRect(0, 0, flat.width, flat.height);
 	context.drawImage(canvas, 0, 0);
-	return toBlob(flat, 'image/jpeg', quality);
+	return flat;
 }
 
 function toBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob> {

@@ -1,12 +1,22 @@
 /** A static file: fetching it never runs the Worker, so checking costs nothing from the request budget. */
 export const REACHABLE_URL = '/reachable.txt';
 
+// A stalled request would hold up every later poll, as polling never runs two checks at once.
+export const REACHABLE_TIMEOUT_MS = 10_000;
+
 export async function isReachable(fetcher: typeof fetch = fetch): Promise<boolean> {
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(), REACHABLE_TIMEOUT_MS);
 	try {
-		const response = await fetcher(REACHABLE_URL, { cache: 'no-store' });
+		const response = await fetcher(REACHABLE_URL, {
+			cache: 'no-store',
+			signal: controller.signal
+		});
 		return response.ok;
 	} catch {
 		return false;
+	} finally {
+		clearTimeout(timer);
 	}
 }
 

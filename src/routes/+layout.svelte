@@ -1,6 +1,8 @@
 <script lang="ts">
 	import '../app.css';
+	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
+	import { connection } from '#lib/components/connection/index.js';
 	import { resolveAppearance, supportedModes, themeImages } from '#lib/themes/index.js';
 	import type { LayoutProps } from './$types';
 
@@ -9,6 +11,12 @@
 	const appearance = $derived(resolveAppearance(page.data.gameTheme, page.data.colorMode));
 	const modes = $derived(appearance.mode ? [appearance.mode] : supportedModes(appearance.theme));
 	const images = $derived(themeImages(appearance.theme));
+
+	// Pages that do not poll would otherwise keep the offline notice after loading fine. A failed
+	// load offline also lands on the error page, so that says nothing about the connection.
+	afterNavigate(() => {
+		if (!page.error) connection.online = true;
+	});
 
 	// The server sets these on <html>. Client-side navigation keeps them in step.
 	$effect(() => {

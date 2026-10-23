@@ -1,6 +1,6 @@
 import type { ActionResult } from '$app/forms';
 import { needsRetry } from '#lib/components/admin/admin-message.js';
-import { refreshGameData } from '#lib/components/connection/index.js';
+import { connection, refreshGameData } from '#lib/components/connection/index.js';
 import { RETRY } from '#lib/components/team/action-message.js';
 import { toast } from '#lib/components/toast/index.js';
 
@@ -22,5 +22,7 @@ export async function updateOrRetry(
 		await refreshGameData().catch(() => {});
 		return;
 	}
+	// Only an error result can come from a request that never reached the server.
+	if (result.type !== 'error') connection.online = true;
 	await update(options);
 }
