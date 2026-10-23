@@ -88,9 +88,10 @@
 						href={tab.href}
 						aria-current={current ? 'page' : undefined}
 						class={cn(
-							'flex min-h-row items-center justify-center gap-1.5 font-semibold',
+							'flex min-h-row items-center justify-center gap-1.5 font-semibold focus-visible:-outline-offset-4',
 							current ? 'text-ink' : 'text-muted',
-							event && current && 'shadow-[inset_0_4px_0_var(--own)]'
+							// Ink is the strip's text colour here, so the bar keeps 3:1 on the strip in any theme.
+							event && current && 'shadow-[inset_0_4px_0_var(--ink)]'
 						)}
 					>
 						{tab.label}
