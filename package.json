@@ -6,9 +6,9 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173 --env-file .env.dev",
+		"preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173 --local-upstream localhost:4173 --env-file .env.dev",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p loadtest",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"gen": "wrangler types --env-file .env.example --env-file .env.dev --strict-vars false",
 		"db:migrate": "wrangler d1 migrations apply huntboard --local",

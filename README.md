@@ -25,7 +25,7 @@ Dependencies point one way: route, then action adapter or page builder, then use
 
 - `domain/`: pure game rules and shared limits, such as the challenge parser, scoring and points.
 - `format/`: display formatting, such as times, ordinals and plurals.
-- `client/`: browser-only code, such as live updates and image resizing.
+- `client/`: code for the page in the browser, such as live updates, the game clock and image resizing. Pages that render on the server use some of it too.
 - `themes/`: the theme registry and each theme's tokens.
 - `components/`: Svelte components, and the form action state they share.
 - `action-results.ts`: the form action result types, by key.
@@ -40,7 +40,7 @@ Dependencies point one way: route, then action adapter or page builder, then use
 - `actions/`: thin form action adapters.
 - `testing/`: an in-memory R2 bucket for tests.
 
-A use case returns an `ActionOutcome<R>`: an HTTP status and a result. The adapter calls `respond(key, outcome)`, which puts the result under `page.form[key]`. The client reads it back by the same key, through `AdminAction<K>` or `resultUnder(page.form, key)`. `ActionResults` in `src/lib/action-results.ts` maps each key to its result type on both sides, so a renamed key or a changed result fails `pnpm check`.
+A use case returns an `ActionOutcome<R>`: an HTTP status and a result. The adapter calls `respond(key, outcome)` from `server/actions/respond.ts`, which puts the result under `page.form[key]`. The client reads it back by the same key, through `AdminAction<K>` or `resultUnder(page.form, key)`. `ActionResults` in `src/lib/action-results.ts` maps each key to its result type on both sides, so a renamed key or a changed result fails `pnpm check`.
 
 Domain rules are written test first. Vitest covers the domain, use cases, page builders and D1 queries. Query tests run on in-memory SQLite. UI is checked with Playwright rather than component tests. Before a commit, `pnpm test`, `pnpm check` and `pnpm lint` pass.
 

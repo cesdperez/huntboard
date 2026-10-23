@@ -352,7 +352,10 @@ export async function playHunt(
 		`${admin}/queue`
 	);
 	for (const claim of leftovers) await judge(SHAPE.judges[0], claim, 'pending');
-	const { standings } = await client.data<{ standings: Standing[] }>('scoreboard:poll', scoreboard);
+	const { standings } = await client.data<{ standings: Standing[] }>(
+		'team:refresh',
+		`/t/${teams[0].token}`
+	);
 	return { expected, standings, failures };
 }
 

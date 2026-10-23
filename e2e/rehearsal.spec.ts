@@ -367,4 +367,6 @@ async function addAdjustment(
 	await item.getByLabel('Reason').fill(reason);
 	await item.getByRole('button', { name: 'Add', exact: true }).click();
 	await expect(toast(page)).toHaveText('Adjustment added');
+	const escaped = reason.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	await expect(item.getByRole('button', { name: new RegExp(`for ${escaped}$`) })).toBeVisible();
 }

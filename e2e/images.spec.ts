@@ -104,7 +104,12 @@ test('images: game image and team pictures, from upload to reset', async ({ brow
 
 	await test.step('the admin removes the team picture and its file goes', async () => {
 		await admin.reload();
-		await admin.getByRole('button', { name: 'Edit Canal Rats' }).click();
+		await expect(async () => {
+			await admin.getByRole('button', { name: 'Edit Canal Rats' }).click();
+			await expect(admin.getByRole('button', { name: 'Remove picture' })).toBeVisible({
+				timeout: 1000
+			});
+		}).toPass();
 		admin.once('dialog', (dialog) => dialog.accept());
 		await admin.getByRole('button', { name: 'Remove picture' }).click();
 		await expect(admin.getByRole('button', { name: 'Remove picture' })).toBeHidden();
