@@ -6,7 +6,7 @@ Huntboard is used on a phone, outdoors, in a hurry, often one-handed while the o
 
 Orienteering marks each checkpoint with a square flag split diagonally into orange and white. It is the most recognisable object in the world of finding things around a city, and the diagonal split is our one signature. It appears in exactly one place: the claim marker. Everything else stays quiet so the marker and the numbers carry the screen.
 
-The palette is signal orange on a cool white, with deep navy for text. Orange is also the Dutch colour, which suits the reference event without naming it.
+The palette is signal orange on a cool white, with deep navy for text.
 
 This direction is the theme `flag`. A game can pick another theme for all its pages; see [Themes](#themes). The rest of this document describes `flag`.
 
@@ -259,7 +259,7 @@ A theme's registry entry names its layout. Structure changes only through it; th
 
 ### Highland Bru
 
-`highland-bru`, light only, `event` layout. Made for a Scottish birthday whose invitation is orange with cobalt: the event brings the people through its game name and image, the theme brings only the mood.
+`highland-bru`, light only, `event` layout. Made for a Scottish birthday. The theme brings only the mood: names, faces and inside jokes come from the game name, the game image and the challenge text, never from the app's code or copy.
 
 | Role | Value |
 |---|---|

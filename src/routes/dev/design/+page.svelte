@@ -272,14 +272,14 @@
 					<AppBar><Button variant="ghost">Ana</Button></AppBar>
 					<EventBanner
 						name="Birthday hunt"
-						day="24 October"
+						day="12 June"
 						countdown="Ends in 1:42:10"
 						image={sampleImage}
 					/>
 				</div>
 				<EventBanner
 					name="Birthday hunt"
-					day="24 October"
+					day="12 June"
 					countdown="Starts in 0:42:10"
 					image={null}
 				/>

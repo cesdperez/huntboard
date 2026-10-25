@@ -1,4 +1,4 @@
-/** Sets the D1 rows read budget, see docs/decisions.md "Live updates by polling". */
+/** Sets the D1 rows read budget, see the README "Free-tier budget". */
 export const POLL_INTERVAL_MS = 60_000;
 
 export interface PollingOptions {

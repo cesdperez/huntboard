@@ -1,7 +1,7 @@
 import { POLL_INTERVAL_MS } from '../src/lib/client/live-updates.ts';
 import type { AppClient } from './http.ts';
 
-/** The game the hunt plays, per docs/decisions.md "Free-tier budget". */
+/** The game the hunt plays, per the README "Free-tier budget". */
 export const SHAPE = {
 	teams: 7,
 	playersPerTeam: 6,
