@@ -4,6 +4,12 @@ A live scoreboard for team scavenger hunts. Teams check off challenges from thei
 
 No accounts. Each team joins through its own secret link, so teams see only their own progress and the totals of everyone else. Creating a game needs a creation code.
 
+| Team | Judge |
+|---|---|
+| ![A team's page on a phone: its rank and total, and the challenge list with scored and pending claims](docs/screenshots/team.png) | ![The admin queue on a phone: pending claims with quick score, reject and custom points](docs/screenshots/admin-queue.png) |
+
+![The scoreboard on a big screen: four teams ranked by total points](docs/screenshots/scoreboard.png)
+
 - [Design](DESIGN.md): visual and interaction rules for every screen
 - [Challenge format](docs/challenge-format.md): how organisers paste in their challenge list
 
