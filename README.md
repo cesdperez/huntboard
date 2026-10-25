@@ -10,6 +10,8 @@ No accounts. Each team joins through its own secret link, so teams see only thei
 
 ![The scoreboard on a big screen: four teams ranked by total points](docs/screenshots/scoreboard.png)
 
+> This ran a real game with 50 players fine, and should scale to thousands of concurrent players. To stay within the Cloudflare free tier, keep it to about 70 players a day in 5-hour games (see [Free-tier budget](#free-tier-budget)).
+
 - [Design](DESIGN.md): visual and interaction rules for every screen
 - [Challenge format](docs/challenge-format.md): how organisers paste in their challenge list
 
