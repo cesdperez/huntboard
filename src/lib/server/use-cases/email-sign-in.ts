@@ -22,7 +22,7 @@ export interface SignInEmail {
 export type SendEmail = (email: SignInEmail) => Promise<boolean>;
 
 export const SIGN_IN_MINUTES = 15;
-/** Per address and per SIGN_IN_MINUTES, so the form cannot flood someone's inbox. */
+/** Unused requests per address and per SIGN_IN_MINUTES, so the form cannot flood an inbox. */
 export const MAX_REQUESTS_PER_WINDOW = 3;
 /** A six-digit code survives a few guesses, not many. */
 export const MAX_CODE_ATTEMPTS = 5;
