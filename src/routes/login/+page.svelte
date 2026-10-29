@@ -14,9 +14,14 @@
 	let otherEmail = $state(false);
 
 	const event = $derived(pageLayout() === 'event');
-	const sentTo = $derived(otherEmail ? null : (form?.sent ?? data.pendingEmail));
+	const codeResult = $derived(form && 'code' in form ? form : null);
+	const codeEnded = $derived(codeResult?.needsNewEmail ?? false);
+	const sentTo = $derived(otherEmail || codeEnded ? null : (form?.sent ?? data.pendingEmail));
 	const requestAction = $derived(`?/request&next=${encodeURIComponent(data.next)}`);
-	const formError = $derived(form?.error ?? null);
+	const codeError = $derived(codeEnded ? null : (codeResult?.error ?? null));
+	const emailError = $derived(
+		form && 'email' in form ? form.error : codeEnded ? (codeResult?.error ?? null) : null
+	);
 </script>
 
 <svelte:head>
@@ -67,14 +72,14 @@
 						autocomplete="one-time-code"
 						maxlength={7}
 						value={form && 'code' in form ? form.code : ''}
-						aria-invalid={formError ? true : undefined}
+						aria-invalid={codeError ? true : undefined}
 					/>
 				</div>
 				{#if form && 'needsName' in form && form.needsName}
-					<DisplayNameField error={formError} />
+					<DisplayNameField error={codeError} />
 				{/if}
-				{#if formError}
-					<p class="text-[15px] text-danger" role="alert">{formError}</p>
+				{#if codeError}
+					<p class="text-[15px] text-danger" role="alert">{codeError}</p>
 				{/if}
 				<Button type="submit" variant="primary" size="lg">Sign in</Button>
 			</form>
@@ -106,15 +111,15 @@
 					autocomplete="email"
 					maxlength={EMAIL_MAX_LENGTH}
 					value={form && 'email' in form ? form.email : ''}
-					aria-invalid={formError ? true : undefined}
+					aria-invalid={emailError ? true : undefined}
 					aria-describedby="email-hint"
 				/>
 				<p id="email-hint" class="type-secondary">
 					We email you a link to sign in. New here? The same link creates your account.
 				</p>
 			</div>
-			{#if formError}
-				<p class="text-[15px] text-danger" role="alert">{formError}</p>
+			{#if emailError}
+				<p class="text-[15px] text-danger" role="alert">{emailError}</p>
 			{/if}
 			<Button type="submit" variant="primary" size="lg">Email me a sign-in link</Button>
 		</form>

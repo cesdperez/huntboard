@@ -43,11 +43,24 @@ export type RequestResult =
 export type FinishResult =
 	| { kind: 'signed-in'; userId: number; next: string }
 	| { kind: 'needs-name'; email: string }
-	| { kind: 'error'; message: string };
+	| { kind: 'error'; message: string; needsNewEmail: boolean };
 
 const EXPIRED: FinishResult = {
 	kind: 'error',
-	message: 'This sign-in link or code has expired or was already used. Ask for a new email.'
+	message: 'This sign-in link or code has expired or was already used. Ask for a new email.',
+	needsNewEmail: true
+};
+
+const TOO_MANY_WRONG_CODES: FinishResult = {
+	kind: 'error',
+	message: 'Too many wrong codes were tried, so the code no longer works. Ask for a new email.',
+	needsNewEmail: true
+};
+
+const NOT_RIGHT: FinishResult = {
+	kind: 'error',
+	message: 'That code is not right. Check the email and try again.',
+	needsNewEmail: false
 };
 
 /**
@@ -161,9 +174,10 @@ export async function finishWithCode(
 	displayName: string,
 	now = new Date()
 ): Promise<FinishResult> {
+	const ids = requestIds.slice(0, MAX_REQUESTS_PER_WINDOW);
 	const typed = code.replace(/\s/g, '');
 	const checked = await Promise.all(
-		requestIds.slice(0, MAX_REQUESTS_PER_WINDOW).map(async (id) => {
+		ids.map(async (id) => {
 			const hash = await codeHash(id, typed);
 			const request = await checkCode(db, id, hash, MAX_CODE_ATTEMPTS, now.toISOString());
 			return { request, right: request?.code_hash === hash };
@@ -171,8 +185,11 @@ export async function finishWithCode(
 	);
 	const match = checked.find(({ right }) => right);
 	if (match?.request) return complete(db, match.request, displayName);
-	if (!checked.some(({ request }) => request)) return EXPIRED;
-	return { kind: 'error', message: 'That code is not right. Check the email and try again.' };
+	if (checked.some(({ request }) => request && request.code_attempts < MAX_CODE_ATTEMPTS)) {
+		return NOT_RIGHT;
+	}
+	const unexpired = await findRequests(db, ids, now.toISOString());
+	return unexpired.length > 0 ? TOO_MANY_WRONG_CODES : EXPIRED;
 }
 
 async function complete(

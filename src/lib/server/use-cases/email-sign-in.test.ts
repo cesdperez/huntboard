@@ -171,19 +171,32 @@ describe('finishWithCode', () => {
 		});
 	});
 
-	it('stops accepting codes after too many wrong ones', async () => {
+	it('stops accepting codes after too many wrong ones, and says so', async () => {
 		const { requestId, code } = await sent();
 		const wrong = code === '000000' ? '111111' : '000000';
+		const tooMany = {
+			kind: 'error',
+			message: 'Too many wrong codes were tried, so the code no longer works. Ask for a new email.',
+			needsNewEmail: true
+		};
 
-		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++) {
+		for (let i = 0; i < MAX_CODE_ATTEMPTS - 1; i++) {
 			expect(await finishWithCode(db, [requestId], wrong, '', NOW)).toEqual({
 				kind: 'error',
-				message: 'That code is not right. Check the email and try again.'
+				message: 'That code is not right. Check the email and try again.',
+				needsNewEmail: false
 			});
 		}
-		expect(await finishWithCode(db, [requestId], code, '', NOW)).toMatchObject({
+		expect(await finishWithCode(db, [requestId], wrong, '', NOW)).toEqual(tooMany);
+		expect(await finishWithCode(db, [requestId], code, '', NOW)).toEqual(tooMany);
+	});
+
+	it('asks for a new email once the code has expired', async () => {
+		const { requestId, code } = await sent();
+
+		expect(await finishWithCode(db, [requestId], code, '', LATER)).toMatchObject({
 			kind: 'error',
-			message: expect.stringContaining('Ask for a new email')
+			needsNewEmail: true
 		});
 	});
 

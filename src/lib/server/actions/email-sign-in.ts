@@ -104,12 +104,19 @@ async function finishSignIn(
 		await signIn(cookies, result.userId);
 		redirect(303, result.next);
 	}
-	if (result.kind === 'error')
-		return fail(400, { ...kept, needsName: false, error: result.message });
+	if (result.kind === 'error') {
+		return fail(400, {
+			...kept,
+			needsName: false,
+			needsNewEmail: result.needsNewEmail,
+			error: result.message
+		});
+	}
 	// Asking for the name is not an error until the form has sent one.
 	return fail(400, {
 		...kept,
 		needsName: true,
+		needsNewEmail: false,
 		error: data.has('displayName') ? NAME_ERROR : null
 	});
 }
