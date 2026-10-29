@@ -13,7 +13,7 @@
 	let downloaded = $state(false);
 
 	const remove: SubmitFunction = ({ cancel }) => {
-		const warning = `Delete all media of ${game.name}? This deletes every photo and video teams sent. Claims and scores stay. It cannot be undone.`;
+		const warning = `Delete all media of ${game.name}? This deletes every photo and video teams sent. Claims and scores stay. It cannot be undone. Wait until the download has finished.`;
 		if (!confirm(warning)) return cancel();
 		pending = true;
 		return async (settled) => {

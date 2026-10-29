@@ -18,6 +18,17 @@ export async function createGame(
 	return game;
 }
 
+export async function countGamesCreatedToday(db: D1Database, userId: number): Promise<number> {
+	const count = await db
+		.prepare(
+			`SELECT count(*) AS n FROM game
+			WHERE owner_user_id = ? AND created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 day')`
+		)
+		.bind(userId)
+		.first<number>('n');
+	return count ?? 0;
+}
+
 export function getGameByAdminToken(db: D1Database, token: string): Promise<GameRow | null> {
 	return db.prepare('SELECT * FROM game WHERE admin_token = ?').bind(token).first<GameRow>();
 }
