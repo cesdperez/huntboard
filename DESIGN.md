@@ -116,6 +116,7 @@ Tapping a row opens a bottom sheet with the description, the note field and one 
 - Outside the game window the sheet keeps "Mark done" visible but disabled, with the closed message above it.
 - An error in the sheet stays only while the claim it is about is unchanged. Once a poll shows a new state, the error goes, so it never contradicts the button under it.
 - A confirmation shows as a toast: a `--ink` pill above the bottom edge for three seconds.
+- When a poll shows that a judge scored or rejected a claim, a toast says so: "Scored 8 for Swim in a fountain", or "Rejected Free dessert: no proof received. You can mark it done again." Several judgements show one after another, and the phone vibrates briefly where the browser allows it. Opening the page and the team's own marks and undos stay quiet.
 
 ### Admin
 
@@ -307,7 +308,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. When the browser comes back online, polls run again at once, and pages that do not poll check the server.
 - A page that cannot load at all says so plainly. Offline: "You are offline" with "This page loads again once you reconnect." Otherwise: "This page did not load" with "It tries again by itself. If it keeps happening, reload the page or tell your organiser." Both reload by themselves on the polling schedule once the server answers.
 - A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
-- An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast, the one toast that is not a confirmation.
+- An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast. The only other toasts that are not a confirmation tell a team about a judgement.
 - A file the browser cannot open: "This file is not an image this browser can read. Choose a JPEG, PNG or WebP image." A file that stays too large after shrinking: "This image stays too large even when shrunk. Choose another one." Both show in place before anything is sent.
 
 ## Accessibility floor
