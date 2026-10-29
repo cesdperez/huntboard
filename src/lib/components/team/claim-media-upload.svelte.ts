@@ -1,8 +1,8 @@
 import { deserialize } from '$app/forms';
 import { resultUnder } from '#lib/action-results.js';
-import { prepareClaimMedia } from '#lib/client/claim-media.js';
+import { classifyMedia, prepareClaimMedia } from '#lib/client/claim-media.js';
 import { putFile } from '#lib/client/media-upload.js';
-import type { MediaKind } from '#lib/domain/claim-media.js';
+import { isVideoType, type MediaKind } from '#lib/domain/claim-media.js';
 import type { GamePhase } from '#lib/domain/game-window.js';
 import { actionFailureMessage, RETRY } from './action-message.js';
 
@@ -37,34 +37,31 @@ export class ClaimMediaUpload {
 		const controller = new AbortController();
 		this.#controller = controller;
 		const { signal } = controller;
-		this.kind = file.type.startsWith('video/') ? 'video' : 'photo';
+		const onProgress = (fraction: number) => {
+			if (!signal.aborted) this.progress = fraction;
+		};
+		this.kind = classifyMedia(file) === 'video' ? 'video' : 'photo';
 		this.phase = 'preparing';
 		try {
-			const prepared = await prepareClaimMedia(
-				file,
-				(fraction) => (this.progress = fraction),
-				signal
-			);
+			// Every await below can outlive a clear() or a newer start(), and not every step honours the signal.
+			const prepared = await prepareClaimMedia(file, onProgress, signal);
+			if (signal.aborted) return;
 			if (!prepared.ok) return this.#fail(prepared.message);
+			this.kind = isVideoType(prepared.type) ? 'video' : 'photo';
 			if (this.kind === 'photo') this.preview = URL.createObjectURL(prepared.file);
 
 			const target = await this.#presign(prepared.file, prepared.type, signal);
+			if (signal.aborted) return;
 			if (typeof target === 'string') return this.#fail(target);
 
 			this.phase = 'uploading';
 			this.progress = 0;
-			const uploaded = await putFile(
-				target.url,
-				target.headers,
-				prepared.file,
-				(fraction) => (this.progress = fraction),
-				signal
-			);
+			const uploaded = await putFile(target.url, target.headers, prepared.file, onProgress, signal);
+			if (signal.aborted) return;
 			if (!uploaded) return this.#fail(RETRY);
 			this.key = target.key;
 			this.phase = 'ready';
 		} catch (error) {
-			// Aborted by clear(), which already reset everything.
 			if (signal.aborted) return;
 			console.error('Attaching media failed', error);
 			this.#fail(RETRY);
