@@ -3,7 +3,7 @@ import { createGame, updateGameSettings } from '../db/games.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from '../db/types.js';
-import { getGridPage, getTeamScoresPage } from './judging-pages.js';
+import { getGridPage, getQueuePage, getTeamScoresPage } from './judging-pages.js';
 
 let db: D1Database;
 let game: GameRow;
@@ -43,6 +43,31 @@ describe('getGridPage', () => {
 		).toEqual([
 			['Swim in a fountain', ['open', 'pending']],
 			['Bake a cake', ['scored', 'open']]
+		]);
+	});
+
+	it('shows the media of each cell claim', async () => {
+		const key = `${game.id}/claims/abcdefghijklmnopqrstuv.jpg`;
+		await seedClaim(db, owls.id, swim.id, { media_key: key });
+
+		const page = await getGridPage(db, game.id);
+
+		expect(page.rows[0].cells[1].claim?.media).toEqual({ src: `/media/${key}`, kind: 'photo' });
+	});
+});
+
+describe('getQueuePage', () => {
+	it('lists the pending claims with their photo or video', async () => {
+		const key = `${game.id}/claims/abcdefghijklmnopqrstuv.webm`;
+		await seedClaim(db, rats.id, swim.id, { media_key: key });
+		await seedClaim(db, owls.id, swim.id);
+		await seedClaim(db, owls.id, cake.id, { status: 'scored', points: 7 });
+
+		const page = await getQueuePage(db, game.id);
+
+		expect(page.claims.map((claim) => [claim.team_name, claim.media])).toEqual([
+			['Canal Rats', { src: `/media/${key}`, kind: 'video' }],
+			['Night Owls', null]
 		]);
 	});
 });

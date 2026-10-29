@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { Points } from '#lib/components/points/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import type { PendingClaimRow } from '#lib/server/db/judging.js';
+	import { ClaimMediaView } from '#lib/components/media/index.js';
+	import type { QueueClaim } from '#lib/server/pages/judging-pages.js';
 	import { timeAgo } from '#lib/format/time-ago.js';
 	import JudgePanel from './judge-panel.svelte';
 
 	type Props = {
-		claim: PendingClaimRow;
+		claim: QueueClaim;
 		/** False once a refresh shows the claim is no longer pending, kept in view for its notice. */
 		live: boolean;
 		notice: string | null;
@@ -46,6 +47,10 @@
 			</p>
 		{/if}
 	</div>
+
+	{#if claim.media}
+		<ClaimMediaView media={claim.media} {label} preload="none" />
+	{/if}
 
 	{#if live}
 		<JudgePanel

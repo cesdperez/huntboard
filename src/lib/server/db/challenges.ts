@@ -78,7 +78,13 @@ export async function getImportSource(db: D1Database, gameId: number): Promise<I
 	return { existing: [...byId.values()], teamNames };
 }
 
-export type ApplyChallengeImportResult = { status: 'applied' } | { status: 'conflict' };
+export type ApplyChallengeImportResult =
+	| {
+			status: 'applied';
+			/** Of the claims that went with the deleted challenges. */
+			mediaKeys: string[];
+	  }
+	| { status: 'conflict' };
 
 /**
  * Applies a re-import atomically. Every statement is scoped to the game, so foreign ids do nothing.
@@ -94,6 +100,15 @@ export async function applyChallengeImport(
 			.prepare(
 				`DELETE FROM challenge WHERE id = ? AND game_id = ?
 					AND NOT EXISTS (SELECT 1 FROM claim WHERE claim.challenge_id = challenge.id)`
+			)
+			.bind(id, gameId)
+	);
+	const deletedMedia = plan.deleteWithClaimsIds.map((id) =>
+		db
+			.prepare(
+				`SELECT claim.media_key FROM claim JOIN challenge ON challenge.id = claim.challenge_id
+				WHERE challenge.id = ? AND challenge.game_id = ? AND claim.media_key IS NOT NULL
+				ORDER BY claim.id`
 			)
 			.bind(id, gameId)
 	);
@@ -122,16 +137,27 @@ export async function applyChallengeImport(
 				fields.position
 			)
 	);
-	// Deletes go first so their title keys are free before anything else is written.
-	const statements = [...unclaimedDeletes, ...claimedDeletes, ...updates, ...inserts];
-	if (statements.length === 0) return { status: 'applied' };
+	// Deletes go first so their title keys are free before anything else is written. The media
+	// keys are read in the same transaction, so a claim that comes in meanwhile is not missed.
+	const statements = [
+		...deletedMedia,
+		...unclaimedDeletes,
+		...claimedDeletes,
+		...updates,
+		...inserts
+	];
+	if (statements.length === 0) return { status: 'applied', mediaKeys: [] };
+	let results: D1Result<{ media_key: string }>[];
 	try {
-		await db.batch(statements);
+		results = await db.batch<{ media_key: string }>(statements);
 	} catch (error) {
 		if (isUniqueViolation(error)) return { status: 'conflict' };
 		throw error;
 	}
-	return { status: 'applied' };
+	const mediaKeys = results
+		.slice(0, deletedMedia.length)
+		.flatMap((result) => result.results.map((row) => row.media_key));
+	return { status: 'applied', mediaKeys };
 }
 
 export type UpdateChallengeResult =

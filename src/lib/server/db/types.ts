@@ -55,6 +55,8 @@ export interface ClaimRow {
 	judged_by: string | null;
 	judged_at: string | null;
 	judge_note: string | null;
+	/** Key in the MEDIA bucket, or null for a claim without a photo or video. */
+	media_key: string | null;
 }
 
 export interface AdjustmentRow {

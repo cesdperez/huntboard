@@ -1,11 +1,26 @@
+import { claimMedia, type ClaimMedia } from '#lib/domain/claim-media.js';
 import { judgingGrid, type GridRow, type GridTeam } from '#lib/domain/judging-grid.js';
 import { computeScoreboard, type TeamScore } from '#lib/domain/scoring.js';
 import { listAdjustments } from '../db/adjustments.js';
 import { listChallenges } from '../db/challenges.js';
-import { listGameClaims } from '../db/judging.js';
+import { listGameClaims, listPendingClaims, type PendingClaimRow } from '../db/judging.js';
 import { getScoreboardInputWithoutAdjustments } from '../db/scoreboard.js';
 import { listTeamNames } from '../db/teams.js';
 import type { GameRow } from '../db/types.js';
+
+export interface QueueClaim extends PendingClaimRow {
+	media: ClaimMedia | null;
+}
+
+export interface QueuePageData {
+	/** Oldest first. */
+	claims: QueueClaim[];
+}
+
+export async function getQueuePage(db: D1Database, gameId: number): Promise<QueuePageData> {
+	const claims = await listPendingClaims(db, gameId);
+	return { claims: claims.map((claim) => ({ ...claim, media: claimMedia(claim.media_key) })) };
+}
 
 export interface GridPageData {
 	teams: GridTeam[];

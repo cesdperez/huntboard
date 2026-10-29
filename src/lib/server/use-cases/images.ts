@@ -9,12 +9,9 @@ import { resetGame } from '../db/games.js';
 import { setGameImage, setGameImageLabel, setTeamAvatar } from '../db/images.js';
 import { deleteTeam, type DeleteTeamResult } from '../db/teams.js';
 import type { GameRow } from '../db/types.js';
-import {
-	deleteGameImages,
-	deleteImages,
-	replaceImage,
-	type ImageBucket
-} from '../storage/image-store.js';
+import { deleteGameObjects, deleteObjects } from '../storage/bucket-objects.js';
+import { replaceImage, type ImageBucket } from '../storage/image-store.js';
+import type { MediaBucket } from '../storage/media-store.js';
 import { readImageUpload } from './image-upload.js';
 import { readString } from './form.js';
 
@@ -56,7 +53,7 @@ export async function removeGameImage(
 	gameId: number
 ): Promise<void> {
 	const replaced = await setGameImage(db, gameId, null, '');
-	await deleteImages(bucket, [replaced?.previous ?? null]);
+	await deleteObjects(bucket, [replaced?.previous ?? null]);
 }
 
 /** False when the team is not in this game. */
@@ -68,7 +65,7 @@ export async function removeTeamAvatar(
 ): Promise<boolean> {
 	const replaced = await setTeamAvatar(db, gameId, teamId, null);
 	if (!replaced) return false;
-	await deleteImages(bucket, [replaced.previous]);
+	await deleteObjects(bucket, [replaced.previous]);
 	return true;
 }
 
@@ -79,17 +76,19 @@ export async function deleteTeamWithAvatar(
 	teamId: number
 ): Promise<DeleteTeamResult['status']> {
 	const result = await deleteTeam(db, gameId, teamId);
-	if (result.status === 'deleted') await deleteImages(bucket, [result.avatarKey]);
+	if (result.status === 'deleted') await deleteObjects(bucket, [result.avatarKey]);
 	return result.status;
 }
 
-/** resetGame, then a sweep of every image stored under the game, orphans included. */
-export async function resetGameWithImages(
+/** resetGame, then a sweep of every image and claim media object of the game, orphans included. */
+export async function resetGameWithFiles(
 	db: D1Database,
-	bucket: ImageBucket,
+	images: ImageBucket,
+	media: MediaBucket,
 	gameId: number
 ): Promise<GameRow> {
 	const game = await resetGame(db, gameId);
-	await deleteGameImages(bucket, gameId);
+	await deleteGameObjects(images, gameId);
+	await deleteGameObjects(media, gameId);
 	return game;
 }

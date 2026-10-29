@@ -11,15 +11,18 @@ import {
 	importChallenges,
 	previewChallengeImport
 } from './challenge-setup.js';
+import { MemoryBucket } from '../testing/memory-bucket.js';
 
 const EMPTY = 'Paste at least one challenge.';
 const MISSING = 'That challenge is not in this game any more. Reload the page.';
 
 let db: D1Database;
 let game: GameRow;
+let media: MemoryBucket;
 
 beforeEach(async () => {
 	db = createTestDb();
+	media = new MemoryBucket();
 	game = await createGame(db, 'Canal hunt');
 });
 
@@ -82,14 +85,14 @@ describe('importChallenges', () => {
 	it('imports the pasted challenges', async () => {
 		const text = '- Swim in a fountain [10]\n- Bake a cake [5-20]\n';
 
-		const outcome = await importChallenges(db, game.id, form({ text }));
+		const outcome = await importChallenges(db, media.asBucket(), game.id, form({ text }));
 
 		expect(outcome).toEqual({ status: 200, result: { kind: 'imported', count: 2 } });
 		expect(await titles()).toEqual(['Swim in a fountain', 'Bake a cake']);
 	});
 
 	it('refuses blank text', async () => {
-		const outcome = await importChallenges(db, game.id, form({ text: '' }));
+		const outcome = await importChallenges(db, media.asBucket(), game.id, form({ text: '' }));
 
 		expect(outcome).toEqual({
 			status: 400,
@@ -100,7 +103,7 @@ describe('importChallenges', () => {
 	it('shows the preview when a line does not parse', async () => {
 		const text = '- Swim in a fountain\n';
 
-		const outcome = await importChallenges(db, game.id, form({ text }));
+		const outcome = await importChallenges(db, media.asBucket(), game.id, form({ text }));
 
 		expect(outcome).toEqual({
 			status: 400,
@@ -115,7 +118,12 @@ describe('importChallenges', () => {
 	});
 
 	it('refuses text with only sections and no challenges', async () => {
-		const outcome = await importChallenges(db, game.id, form({ text: '# Food\n' }));
+		const outcome = await importChallenges(
+			db,
+			media.asBucket(),
+			game.id,
+			form({ text: '# Food\n' })
+		);
 
 		expect(outcome).toEqual({
 			status: 400,
@@ -129,7 +137,7 @@ describe('importChallenges', () => {
 		await seedClaim(db, rats.id, swim.id);
 		const text = '- Bake a cake [5]\n';
 
-		const outcome = await importChallenges(db, game.id, form({ text }));
+		const outcome = await importChallenges(db, media.asBucket(), game.id, form({ text }));
 
 		expect(outcome).toEqual({
 			status: 409,
@@ -150,12 +158,34 @@ describe('importChallenges', () => {
 
 		const outcome = await importChallenges(
 			db,
+			media.asBucket(),
 			game.id,
 			form({ text: '- Bake a cake [5]\n', acknowledged: ['junk', `${swim.id}:1`] })
 		);
 
 		expect(outcome).toEqual({ status: 200, result: { kind: 'imported', count: 1 } });
 		expect(await titles()).toEqual(['Bake a cake']);
+	});
+
+	it('deletes the media of the claims it deleted and keeps the rest', async () => {
+		const rats = await seedTeam(db, game.id);
+		const swim = await seedChallenge(db, game.id, { title: 'Swim in a fountain' });
+		const cake = await seedChallenge(db, game.id, { title: 'Bake a cake' });
+		await seedClaim(db, rats.id, swim.id, { media_key: `${game.id}/claims/swim.jpg` });
+		await seedClaim(db, rats.id, cake.id, { media_key: `${game.id}/claims/cake.jpg` });
+		await media.put(`${game.id}/claims/swim.jpg`, Uint8Array.of(1));
+		await media.put(`${game.id}/claims/cake.jpg`, Uint8Array.of(2));
+
+		const outcome = await importChallenges(
+			db,
+			media.asBucket(),
+			game.id,
+			form({ text: '- Bake a cake [5]\n', acknowledged: `${swim.id}:1` })
+		);
+
+		expect(outcome.status).toBe(200);
+		expect(await media.head(`${game.id}/claims/swim.jpg`)).toBeNull();
+		expect(await media.head(`${game.id}/claims/cake.jpg`)).not.toBeNull();
 	});
 
 	it('refuses to delete a challenge that got more claims than the admin confirmed', async () => {
@@ -168,6 +198,7 @@ describe('importChallenges', () => {
 
 		const outcome = await importChallenges(
 			db,
+			media.asBucket(),
 			game.id,
 			form({ text, acknowledged: `${swim.id}:1` })
 		);

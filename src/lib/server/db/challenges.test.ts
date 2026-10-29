@@ -123,7 +123,7 @@ describe('applyChallengeImport', () => {
 			deleteWithClaimsIds: [drop.id]
 		});
 
-		expect(result).toEqual({ status: 'applied' });
+		expect(result).toEqual({ status: 'applied', mediaKeys: [] });
 		const challenges = await listChallengesWithClaimCounts(db, game.id);
 		expect(
 			challenges.map(({ title, section, min_points, max_points }) => ({
@@ -137,6 +137,42 @@ describe('applyChallengeImport', () => {
 			{ title: 'KEEP', section: null, min_points: 1, max_points: 3 }
 		]);
 		expect(await db.prepare('SELECT count(*) AS n FROM claim').first('n')).toBe(0);
+	});
+
+	it('returns the media keys of the claims it deleted, so the caller can delete the objects', async () => {
+		const rats = await seedTeam(db, game.id);
+		const owls = await seedTeam(db, game.id);
+		const keep = await seedChallenge(db, game.id, { title: 'Keep' });
+		const drop = await seedChallenge(db, game.id, { title: 'Drop' });
+		await seedClaim(db, rats.id, drop.id, { status: 'rejected', media_key: '1/claims/a.jpg' });
+		await seedClaim(db, owls.id, drop.id, { media_key: '1/claims/b.mp4' });
+		await seedClaim(db, rats.id, drop.id, { status: 'scored', points: 5 });
+		await seedClaim(db, rats.id, keep.id, { media_key: '1/claims/kept.jpg' });
+
+		const result = await applyChallengeImport(db, game.id, {
+			inserts: [],
+			updates: [],
+			deleteIds: [],
+			deleteWithClaimsIds: [drop.id]
+		});
+
+		expect(result).toEqual({ status: 'applied', mediaKeys: ['1/claims/a.jpg', '1/claims/b.mp4'] });
+	});
+
+	it('returns no media keys of another game', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const owls = await seedTeam(db, other.id);
+		const elsewhere = await seedChallenge(db, other.id, { title: 'Elsewhere' });
+		await seedClaim(db, owls.id, elsewhere.id, { media_key: '2/claims/b.mp4' });
+
+		const result = await applyChallengeImport(db, game.id, {
+			inserts: [fields('New one')],
+			updates: [],
+			deleteIds: [],
+			deleteWithClaimsIds: [elsewhere.id]
+		});
+
+		expect(result).toEqual({ status: 'applied', mediaKeys: [] });
 	});
 
 	it('clamps scored claims of updated challenges into the new range', async () => {

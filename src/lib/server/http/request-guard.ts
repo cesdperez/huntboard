@@ -1,3 +1,5 @@
+import { DEV_MEDIA_PATH } from '../storage/dev-media-upload.js';
+
 /** The challenge list field allows 100,000 characters; this leaves room for multi-byte, URL-encoded text. */
 export const MAX_BODY_BYTES = 2 * 1024 * 1024;
 
@@ -7,7 +9,7 @@ const PRIVATE_PATH = /^\/(?:[ats]\/[^/]+|login|games|new)(?:\/|$)/;
 const BODYLESS_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /** A response that ends the request before routing, or null to continue. */
-export function rejection(request: Request): Response | null {
+export function rejection(request: Request, { dev } = { dev: false }): Response | null {
 	const url = new URL(request.url);
 	if (url.protocol === 'http:' && !LOOPBACK_HOSTS.has(url.hostname)) {
 		url.protocol = 'https:';
@@ -17,6 +19,8 @@ export function rejection(request: Request): Response | null {
 
 	const length = request.headers.get('Content-Length');
 	if (length === null) return new Response('Length required', { status: 411 });
+	// In production, claim media goes straight to R2 and never through the Worker.
+	if (dev && url.pathname.startsWith(DEV_MEDIA_PATH)) return null;
 	if (!(Number(length) <= MAX_BODY_BYTES)) {
 		return new Response('Request body too large', { status: 413 });
 	}

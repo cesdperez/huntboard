@@ -88,21 +88,39 @@ describe('getTeamPage', () => {
 		]);
 	});
 
-	it('never includes another team claims, notes or names of who marked them', async () => {
+	it('shows the photo or video on this team claim, for its thumbnail', async () => {
+		const key = `${game.id}/claims/abcdefghijklmnopqrstuv.jpg`;
+		await seedClaim(db, rats.id, swim.id, { media_key: key });
+
+		const page = await getTeamPage(db, rats, game);
+
+		expect(page.challenges[0].claim?.media).toEqual({ src: `/media/${key}`, kind: 'photo' });
+	});
+
+	it('never includes another team claims, notes, media or names of who marked them', async () => {
+		const owlMedia = `${game.id}/claims/owlsowlsowlsowlsowlsow.mp4`;
 		await seedClaim(db, rats.id, cake.id, { note: 'rat note', marked_by: 'Sam' });
 		await seedClaim(db, owls.id, swim.id, {
 			status: 'scored',
 			points: 9,
 			note: 'owl secret note',
 			marked_by: 'Owl Olga',
-			judged_by: 'Judge Owl'
+			judged_by: 'Judge Owl',
+			media_key: owlMedia
 		});
 		await seedClaim(db, owls.id, cake.id, { status: 'rejected', judge_note: 'owl rejection' });
 
 		const json = JSON.stringify(await getTeamPage(db, rats, game));
 
 		expect(json).toContain('rat note');
-		for (const leak of ['owl secret note', 'Owl Olga', 'Judge Owl', 'owl rejection', owls.token]) {
+		for (const leak of [
+			'owl secret note',
+			'Owl Olga',
+			'Judge Owl',
+			'owl rejection',
+			owls.token,
+			owlMedia
+		]) {
 			expect(json).not.toContain(leak);
 		}
 	});

@@ -1,11 +1,12 @@
-import type { ImageBucket } from '../storage/image-store.js';
+import type { MediaBucket } from '../storage/media-store.js';
 
 interface StoredObject {
 	bytes: Uint8Array<ArrayBuffer>;
 	contentType: string | undefined;
+	uploaded: Date;
 }
 
-/** In-memory stand-in for the subset of R2Bucket that image-store.ts uses. Tests only. */
+/** In-memory stand-in for the subset of R2Bucket that the image and media stores use. Tests only. */
 export class MemoryBucket {
 	readonly objects = new Map<string, StoredObject>();
 	/** Page size for list(), small enough for tests to cover the cursor. */
@@ -19,19 +20,35 @@ export class MemoryBucket {
 	async put(key: string, value: Uint8Array<ArrayBuffer>, options?: R2PutOptions) {
 		const metadata = options?.httpMetadata;
 		const contentType = metadata instanceof Headers ? undefined : metadata?.contentType;
-		this.objects.set(key, { bytes: value, contentType });
+		this.objects.set(key, { bytes: value, contentType, uploaded: new Date() });
 		return { key };
 	}
 
-	async get(key: string) {
+	async head(key: string) {
 		const object = this.objects.get(key);
 		if (!object) return null;
 		return {
 			key,
+			size: object.bytes.length,
+			uploaded: object.uploaded,
 			httpEtag: `"${key}"`,
-			httpMetadata: { contentType: object.contentType },
-			body: new Blob([object.bytes]).stream()
+			httpMetadata: { contentType: object.contentType }
 		};
+	}
+
+	/** Takes only an offset and length range, which is all the stores ask R2 for. */
+	async get(key: string, options?: R2GetOptions) {
+		const head = await this.head(key);
+		if (!head) return null;
+		const range = options?.range as { offset: number; length?: number } | undefined;
+		const bytes = this.objects.get(key)!.bytes;
+		const body = range
+			? bytes.slice(
+					range.offset,
+					range.length === undefined ? undefined : range.offset + range.length
+				)
+			: bytes;
+		return { ...head, range, body: new Blob([body]).stream() };
 	}
 
 	async delete(keys: string | string[]) {
@@ -52,7 +69,7 @@ export class MemoryBucket {
 		};
 	}
 
-	asBucket(): ImageBucket {
-		return this as unknown as ImageBucket;
+	asBucket(): MediaBucket {
+		return this as unknown as MediaBucket;
 	}
 }

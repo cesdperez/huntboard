@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ClaimSection from '#lib/components/setup/claim-section.svelte';
 	import ChallengesSection from '#lib/components/setup/challenges-section.svelte';
+	import ClaimMediaSection from '#lib/components/setup/claim-media-section.svelte';
 	import GameImageSection from '#lib/components/setup/game-image-section.svelte';
 	import GameSettingsSection from '#lib/components/setup/game-settings-section.svelte';
 	import LinksSection from '#lib/components/setup/links-section.svelte';
@@ -22,5 +23,6 @@
 	<TeamsSection game={data.game} teams={data.teams} />
 	<ChallengesSection game={data.game} challenges={data.challenges} />
 	<LinksSection game={data.game} teams={data.teams} />
+	<ClaimMediaSection game={data.game} mediaCount={data.mediaCount} />
 	<ResetSection game={data.game} />
 </div>

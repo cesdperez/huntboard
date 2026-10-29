@@ -39,7 +39,7 @@ export async function readImageUpload(
 	return { status: 'ok', upload: { bytes, contentType } };
 }
 
-function startsWith(bytes: Uint8Array, prefix: Uint8Array, offset: number): boolean {
+export function startsWith(bytes: Uint8Array, prefix: Uint8Array, offset: number): boolean {
 	return (
 		bytes.length >= offset + prefix.length &&
 		prefix.every((byte, index) => bytes[offset + index] === byte)

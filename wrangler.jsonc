@@ -20,6 +20,10 @@
 		{
 			"binding": "IMAGES",
 			"bucket_name": "huntboard-images"
+		},
+		{
+			"binding": "MEDIA",
+			"bucket_name": "huntboard-media"
 		}
 	],
 	"vars": {

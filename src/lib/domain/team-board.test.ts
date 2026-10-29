@@ -24,6 +24,7 @@ function claim(id: number, challengeId: number, overrides: Partial<BoardClaim> =
 		points: null,
 		judged_by: null,
 		judge_note: null,
+		media_key: null,
 		...overrides
 	};
 }
@@ -66,8 +67,17 @@ describe('teamBoard', () => {
 			markedAt: '2026-06-01T17:00:00.000Z',
 			points: null,
 			judgedBy: null,
-			judgeNote: null
+			judgeNote: null,
+			media: null
 		});
+	});
+
+	it('shows the claim media with its kind', () => {
+		const key = '3/claims/abcdefghijklmnopqrstuv.mp4';
+
+		const [row] = teamBoard([challenge(1)], [claim(7, 1, { media_key: key })]);
+
+		expect(row.claim?.media).toEqual({ src: `/media/${key}`, kind: 'video' });
 	});
 
 	it('shows a scored claim with its points', () => {
