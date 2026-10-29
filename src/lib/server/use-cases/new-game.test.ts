@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { getGameByAdminToken } from '../db/games.js';
 import { createTestDb } from '../db/testing/test-db.js';
+import { createUserWithIdentity } from '../db/users.js';
 import { createNewGame } from './new-game.js';
 
-const CODE = 'creation-secret';
-
 let db: D1Database;
+let userId: number;
 
-beforeEach(() => {
+beforeEach(async () => {
 	db = createTestDb();
+	userId = (await createUserWithIdentity(db, 'Sam', { provider: 'test', subject: 'sam' })).id;
 });
 
 function form(fields: Record<string, string>): FormData {
@@ -22,36 +23,19 @@ async function gameCount() {
 }
 
 describe('createNewGame', () => {
-	it('creates the game and returns its admin token when the code matches', async () => {
-		const outcome = await createNewGame(db, CODE, form({ name: ' Canal hunt ', code: CODE }));
+	it('creates the game owned by the user and returns its admin token', async () => {
+		const outcome = await createNewGame(db, userId, form({ name: ' Canal hunt ' }));
 
 		expect(outcome).toEqual({ adminToken: expect.any(String) });
 		const adminToken = (outcome as { adminToken: string }).adminToken;
-		expect(await getGameByAdminToken(db, adminToken)).toMatchObject({ name: 'Canal hunt' });
-	});
-
-	it('refuses a wrong creation code and keeps the typed name', async () => {
-		const outcome = await createNewGame(db, CODE, form({ name: 'Canal hunt', code: 'guess' }));
-
-		expect(outcome).toEqual({
-			status: 403,
-			result: {
-				name: 'Canal hunt',
-				error: 'That creation code is not right. Check it and try again.'
-			}
+		expect(await getGameByAdminToken(db, adminToken)).toMatchObject({
+			name: 'Canal hunt',
+			owner_user_id: userId
 		});
-		expect(await gameCount()).toBe(0);
 	});
 
-	it('refuses every code when no creation code is set', async () => {
-		const outcome = await createNewGame(db, undefined, form({ name: 'Canal hunt', code: '' }));
-
-		expect(outcome).toMatchObject({ status: 403 });
-		expect(await gameCount()).toBe(0);
-	});
-
-	it('refuses an empty name before it checks the code', async () => {
-		const outcome = await createNewGame(db, CODE, form({ name: '  ', code: 'guess' }));
+	it('refuses an empty name', async () => {
+		const outcome = await createNewGame(db, userId, form({ name: '  ' }));
 
 		expect(outcome).toEqual({ status: 400, result: { name: '', error: 'Give the game a name.' } });
 		expect(await gameCount()).toBe(0);

@@ -54,17 +54,6 @@
 				required
 				maxlength={GAME_NAME_MAX_LENGTH}
 				value={form?.name ?? ''}
-			/>
-		</div>
-
-		<div class="flex flex-col gap-2">
-			<Label for="code">Creation code</Label>
-			<Input
-				id="code"
-				name="code"
-				type="password"
-				required
-				autocomplete="off"
 				aria-invalid={form?.error ? true : undefined}
 				aria-describedby={form?.error ? 'new-game-error' : undefined}
 			/>

@@ -12,4 +12,4 @@ describe('resultUnder', () => {
 });
 
 // Checked by pnpm check, not at run time.
-expectTypeOf<ErrorResultKey>().toEqualTypeOf<'judge' | 'team' | 'teamScores'>();
+expectTypeOf<ErrorResultKey>().toEqualTypeOf<'claim' | 'judge' | 'team' | 'teamScores'>();

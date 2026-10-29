@@ -48,14 +48,26 @@ describe('securityHeaders', () => {
 		expect(headers['Cache-Control']).toBeUndefined();
 	});
 
-	it.each(['/a/tok', '/t/tok/__data.json', '/s/tok'])(
-		'keeps secret-link responses %s out of caches',
-		(path) => {
-			expect(securityHeaders(new URL(`https://huntboard.example${path}`))['Cache-Control']).toBe(
-				'no-store'
-			);
-		}
-	);
+	it.each([
+		'/a/tok',
+		'/t/tok/__data.json',
+		'/s/tok',
+		'/login',
+		'/login/google/callback',
+		'/games',
+		'/games/__data.json',
+		'/new'
+	])('keeps secret-link and account responses %s out of caches', (path) => {
+		expect(securityHeaders(new URL(`https://huntboard.example${path}`))['Cache-Control']).toBe(
+			'no-store'
+		);
+	});
+
+	it.each(['/', '/logins', '/newest'])('leaves %s cacheable', (path) => {
+		expect(
+			securityHeaders(new URL(`https://huntboard.example${path}`))['Cache-Control']
+		).toBeUndefined();
+	});
 
 	it('omits HSTS on plain HTTP', () => {
 		expect(
