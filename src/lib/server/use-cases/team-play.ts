@@ -83,8 +83,11 @@ export async function markDone(
 	if (challengeId === null) return error(404, CHALLENGE_GONE);
 	const mediaKey = readString(data, 'mediaKey') || null;
 	if (mediaKey !== null) {
-		if (!(await isTeamUpload(db, team.id, mediaKey))) return error(400, MEDIA_NOT_UPLOADED);
-		const mediaError = await checkClaimMedia(media, game.id, mediaKey);
+		const [signedForTeam, mediaError] = await Promise.all([
+			isTeamUpload(db, team.id, mediaKey),
+			checkClaimMedia(media, game.id, mediaKey)
+		]);
+		if (!signedForTeam) return error(400, MEDIA_NOT_UPLOADED);
 		if (mediaError) return error(400, mediaError);
 	}
 
@@ -131,6 +134,8 @@ export async function requestMediaUpload(
 	if (size > maxMediaBytes(type)) return error(400, mediaTooLarge(type));
 
 	const key = newMediaKey(game.id, type);
+	// Sign before recording, so a failed signature does not spend the team's budget.
+	const target = await presign(key, type, size, now);
 	const upload = { gameId: game.id, teamId: team.id, key, size };
 	switch (await recordMediaUpload(db, upload, UPLOAD_LIMITS)) {
 		case 'team-count':
@@ -139,7 +144,6 @@ export async function requestMediaUpload(
 		case 'game-bytes':
 			return error(400, GAME_MEDIA_FULL);
 	}
-	const target = await presign(key, type, size, now);
 	return { status: 200, result: { kind: 'media-upload', key, ...target } };
 }
 
