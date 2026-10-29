@@ -20,7 +20,14 @@ beforeEach(async () => {
 });
 
 function mark(teamId: number, challengeId: number, note: string | null = null) {
-	return markClaim(db, { gameId: game.id, teamId, challengeId, note, markedBy: 'Sam' });
+	return markClaim(db, {
+		gameId: game.id,
+		teamId,
+		challengeId,
+		note,
+		markedBy: 'Sam',
+		mediaKey: null
+	});
 }
 
 describe('listTeamClaims', () => {
@@ -38,6 +45,40 @@ describe('listTeamClaims', () => {
 });
 
 describe('markClaim', () => {
+	it('stores the media key', async () => {
+		const result = await markClaim(db, {
+			gameId: game.id,
+			teamId: rats.id,
+			challengeId: swim.id,
+			note: null,
+			markedBy: 'Sam',
+			mediaKey: `${game.id}/claims/abcdefghijklmnopqrstuv.jpg`
+		});
+
+		expect(result).toMatchObject({
+			status: 'marked',
+			claim: { media_key: `${game.id}/claims/abcdefghijklmnopqrstuv.jpg` }
+		});
+	});
+
+	it('refuses a media key that another claim already has', async () => {
+		const cake = await seedChallenge(db, game.id);
+		const key = `${game.id}/claims/abcdefghijklmnopqrstuv.jpg`;
+		await seedClaim(db, rats.id, swim.id, { status: 'rejected', media_key: key });
+
+		const result = await markClaim(db, {
+			gameId: game.id,
+			teamId: rats.id,
+			challengeId: cake.id,
+			note: null,
+			markedBy: 'Sam',
+			mediaKey: key
+		});
+
+		expect(result).toEqual({ status: 'media-taken' });
+		expect(await listTeamClaims(db, rats.id)).toHaveLength(1);
+	});
+
 	it('adds a pending claim with the note and who marked it', async () => {
 		const result = await mark(rats.id, swim.id, 'photo at 17:02');
 
@@ -119,7 +160,8 @@ describe('markClaim', () => {
 			teamId: rats.id,
 			challengeId: swim.id,
 			note: null,
-			markedBy: 'Sam'
+			markedBy: 'Sam',
+			mediaKey: null
 		});
 
 		expect(result).toEqual({
@@ -161,8 +203,17 @@ describe('undoClaim', () => {
 	it('removes a pending claim of the team', async () => {
 		const claim = await seedClaim(db, rats.id, swim.id);
 
-		expect(await undoClaim(db, rats.id, claim.id)).toEqual({ status: 'undone' });
+		expect(await undoClaim(db, rats.id, claim.id)).toEqual({ status: 'undone', mediaKey: null });
 		expect(await listTeamClaims(db, rats.id)).toEqual([]);
+	});
+
+	it('returns the media key, so the caller can delete the object', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id, { media_key: '1/claims/x.jpg' });
+
+		expect(await undoClaim(db, rats.id, claim.id)).toEqual({
+			status: 'undone',
+			mediaKey: '1/claims/x.jpg'
+		});
 	});
 
 	it('refuses a claim a judge already scored, and says who', async () => {

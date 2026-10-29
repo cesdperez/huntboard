@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { R2_S3_ORIGIN } from './src/lib/server/storage/r2-s3.js';
 
 export default defineConfig({
 	plugins: [
@@ -20,8 +21,13 @@ export default defineConfig({
 					// Svelte and bits-ui render style attributes, which nonces cannot cover.
 					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
 					'font-src': ['self', 'https://fonts.gstatic.com'],
-					'img-src': ['self', 'data:'],
-					'connect-src': ['self'],
+					// blob: shows the photo a team is sending before the upload ends.
+					'img-src': ['self', 'data:', 'blob:'],
+					'media-src': ['self'],
+					// mediabunny runs a timer worker from a blob, so video compression goes on in a background tab.
+					'worker-src': ['self', 'blob:'],
+					// Claim media uploads go straight from the phone to R2.
+					'connect-src': ['self', R2_S3_ORIGIN],
 					'frame-ancestors': ['none'],
 					'form-action': ['self'],
 					'base-uri': ['none'],

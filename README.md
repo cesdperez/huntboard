@@ -21,7 +21,7 @@ No accounts. Each team joins through its own secret link, so teams see only thei
 |---|---|---|
 | Creator | `/new` plus the creation code | Create a game. They land on its admin page |
 | Admin | The admin link | Edit the game, challenges and teams, judge claims, add adjustments, record arrivals, rotate links |
-| Player | Their team's link | See all challenges, mark them done with an optional note, undo a pending claim, rename the team |
+| Player | Their team's link | See all challenges, mark them done with an optional note and photo or video, undo a pending claim, rename the team |
 | Spectator | The scoreboard link | See team names, members and totals |
 
 Players and admins type a nickname on first visit. It is kept in the browser and only shows who marked or judged something. It is not an account.
@@ -34,12 +34,13 @@ Players and admins type a nickname on first visit. It is kept in the browser and
 - **Late penalty.** Whole minutes late, rounded down, times the penalty per minute, with no cap. A team that never arrives gets no automatic penalty; the admin adds an adjustment.
 - **Times are stored in UTC** and shown in each viewer's own time zone.
 - **Teams see every challenge but not each other's claims.** The scoreboard shows totals only.
-- **Proof stays outside the app**, in the group chat or in person. The app stores only one image per game (an invitation, poster or map) and one picture per team, in R2.
+- **Proof is an optional photo or video on a claim.** The phone shrinks it when it can, uploads it to R2, and the judge sees it beside the claim. Proof can still go to the group chat or come in person, because a claim needs no media. The server checks each upload's size and type before the claim points at it. Media lives in its own R2 bucket under the game id and is deleted after the game: by "Delete all media" in Setup, by a reset, and by a 30-day rule on the bucket. Undoing a claim deletes its media; a rejected claim keeps it as history.
+- **Images.** Besides claim media, the app stores one image per game (an invitation, poster or map) and one picture per team, in R2.
 - **Themes live in code.** A game picks a registered theme in Setup; see [Themes](DESIGN.md#themes).
 
 ## Stack
 
-SvelteKit and TypeScript on Cloudflare Workers, D1 (SQLite) for data, R2 for images, pnpm. Tailwind and shadcn-svelte for components. Raw SQL through thin query modules. Everything fits the Cloudflare free tier.
+SvelteKit and TypeScript on Cloudflare Workers, D1 (SQLite) for data, R2 for images and claim media, pnpm. Tailwind and shadcn-svelte for components. Raw SQL through thin query modules. Everything fits the Cloudflare free tier.
 
 ## Code layout
 
@@ -50,7 +51,7 @@ Use cases, queries and the image store take the database or bucket as an argumen
 `src/lib`:
 
 - `domain/`: pure game rules and shared limits, such as the challenge parser, scoring and points.
-- `format/`: display formatting, such as times, ordinals and plurals.
+- `format/`: display formatting, such as times, ordinals, plurals and safe file names.
 - `client/`: code for the page in the browser, such as live updates, the game clock and image resizing. Pages that render on the server use some of it too.
 - `themes/`: the theme registry and each theme's tokens.
 - `components/`: Svelte components, and the form action state they share.
@@ -63,8 +64,8 @@ Use cases, queries and the image store take the database or bucket as an argumen
 - `http/`: request guards, security headers, the D1 usage meter for the load test, and the admin and team link guards that answer 404.
 - `use-cases/`: what each form action does, tested without HTTP, and the form field readers they share.
 - `db/`: D1 queries, including the team link lookup.
-- `storage/`: the R2 image store. It also builds the response for an image request.
-- `testing/`: an in-memory R2 bucket for tests.
+- `storage/`: the R2 image and media stores. They also build the responses for image and media requests, byte ranges and the media zip included. `media-upload.ts` signs uploads to R2, `dev-media-upload.ts` stands in for R2 under `pnpm dev`, and `r2-s3.ts` holds the account id and the R2 S3 origin that the CSP in `vite.config.ts` also reads.
+- `testing/`: an in-memory R2 bucket for tests, with `head` and ranged `get`.
 
 The bottom layer is `domain/`, `format/` and the theme registry in `themes/index.ts`. These import nothing from `src/lib/server`. Browser code imports only types from `src/lib/server`.
 
@@ -87,6 +88,8 @@ pnpm dev
 
 `/dev/design` shows every component in every theme: `/dev/design?theme=<id>&mode=dark`. It answers 404 outside `pnpm dev`.
 
+`pnpm dev` has no R2 S3 endpoint for claim media. While `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are blank, it signs uploads to `/dev/media/...` instead, which stores them in the local `MEDIA` bucket and also answers 404 outside `pnpm dev`. A deployment with the secrets blank refuses uploads.
+
 ## Testing
 
 ```sh
@@ -99,7 +102,7 @@ All three pass before a commit. Query tests run on in-memory SQLite with every m
 
 ### Rehearsal
 
-`pnpm rehearsal` plays a short game end to end in a browser: 4 teams, 10 challenges, judging from the queue and the grid, adjustments, a late arrival and a tie. It also fails on any CSP violation. It runs against the local dev server, and starts one if none is running.
+`pnpm rehearsal` plays a short game end to end in a browser: 4 teams, 10 challenges, judging from the queue and the grid, adjustments, a late arrival and a tie. Two shorter games cover the game image and team pictures, and claim media: a photo and a video compressed in the browser, judged inline, zipped and deleted. It also fails on any CSP violation. It runs against the local dev server, and starts one if none is running.
 
 ```sh
 pnpm exec playwright install chromium   # once
@@ -118,7 +121,7 @@ Each run creates a new game named `Rehearsal ...`. Delete them before a real eve
 pnpm exec wrangler d1 execute huntboard --remote --command "DELETE FROM game WHERE name LIKE 'Rehearsal %'"
 ```
 
-Their images stay in R2 under `<game id>/`. Reset a rehearsal game from its Setup tab before deleting it to remove them too.
+Their images and claim media stay in R2 under `<game id>/`, in the images and media buckets. Reset a rehearsal game from its Setup tab before deleting it to remove them too. The 30-day rule on the media bucket catches any media left behind.
 
 ### Load test
 
@@ -144,6 +147,8 @@ The model game: 40 players in 7 teams, 3 admins, one big screen, 5 hours. Phones
 | 30 s | 10,300 | 4.1 million | 83% |
 | 60 s | 6,700 | 2.7 million | 54% |
 
+Claim media adds Worker requests but no D1 rows. Each media claim costs one `mediaUpload` request; the upload itself goes to R2. Judges and the claiming team load each file from `/media/`, cached for a year in the browser, and a video plays through a few byte-range requests. For the model game that is about 1,000 to 3,000 more requests, well under the daily limit. R2 counts its own operations, far below its free monthly allowance.
+
 Claim queries start from the game's teams and use the `claim_team_id` index, so other games in the database add no rows to a poll. The scoreboard caches its standings per game for 15 seconds, so extra scoreboard viewers cost almost no rows. If polling ever gets too close to the limit, the next step is a cheap check that loads the page only when the game changed, and past that a Durable Object per game pushing changes over WebSockets.
 
 ## Deploy
@@ -158,9 +163,10 @@ Every push to `main` deploys through Cloudflare Workers Builds. It builds the ap
 pnpm exec wrangler login
 pnpm exec wrangler d1 create huntboard
 pnpm exec wrangler r2 bucket create huntboard-images
+pnpm exec wrangler r2 bucket create huntboard-media
 ```
 
-Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, and change the custom domain in `routes` to one on a zone you own. `wrangler deploy` fails while the R2 bucket does not exist. Then:
+Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, and change the custom domain in `routes` to one on a zone you own. Put the account id that `pnpm exec wrangler whoami` prints into `R2_ACCOUNT_ID` in `src/lib/server/storage/r2-s3.ts`. `wrangler deploy` fails while an R2 bucket does not exist. Then:
 
 ```sh
 pnpm db:migrate:remote
@@ -170,11 +176,59 @@ pnpm run deploy
 
 The creation code is the only guard on game creation, so make it random: at least 24 characters from a password generator.
 
+### Claim media
+
+Phones upload claim photos and videos straight to the `huntboard-media` bucket with a presigned URL, so the bucket needs three things the Worker binding does not give it.
+
+A CORS policy that lets the app's origin PUT. Save this as `media-cors.json`, with your own domain:
+
+```json
+{
+	"rules": [
+		{
+			"allowed": {
+				"origins": ["https://huntboard.checho.xyz"],
+				"methods": ["PUT"],
+				"headers": ["Content-Type"]
+			},
+			"maxAgeSeconds": 3600
+		}
+	]
+}
+```
+
+```sh
+pnpm exec wrangler r2 bucket cors set huntboard-media --file media-cors.json
+```
+
+An R2 API token to sign the URLs. In the dashboard, open R2, then Manage API tokens, and create one with Object Read & Write on `huntboard-media` only. Then store its key pair:
+
+```sh
+pnpm exec wrangler secret put R2_ACCESS_KEY_ID
+pnpm exec wrangler secret put R2_SECRET_ACCESS_KEY
+```
+
+A lifecycle rule that deletes media 30 days after upload. It covers the whole bucket, which is why media has its own bucket and game images do not share it:
+
+```sh
+pnpm exec wrangler r2 bucket lifecycle add huntboard-media expire-media --expire-days 30
+```
+
+Without the two secrets, attaching media fails with a message, and claims without media still work.
+
+Media whose claim is gone stays in the bucket until "Delete all media", a reset or the lifecycle rule removes it. That happens when an admin deletes a team, because its claims go with it. A re-import that deletes a challenge deletes the media of its claims too.
+
+"Download all media" on the Setup tab zips every claim's media in the Worker. That takes seconds of CPU for about 1 GB, past the free plan's 10 ms, so it needs Workers Paid ($5 a month). Everything else stays on the free plan.
+
+A game of about 180 claims stores about 1 GB of media. It is deleted after the game, so R2 stays near its 10 GB of free storage.
+
 ## Security
 
 - **Access.** Admin, team and scoreboard links each carry a 128-bit random token, looked up separately per role. Every server action checks its own token and scopes its queries to that game or team. Team and scoreboard pages never receive another team's claims or any privileged token. The scoreboard's QR code is built in the browser from its own route token, so it can only encode the scoreboard link. Unknown links answer 404.
 - **Game creation.** `/new` needs the `CREATE_GAME_CODE` secret, compared in constant time. An unset secret matches nothing.
 - **Headers.** SvelteKit sets an enforced CSP with per-request script nonces. `src/hooks.server.ts` adds `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, HSTS and `X-Robots-Tag: noindex` to every Worker response, and `Cache-Control: no-store` to secret-link pages. `_headers` applies the static ones to assets. `robots.txt` disallows everything.
 - **Requests.** Plain HTTP redirects to HTTPS. Bodies without `Content-Length` get 411 and bodies over 2 MiB get 413, before any parsing. Uploaded images are checked for size, declared type and magic bytes.
+- **Claim media.** Phones upload straight to R2, never through the Worker. The team action `mediaUpload` checks the game window, the declared type and the size limit, then signs one PUT URL for 15 minutes. It covers one new random key under the game id, and its signature covers the content type and length, so R2 refuses any other file. The R2 API token behind it can only read and write the media bucket. Marking done with media checks the object again in the bucket: the key belongs to this game, the size is within the limit, the stored type matches the key, and the first bytes are a JPEG, WebP, MP4, QuickTime or WebM file. A failed check stores no claim.
+- **Media keys are secrets.** `/media/<game id>/claims/<file>` serves an object without reading D1, like `/images/`, so the 128-bit random name is the only guard. Only the claiming team and the admins receive it.
 - **Abuse limits.** The Worker is served only on its custom domain; `workers_dev` and `preview_urls` are off in `wrangler.jsonc`, so every request passes the zone's WAF. A zone rate-limiting rule, configured in Cloudflare and not in this repo, blocks an IP for 10 seconds after 300 requests in 10 seconds, skipping static paths. The cap is high because a whole party often shares one Wi-Fi IP. A distributed attack can still spend the daily free-tier allowance; stopping that needs Cloudflare's paid bot and DDoS features.
 - **Accepted trade-offs.** A link is a bearer credential with no expiry until it is rotated. Nicknames are labels, not identities. Team names and members lines are visible to anyone with the scoreboard link.

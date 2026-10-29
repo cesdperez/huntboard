@@ -15,7 +15,7 @@ import {
 	deleteTeamWithAvatar,
 	removeGameImage,
 	removeTeamAvatar,
-	resetGameWithImages,
+	resetGameWithFiles,
 	saveGameImage
 } from './images.js';
 import { MemoryBucket } from '../testing/memory-bucket.js';
@@ -184,8 +184,9 @@ describe('deleteTeamWithAvatar', () => {
 	});
 });
 
-describe('resetGameWithImages', () => {
-	it('deletes every image of the game and none of another game', async () => {
+describe('resetGameWithFiles', () => {
+	it('deletes every image and media object of the game and none of another game', async () => {
+		const media = new MemoryBucket();
 		const other = await createGame(db, 'Other hunt');
 		const poster = await seedImage(`${game.id}/posterposterposterpost.jpg`);
 		await setGameImage(db, game.id, poster, 'Invitation');
@@ -193,10 +194,13 @@ describe('resetGameWithImages', () => {
 			avatar_key: await seedImage(`${game.id}/ratsratsratsratsratsra.jpg`)
 		});
 		const theirs = await seedImage(`${other.id}/theirstheirstheirsthe.jpg`);
+		await media.put(`${game.id}/claims/ratsratsratsratsratsra.mp4`, JPEG);
+		await media.put(`${other.id}/claims/theirstheirstheirsthe.mp4`, JPEG);
 
-		const reset = await resetGameWithImages(db, bucket.asBucket(), game.id);
+		const reset = await resetGameWithFiles(db, bucket.asBucket(), media.asBucket(), game.id);
 
 		expect(reset).toMatchObject({ image_key: null, image_label: '' });
 		expect(bucket.keys()).toEqual([theirs]);
+		expect(media.keys()).toEqual([`${other.id}/claims/theirstheirstheirsthe.mp4`]);
 	});
 });

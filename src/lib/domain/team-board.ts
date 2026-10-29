@@ -1,3 +1,4 @@
+import { claimMedia, type ClaimMedia } from './claim-media.js';
 import type { ClaimStatus } from './scoring.js';
 
 export interface BoardChallenge {
@@ -19,6 +20,7 @@ export interface BoardClaim {
 	points: number | null;
 	judged_by: string | null;
 	judge_note: string | null;
+	media_key: string | null;
 }
 
 /** The claim a team sees on a challenge. Times are UTC ISO strings. */
@@ -31,6 +33,7 @@ export interface TeamClaim {
 	points: number | null;
 	judgedBy: string | null;
 	judgeNote: string | null;
+	media: ClaimMedia | null;
 }
 
 export interface TeamChallenge {
@@ -91,6 +94,7 @@ function toTeamClaim(claim: BoardClaim): TeamClaim {
 		markedAt: claim.marked_at,
 		points: claim.points,
 		judgedBy: claim.judged_by,
-		judgeNote: claim.judge_note
+		judgeNote: claim.judge_note,
+		media: claimMedia(claim.media_key)
 	};
 }

@@ -24,6 +24,17 @@ describe('rejection', () => {
 		expect(response?.status).toBe(413);
 	});
 
+	it('lets large uploads through to the dev media route, only in dev', () => {
+		const upload = () =>
+			new Request('http://localhost:5173/dev/media/1/claims/abcdefghijklmnopqrstuv.mp4', {
+				method: 'PUT',
+				headers: { 'Content-Length': String(MAX_BODY_BYTES + 1) }
+			});
+
+		expect(rejection(upload(), { dev: true })).toBeNull();
+		expect(rejection(upload(), { dev: false })?.status).toBe(413);
+	});
+
 	it('requires a declared length on bodies', () => {
 		expect(rejection(post('https://huntboard.example/new'))?.status).toBe(411);
 	});

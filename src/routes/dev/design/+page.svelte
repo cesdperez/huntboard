@@ -5,6 +5,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { Marker, type MarkerState } from '#lib/components/marker/index.js';
+	import { ClaimMediaView, MediaThumb, UploadStatus } from '#lib/components/media/index.js';
 	import { Points } from '#lib/components/points/index.js';
 	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
 	import SectionHeading from '#lib/components/team/section-heading.svelte';
@@ -117,7 +118,8 @@
 				markedAt: '2026-10-23T11:50:00.000Z',
 				points: null,
 				judgedBy: null,
-				judgeNote: null
+				judgeNote: null,
+				media: null
 			}
 		},
 		{
@@ -135,7 +137,8 @@
 				markedAt: '2026-10-23T11:10:00.000Z',
 				points: 25,
 				judgedBy: 'Sam',
-				judgeNote: null
+				judgeNote: null,
+				media: null
 			}
 		},
 		{
@@ -153,7 +156,8 @@
 				markedAt: '2026-10-23T11:20:00.000Z',
 				points: null,
 				judgedBy: 'Sam',
-				judgeNote: 'No proof received'
+				judgeNote: 'No proof received',
+				media: null
 			}
 		}
 	];
@@ -302,6 +306,65 @@
 				{/each}
 			</ul>
 		</div>
+	</section>
+
+	<section class="flex flex-col gap-3">
+		<h2 class="type-heading">Claim media</h2>
+		<div class="flex flex-col gap-4">
+			<UploadStatus
+				phase="preparing"
+				kind="video"
+				progress={null}
+				preview={null}
+				error={null}
+				onremove={() => {}}
+			/>
+			<UploadStatus
+				phase="preparing"
+				kind="video"
+				progress={0.4}
+				preview={null}
+				error={null}
+				onremove={() => {}}
+			/>
+			<UploadStatus
+				phase="uploading"
+				kind="photo"
+				progress={0.7}
+				preview={sampleImage.src}
+				error={null}
+				onremove={() => {}}
+			/>
+			<UploadStatus
+				phase="ready"
+				kind="photo"
+				progress={null}
+				preview={sampleImage.src}
+				error={null}
+				onremove={() => {}}
+			/>
+			<UploadStatus
+				phase="failed"
+				kind="video"
+				progress={null}
+				preview={null}
+				error="This video is longer than 60 seconds. Trim it and try again."
+				onremove={() => {}}
+			/>
+		</div>
+		<div class="flex items-center gap-3">
+			<MediaThumb kind="photo" src={sampleImage.src} class="size-8" />
+			<MediaThumb kind="video" class="size-8" />
+			<MediaThumb kind="photo" src={sampleImage.src} class="size-10" />
+			<MediaThumb kind="video" class="size-10" />
+			<span class="type-secondary">Thumbnails on a team row and in its sheet</span>
+		</div>
+		<ClaimMediaView
+			media={{ src: sampleImage.src, kind: 'photo' }}
+			label="Canal Rats, Swim"
+			preload="none"
+		/>
+		<p class="type-secondary">Judges see a video in the same box, with the browser's controls.</p>
 	</section>
 
 	<section class="flex flex-col gap-3">

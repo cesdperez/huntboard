@@ -19,6 +19,7 @@ function challenge(id: number, claim: Partial<TeamClaim> | null = null): TeamCha
 			points: null,
 			judgedBy: null,
 			judgeNote: null,
+			media: null,
 			...claim
 		}
 	};

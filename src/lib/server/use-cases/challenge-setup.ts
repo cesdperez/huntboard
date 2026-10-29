@@ -13,6 +13,8 @@ import { parseChallenges } from '#lib/domain/challenge-parser.js';
 import { diffReimport } from '#lib/domain/reimport-diff.js';
 import type { ActionOutcome } from './action-outcome.js';
 import { applyChallengeImport, getImportSource, updateChallenge } from '../db/challenges.js';
+import { deleteObjects } from '../storage/bucket-objects.js';
+import type { MediaBucket } from '../storage/media-store.js';
 import { readId, readString } from './form.js';
 
 /** What the challenges actions return under `page.form.challenges`. */
@@ -43,8 +45,10 @@ export async function previewChallengeImport(
 	return { status: 200, result: { kind: 'preview', text, preview } };
 }
 
+/** Deletes the media of claims that go with deleted challenges, best effort. */
 export async function importChallenges(
 	db: D1Database,
+	media: MediaBucket,
 	gameId: number,
 	data: FormData
 ): Promise<ChallengesOutcome> {
@@ -80,6 +84,7 @@ export async function importChallenges(
 			'The challenges changed since the preview. Check the list below and confirm again.'
 		);
 	}
+	await deleteObjects(media, result.mediaKeys);
 	return { status: 200, result: { kind: 'imported', count: challenges.length } };
 }
 
