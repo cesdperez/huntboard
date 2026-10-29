@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { R2_S3_ORIGIN } from './src/lib/server/storage/r2-s3.js';
 
 export default defineConfig({
 	plugins: [
@@ -21,7 +22,9 @@ export default defineConfig({
 					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
 					'font-src': ['self', 'https://fonts.gstatic.com'],
 					'img-src': ['self', 'data:'],
-					'connect-src': ['self'],
+					'media-src': ['self'],
+					// Claim media uploads go straight from the phone to R2.
+					'connect-src': ['self', R2_S3_ORIGIN],
 					'frame-ancestors': ['none'],
 					'form-action': ['self'],
 					'base-uri': ['none'],

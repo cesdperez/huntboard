@@ -158,9 +158,10 @@ Every push to `main` deploys through Cloudflare Workers Builds. It builds the ap
 pnpm exec wrangler login
 pnpm exec wrangler d1 create huntboard
 pnpm exec wrangler r2 bucket create huntboard-images
+pnpm exec wrangler r2 bucket create huntboard-media
 ```
 
-Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, and change the custom domain in `routes` to one on a zone you own. `wrangler deploy` fails while the R2 bucket does not exist. Then:
+Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, and change the custom domain in `routes` to one on a zone you own. Put the account id that `pnpm exec wrangler whoami` prints into `R2_ACCOUNT_ID` in `src/lib/server/storage/r2-s3.ts`. `wrangler deploy` fails while an R2 bucket does not exist. Then:
 
 ```sh
 pnpm db:migrate:remote
@@ -169,6 +170,50 @@ pnpm run deploy
 ```
 
 The creation code is the only guard on game creation, so make it random: at least 24 characters from a password generator.
+
+### Claim media
+
+Phones upload claim photos and videos straight to the `huntboard-media` bucket with a presigned URL, so the bucket needs three things the Worker binding does not give it.
+
+A CORS policy that lets the app's origin PUT. Save this as `media-cors.json`, with your own domain:
+
+```json
+{
+	"rules": [
+		{
+			"allowed": {
+				"origins": ["https://huntboard.checho.xyz"],
+				"methods": ["PUT"],
+				"headers": ["Content-Type"]
+			},
+			"maxAgeSeconds": 3600
+		}
+	]
+}
+```
+
+```sh
+pnpm exec wrangler r2 bucket cors set huntboard-media --file media-cors.json
+```
+
+An R2 API token to sign the URLs. In the dashboard, open R2, then Manage API tokens, and create one with Object Read & Write on `huntboard-media` only. Then store its key pair:
+
+```sh
+pnpm exec wrangler secret put R2_ACCESS_KEY_ID
+pnpm exec wrangler secret put R2_SECRET_ACCESS_KEY
+```
+
+A lifecycle rule that deletes media 30 days after upload. It covers the whole bucket, which is why media has its own bucket and game images do not share it:
+
+```sh
+pnpm exec wrangler r2 bucket lifecycle add huntboard-media expire-media --expire-days 30
+```
+
+Without the two secrets, attaching media fails with a message, and claims without media still work.
+
+"Download all media" on the Setup tab zips every claim's media in the Worker. That takes seconds of CPU for about 1 GB, past the free plan's 10 ms, so it needs Workers Paid ($5 a month). Everything else stays on the free plan.
+
+A game of about 180 claims stores about 1 GB of media. It is deleted after the game, so R2 stays near its 10 GB of free storage.
 
 ## Security
 
