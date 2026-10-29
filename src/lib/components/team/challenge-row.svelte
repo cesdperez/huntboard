@@ -2,6 +2,7 @@
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import { Marker } from '#lib/components/marker/index.js';
 	import { Points } from '#lib/components/points/index.js';
+	import { CLAIM_AGAIN } from '#lib/domain/claim-messages.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 
@@ -27,9 +28,7 @@
 				<span class="type-secondary text-waiting!">Waiting for a judge</span>
 			{:else if claim?.status === 'rejected'}
 				<span class="type-secondary text-danger!">
-					{claim.judgeNote
-						? `Rejected: ${claim.judgeNote}`
-						: 'Rejected. You can mark it done again.'}
+					{claim.judgeNote ? `Rejected: ${claim.judgeNote}` : `Rejected. ${CLAIM_AGAIN}`}
 				</span>
 			{/if}
 		</span>
