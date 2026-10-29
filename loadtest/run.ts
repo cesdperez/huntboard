@@ -40,7 +40,7 @@ async function waitForServer(server: ReturnType<typeof spawn>) {
 
 rmSync(STATE_DIR, { recursive: true, force: true });
 wrangler(['d1', 'migrations', 'apply', 'huntboard', '--local']);
-// /new needs the production creation code, so the game goes in directly.
+// /new needs a signed-in account and a production build has no test sign-in, so the game goes in directly.
 const adminToken = randomBytes(16).toString('hex');
 wrangler([
 	'd1',
