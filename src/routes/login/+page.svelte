@@ -73,15 +73,11 @@
 			computer{data.googleEnabled ? ', or your Google account' : ''}.
 		</p>
 
-		<form
-			method="POST"
-			action={googleAction}
-			class="flex flex-col gap-4"
-			use:enhance={({ cancel }) => {
-				// Without Google, Enter in the name field would post a sign-up the server cannot start.
-				if (!data.googleEnabled) cancel();
-			}}
-		>
+		<form method="POST" action={googleAction} class="flex flex-col gap-4" use:enhance>
+			{#if !data.googleEnabled}
+				<!-- A disabled default button stops Enter from submitting, even before hydration. -->
+				<button type="submit" disabled class="hidden" aria-hidden="true" tabindex="-1"></button>
+			{/if}
 			<input type="hidden" name="intent" value="sign-up" />
 			<div class="flex flex-col gap-2">
 				<Label for="display-name">Your name</Label>
