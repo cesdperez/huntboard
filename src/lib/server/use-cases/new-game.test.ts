@@ -46,12 +46,29 @@ describe('createNewGame', () => {
 			await createNewGame(db, userId, form({ name: `Hunt ${i}` }));
 
 		const refused = await createNewGame(db, userId, form({ name: 'One more' }));
-		expect(refused).toMatchObject({ status: 429, result: { name: 'One more' } });
+		expect(refused).toEqual({
+			status: 429,
+			result: {
+				name: 'One more',
+				error: `You can create ${GAMES_PER_DAY} games in 24 hours. Try again later.`
+			}
+		});
 		expect(await gameCount()).toBe(GAMES_PER_DAY);
 
 		await db.prepare("UPDATE game SET created_at = '2000-01-01T00:00:00.000Z'").run();
 		expect(await createNewGame(db, userId, form({ name: 'Next day' }))).toEqual({
 			adminToken: expect.any(String)
 		});
+	});
+
+	it('holds the daily limit when many requests arrive at once', async () => {
+		const outcomes = await Promise.all(
+			Array.from({ length: GAMES_PER_DAY + 5 }, (_, i) =>
+				createNewGame(db, userId, form({ name: `Hunt ${i}` }))
+			)
+		);
+
+		expect(await gameCount()).toBe(GAMES_PER_DAY);
+		expect(outcomes.filter((outcome) => 'status' in outcome)).toHaveLength(5);
 	});
 });
