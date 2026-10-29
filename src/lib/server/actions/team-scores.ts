@@ -15,6 +15,8 @@ export const teamScoresActions = {
 	arrivalRecord: adminAction('teamScores', (db, gameId, data) =>
 		recordArrival(db, gameId, data, new Date())
 	),
-	arrivalCorrect: adminAction('teamScores', correctArrival),
+	arrivalCorrect: adminAction('teamScores', (db, gameId, data) =>
+		correctArrival(db, gameId, data, new Date())
+	),
 	arrivalClear: adminAction('teamScores', clearArrival)
 } satisfies AdminActions;

@@ -35,6 +35,12 @@
 		adjusting.failed?.kind === 'adjustment-invalid' ? adjusting.failed : null
 	);
 
+	// The server refuses a time still to come, so an end time ahead of now is no use as a seed.
+	function arrivalSeed(): string {
+		const now = new Date().toISOString();
+		return endsAt && endsAt < now ? endsAt : now;
+	}
+
 	const formatTime = (iso: string) => (browser ? formatClockTime(iso, new Date()) : '');
 	const signed = (points: number) => (points > 0 ? `+${points}` : `−${-points}`);
 
@@ -120,9 +126,7 @@
 					name="arrivedAtLocal"
 					type="datetime-local"
 					required
-					value={untrack(() =>
-						utcToLocalInput(team.arrivedAt ?? endsAt ?? new Date().toISOString())
-					)}
+					value={untrack(() => utcToLocalInput(team.arrivedAt ?? arrivalSeed()))}
 				/>
 				<div class="flex gap-3">
 					<Button variant="ghost" class="flex-1" onclick={correcting.hide}>Cancel</Button>

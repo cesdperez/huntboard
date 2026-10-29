@@ -164,7 +164,7 @@ The grid has team names as columns and a sticky first column of challenge titles
 
 The Teams tab lists teams in their setup order, not by rank, so a row does not move while the judge taps it. Each team shows its rank and total, then the breakdown: scored claims, adjustments, and the late penalty with its minutes.
 
-- "Record arrival" takes the server's clock. "Correct" and "Enter time" take a time in the viewer's time zone. "Clear" confirms first.
+- "Record arrival" takes the server's clock. "Correct" and "Enter time" take a time in the viewer's time zone, no later than now. They start at the end time, or at now while the end is still to come. "Clear" confirms first.
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
 - Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
 
