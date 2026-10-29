@@ -3,6 +3,8 @@ import type { GamePhase, GameWindow } from './game-window.js';
 import type { ClaimStatus } from './scoring.js';
 import type { TeamClaim } from './team-board.js';
 
+export const CLAIM_AGAIN = 'You can mark it done again.';
+
 export interface ConflictingClaim {
 	status: ClaimStatus;
 	markedBy: string;
@@ -50,8 +52,18 @@ export function claimLine(
 		case 'scored':
 			return claim.judgedBy ? `Judged by ${claim.judgedBy}.` : null;
 		case 'rejected':
-			return `${judgeName(claim.judgedBy)} rejected this. You can mark it done again.`;
+			return `${judgeName(claim.judgedBy)} rejected this. ${CLAIM_AGAIN}`;
 	}
+}
+
+/** Tells a team that a judge scored or rejected its claim on the challenge with this title. */
+export function judgedClaimMessage(
+	title: string,
+	claim: Pick<TeamClaim, 'status' | 'points' | 'judgeNote'>
+): string {
+	if (claim.status === 'scored') return `Scored ${claim.points ?? 0} for ${title}`;
+	const reason = claim.judgeNote ? `: ${claim.judgeNote}` : '';
+	return `Rejected ${title}${reason}. ${CLAIM_AGAIN}`;
 }
 
 /** The empty admin queue, by game phase. Null while the browser clock has not started. */

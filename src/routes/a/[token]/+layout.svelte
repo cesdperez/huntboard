@@ -48,7 +48,7 @@
 				<div
 					class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-3 px-gutter py-2"
 				>
-					<p class="min-w-0 font-banner text-[32px] leading-none break-words uppercase">
+					<p class="min-w-0 type-banner text-[32px] leading-none break-words">
 						{data.game.name}
 					</p>
 					<p class="flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">

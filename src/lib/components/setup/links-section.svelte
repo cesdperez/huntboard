@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
+	import { absoluteLink } from '#lib/client/absolute-link.js';
 	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
 	import LinkRow from './link-row.svelte';
 
@@ -9,8 +10,7 @@
 
 	const result = $derived(resultUnder(page.form, 'links'));
 
-	// resolve() returns a path relative to the current page during SSR, so anchor it to the page URL.
-	const absolute = (path: string) => new URL(path, page.url.href).href;
+	const absolute = (path: string) => absoluteLink(path, page.url.href);
 </script>
 
 <section aria-labelledby="links-heading" class="flex flex-col gap-3">

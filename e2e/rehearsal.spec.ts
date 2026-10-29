@@ -95,12 +95,23 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		teamUrls.set(name, await admin.getByLabel(name, { exact: true }).inputValue());
 	}
 
+	await test.step('a team link shows as a QR code to hand out in person', async () => {
+		await admin.getByRole('button', { name: `Show QR code of the ${TEAMS[0]} link` }).click();
+		const sheet = admin.getByRole('dialog', { name: `${TEAMS[0]} link` });
+		await expect(sheet.getByRole('img', { name: `QR code of the ${TEAMS[0]} link` })).toBeVisible();
+		await expect(sheet).toContainText(teamUrls.get(TEAMS[0])!);
+		await sheet.getByRole('button', { name: 'Close' }).click();
+	});
+
 	const scoreboard = await openAs(browser, null, { width: 1920, height: 1080 });
 	await test.step('the scoreboard lists every team at 0 points', async () => {
 		await scoreboard.goto(scoreboardUrl);
 		await expect(scoreboard.locator('html')).toHaveAttribute('data-game-theme', 'flag');
 		await expect(standings(scoreboard)).toHaveText(TEAMS.map((name) => rowText('1st', name, '0')));
 		await expect(scoreboard.getByText(/^Ends in \d+:\d\d:\d\d$/)).toBeVisible();
+		await expect(
+			scoreboard.getByRole('img', { name: "QR code of this scoreboard's link" })
+		).toBeVisible();
 	});
 
 	const teams = new Map<TeamName, Page>();

@@ -1,0 +1,64 @@
+/* Ceramic blue and terracotta on warm cream, for the Lightmile club trip to Málaga. Light only. */
+:root[data-game-theme='azulejo'] {
+	color-scheme: light;
+	--paper: #fff7e8;
+	--surface: #fffaf0;
+	--ink: #283950;
+	--muted: #726451;
+	--line: #ded3be;
+	--flag: #b8412d;
+	--on-flag: #fffaf0;
+	--danger: #a32020;
+	--scrim: rgb(40 57 80 / 0.45);
+
+	--own-row: #f5dfcc;
+	--strip: #24468c;
+	--on-strip: #fff7e8;
+	--on-strip-muted: #d5ddef;
+	--strip-line: #5a74ad;
+	--strip-score: #fff7e8;
+	--strip-own-row: #1b3770;
+	--strip-danger: #ffd2c8;
+	/* Behind team initials on the strip. */
+	--strip-paper: #1b3770;
+	--score: #24468c;
+	--waiting: #b8412d;
+	--marker-outline: #726451;
+
+	/* A hairline under the cream app bar, so it reads apart from the cream banner. */
+	--app-bar: linear-gradient(#ded3be, #ded3be) bottom / 100% 1px no-repeat, var(--app-bar-base);
+	/* The browser chrome colour, since the app bar is the top of the page. */
+	--app-bar-base: #fff7e8;
+	--on-app-bar: #283950;
+	--banner: #fff7e8;
+	--on-banner: #24468c;
+	--banner-transform: none;
+	--banner-tracking: -0.05em;
+	--banner-weight: 700;
+	/* Georgia is wide, so a name like "Birthday" still fits one line beside a game image. */
+	--banner-title-size: clamp(44px, 14vw, 72px);
+	--banner-title-tail-display: block;
+	--banner-title-tail-style: italic;
+	--banner-title-tail-weight: 400;
+	--banner-edge: repeating-linear-gradient(
+		90deg,
+		#24468c 0 10px,
+		transparent 10px 18px,
+		#b8412d 18px 28px,
+		transparent 28px 36px
+	);
+	--banner-edge-size: 6px;
+	--banner-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 150' fill='none' stroke='%23b8412d' stroke-width='1.8'%3E%3Cpath d='M2 2H102V102H2Z M52 2V102M2 52H102'/%3E%3Cpath d='M2 27Q27 27 27 2Q27 27 52 27Q27 27 27 52Q27 27 2 27ZM52 27Q77 27 77 2Q77 27 102 27Q77 27 77 52Q77 27 52 27ZM2 77Q27 77 27 52Q27 77 52 77Q27 77 27 102Q27 77 2 77ZM52 77Q77 77 77 52Q77 77 102 77Q77 77 77 102Q77 77 52 77Z'/%3E%3Cpath d='M12 126H92M24 134H80'/%3E%3C/svg%3E");
+	--on-section: #b8412d;
+	--section-heading-font: small-caps 700 17px/1.25 var(--font-display);
+	--section-heading-tracking: 0.04em;
+	--section-rule: #b8412d;
+	--section-rule-width: 1px;
+	--section-ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 22 22' fill='none' stroke='%23b8412d' stroke-width='1.25' stroke-linecap='round'%3E%3Cpath d='M8 0V16M0 8H16M2 2L14 14M2 14L14 2'/%3E%3C/svg%3E");
+	--section-ornament-order: 1;
+
+	--font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Georgia, 'Times New Roman', ui-serif, serif;
+	--font-score: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+	--font-banner: var(--font-display);
+}

@@ -15,6 +15,8 @@ export interface Theme {
 	/** Stylesheets for every family the theme's tokens name, Archivo too if it keeps the flag sans. */
 	fonts: readonly string[];
 	layout: ThemeLayout;
+	/** Artwork the event layout's app bar shows in place of the Huntboard name. */
+	wordmark?: { src: string; alt: string };
 }
 
 /** The theme a page gets, and the mode it forces. A null mode follows the OS. */
@@ -43,7 +45,19 @@ const HIGHLAND_BRU: Theme = {
 	layout: 'event'
 };
 
-export const THEMES: readonly Theme[] = [FLAG_THEME, HIGHLAND_BRU];
+// Georgia is a system font, so only Archivo is loaded.
+const AZULEJO: Theme = {
+	id: 'azulejo',
+	name: 'Lightmile Azulejo',
+	modes: { light: { themeColor: '#fff7e8' } },
+	fonts: [
+		'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap'
+	],
+	layout: 'event',
+	wordmark: { src: '/themes/azulejo/wordmark.svg', alt: 'Lightmile' }
+};
+
+export const THEMES: readonly Theme[] = [FLAG_THEME, HIGHLAND_BRU, AZULEJO];
 
 /** The theme /new gives a game, and the one pages without a game wear. */
 export const DEFAULT_THEME: Theme = HIGHLAND_BRU;

@@ -3,6 +3,7 @@
 @import 'shadcn-svelte/tailwind.css';
 @import './lib/themes/flag.css';
 @import './lib/themes/highland-bru.css';
+@import './lib/themes/azulejo.css';
 
 /* Follows the OS colour scheme. data-theme on <html> forces one: a single-mode theme or a preview. */
 @custom-variant dark {
@@ -157,8 +158,20 @@
 @utility surface-banner {
 	--ink: var(--on-banner);
 	--muted: var(--on-banner);
-	background-color: var(--banner);
+	/* The edging sits in its own padding, under the content. */
+	padding-bottom: var(--banner-edge-size);
+	background:
+		var(--banner-edge) left bottom / 100% var(--banner-edge-size) no-repeat,
+		var(--banner);
 	color: var(--on-banner);
+}
+
+/* The game name or page title in an event banner. */
+@utility type-banner {
+	font-family: var(--font-banner);
+	font-weight: var(--banner-weight);
+	letter-spacing: var(--banner-tracking);
+	text-transform: var(--banner-transform);
 }
 
 @utility type-heading {
