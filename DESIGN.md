@@ -180,10 +180,13 @@ Setup ends with "Reset game", which returns the game to how `/new` created it: t
 
 These pages belong to no game, so they wear the default theme.
 
-- Sign-in puts "Sign in with a passkey" first, as the one primary button, with "Sign in with Google" under it. Under a divider, "New here?" asks only for "Your name", then "Create account with a passkey" or "Create account with Google". The Google buttons are hidden when Google is not configured.
-- A passkey button stays disabled until the page hydrates, because the ceremony runs in the browser.
-- My games: "New game" as the primary button, then the games, newest first, each opening its admin link. Under them, "Ways to sign in" lists each method, then "Add a passkey" and, while the account has no Google sign-in, "Add Google". "Sign out" comes last, as a ghost button.
-- Sign-in errors show in place, above the buttons they are about. A cancelled passkey prompt reads "No passkey was used. Try again when you are ready."
+- Sign-in asks only for "Email", with "Email me a sign-in link" as the one primary button. Sign-up is the same form: the hint says the link also creates an account.
+- After sending, the page becomes "Check your email": the address, a "Code" field and "Sign in", then "Use a different email" as a ghost button. A reload keeps this step while the code still works.
+- A new address learns it is new only after a right code or from the link's page. Then "Your name" appears above the button, and the link's button reads "Create account".
+- The link opens a page that names the address and waits for "Sign in". An expired link says so and offers "Ask for a new email".
+- The dev server sends no email. It shows the link and code in a dashed box under the address instead.
+- My games: "New game" as the primary button, then the games, newest first, each opening its admin link. "Sign out" comes last, as a ghost button.
+- Sign-in errors show in place, above the button they are about.
 
 ### Scoreboard
 

@@ -1,11 +1,11 @@
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
-// Creator accounts with passkeys, from sign-up to a second passkey. A virtual authenticator stands
-// in for the phone's, so the real WebAuthn ceremony runs in the browser and on the server.
+// Creator accounts by email, from sign-up to signing in again. The dev server sends no email and
+// shows the link and code on the page instead, so this runs only against the local server.
 
 test.skip(
 	!!process.env.HUNTBOARD_URL,
-	'Creates accounts, so it runs only against the local server'
+	'Needs the dev server, which shows the sign-in email on the page'
 );
 
 const cspViolations: string[] = [];
@@ -14,26 +14,37 @@ test.afterEach(() => {
 	expect(cspViolations).toEqual([]);
 });
 
-test('accounts: sign up with a passkey, create a game, sign out and back in', async ({
-	browser
+test('accounts: sign up with a code, create a game, sign out and back in with the link', async ({
+	page
 }) => {
-	const context = await browser.newContext();
-	const page = await context.newPage();
 	page.on('console', (message) => {
 		if (message.text().includes('Content Security Policy')) cspViolations.push(message.text());
 	});
-	await addVirtualAuthenticator(context, page);
-	const name = `Organiser ${Date.now()}`;
-	const gameName = `Accounts ${Date.now()}`;
+	const stamp = Date.now();
+	const email = `organiser-${stamp}@example.com`;
+	const name = `Organiser ${stamp}`;
+	const gameName = `Accounts ${stamp}`;
 
 	await test.step('/new sends a visitor to sign in first', async () => {
 		await page.goto('/new');
 		await expect(page).toHaveURL(/\/login\?next=%2Fnew$/);
 	});
 
-	await test.step('sign up with a passkey and land back on /new', async () => {
+	let code = '';
+	await test.step('a wrong code is refused', async () => {
+		code = await askForEmail(page, email);
+		await page.getByLabel('Code').fill(code === '000000' ? '111111' : '000000');
+		await page.getByRole('button', { name: 'Sign in' }).click();
+		await expect(page.getByRole('alert')).toHaveText(
+			'That code is not right. Check the email and try again.'
+		);
+	});
+
+	await test.step('the right code asks a new address for a name, then lands on /new', async () => {
+		await page.getByLabel('Code').fill(code);
+		await page.getByRole('button', { name: 'Sign in' }).click();
 		await page.getByLabel('Your name').fill(name);
-		await page.getByRole('button', { name: 'Create account with a passkey' }).click();
+		await page.getByRole('button', { name: 'Sign in' }).click();
 		await expect(page).toHaveURL(/\/new$/);
 	});
 
@@ -41,56 +52,40 @@ test('accounts: sign up with a passkey, create a game, sign out and back in', as
 		await page.getByLabel('Game name').fill(gameName);
 		await page.getByRole('button', { name: 'Create game' }).click();
 		await expect(page).toHaveURL(/\/a\/[^/]+\/setup$/);
-		await expect(page.getByRole('heading', { name: 'My games' })).toHaveCount(0);
 
 		await page.goto('/games');
-		await expect(page.getByText(`Signed in as ${name}.`).first()).toBeVisible();
+		await expect(page.getByText(`Signed in as ${name} (${email}).`).first()).toBeVisible();
 		await expect(page.getByRole('list', { name: 'My games' })).toContainText(gameName);
 	});
 
-	await test.step('the same authenticator cannot add a second passkey', async () => {
-		await page.getByRole('button', { name: 'Add a passkey' }).click();
-		await expect(page.getByRole('alert')).toHaveText(
-			'This device already has a passkey for your account.'
-		);
-	});
-
-	await test.step('sign out, then sign in with the passkey', async () => {
+	await test.step('sign out, then sign in with the emailed link', async () => {
 		await page.getByRole('button', { name: 'Sign out' }).click();
 		await expect(page).toHaveURL(/\/$/);
 		await page.goto('/games');
 		await expect(page).toHaveURL(/\/login\?next=%2Fgames$/);
 
-		await page.getByRole('button', { name: 'Sign in with a passkey' }).click();
+		await askForEmail(page, email.toUpperCase());
+		const link = await page.getByRole('link', { name: 'Sign-in link' }).getAttribute('href');
+		await page.goto(link ?? '');
+		await expect(page.getByText(`Signing in as ${email}.`)).toBeVisible();
+		await page.getByRole('button', { name: 'Sign in' }).click();
 		await expect(page).toHaveURL(/\/games$/);
 		await expect(page.getByRole('list', { name: 'My games' })).toContainText(gameName);
 	});
 
-	await test.step('a security key is added as a second way to sign in', async () => {
-		await addVirtualAuthenticator(context, page, 'usb');
-		await page.getByRole('button', { name: 'Add a passkey' }).click();
-		await expect(
-			page.getByRole('list', { name: 'Ways to sign in' }).getByRole('listitem')
-		).toHaveCount(2);
+	await test.step('the link works only once', async () => {
+		await page.goBack();
+		await page.reload();
+		await expect(page.getByRole('alert')).toHaveText(
+			'This sign-in link has expired or was already used.'
+		);
 	});
 });
 
-/** An authenticator that verifies the user and stores passkeys: a phone's, or a security key. */
-async function addVirtualAuthenticator(
-	context: BrowserContext,
-	page: Page,
-	transport: 'internal' | 'usb' = 'internal'
-) {
-	const cdp = await context.newCDPSession(page);
-	await cdp.send('WebAuthn.enable');
-	await cdp.send('WebAuthn.addVirtualAuthenticator', {
-		options: {
-			protocol: 'ctap2',
-			transport,
-			hasResidentKey: true,
-			hasUserVerification: true,
-			isUserVerified: true,
-			automaticPresenceSimulation: true
-		}
-	});
+/** Asks for a sign-in email and returns the code the dev server shows in its place. */
+async function askForEmail(page: Page, email: string): Promise<string> {
+	await page.getByLabel('Email').fill(email);
+	await page.getByRole('button', { name: 'Email me a sign-in link' }).click();
+	await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+	return (await page.getByTestId('preview-code').textContent()) ?? '';
 }
