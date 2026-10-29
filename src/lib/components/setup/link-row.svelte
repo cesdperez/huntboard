@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
+	import LinkQrSheet from './link-qr-sheet.svelte';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let {
@@ -28,6 +29,7 @@
 	let copyState = $state<'idle' | 'copied' | 'manual'>('idle');
 	let confirming = $state(false);
 	let submitting = $state(false);
+	let showingQr = $state(false);
 	let rotateButton = $state<HTMLElement | null>(null);
 	let cancelButton = $state<HTMLElement | null>(null);
 	let resetTimer: ReturnType<typeof setTimeout> | undefined;
@@ -123,6 +125,9 @@
 				<Button onclick={copy}>
 					{copyState === 'copied' ? 'Copied' : 'Copy'}<span class="sr-only"> {label} link</span>
 				</Button>
+				<Button onclick={() => (showingQr = true)}>
+					Show QR<span class="sr-only"> code of the {label} link</span>
+				</Button>
 				<Button bind:ref={rotateButton} variant="destructive" onclick={() => setConfirming(true)}>
 					Rotate<span class="sr-only"> {label} link</span>
 				</Button>
@@ -131,4 +136,6 @@
 
 		<p class={cn('type-secondary', status && 'mt-3')} role="status">{status}</p>
 	</div>
+
+	<LinkQrSheet {label} {url} bind:open={showingQr} />
 </li>
