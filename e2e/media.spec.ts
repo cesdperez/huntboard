@@ -1,27 +1,23 @@
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
+import { failOnCspViolations, watchCsp } from './csp.js';
+import { openNewGameSignedIn } from './sign-in.js';
 
 // Claim photos and videos from the team's phone to the judge and the zip download: compressed in
 // the browser, uploaded straight to storage, shown inline to judges, and gone once deleted.
 
-const CREATE_GAME_CODE = process.env.CREATE_GAME_CODE ?? 'letmein';
 const TEAM = 'Canal Rats';
 const PHOTO_CHALLENGE = 'Swim in a fountain';
 const VIDEO_CHALLENGE = 'Sing on a bridge';
 
-const cspViolations: string[] = [];
-
-test.afterEach(() => {
-	expect(cspViolations).toEqual([]);
-});
+failOnCspViolations();
 
 test('media: a photo and a video from claim to download and deletion', async ({ browser }) => {
 	test.setTimeout(3 * 60_000);
 	const admin = await open(browser, 'Media judge');
 
 	await test.step('create a running game with one team and two challenges', async () => {
-		await admin.goto('/new');
+		await openNewGameSignedIn(admin, 'Media judge');
 		await admin.getByLabel('Game name').fill(`Rehearsal media ${Date.now()}`);
-		await admin.getByLabel('Creation code').fill(CREATE_GAME_CODE);
 		await admin.getByRole('button', { name: 'Create game' }).click();
 		await expect(admin).toHaveURL(/\/a\/[^/]+\/setup$/);
 		const [start, end] = await localInputs(admin, [-30, 60]);
@@ -144,9 +140,7 @@ async function open(browser: Browser, nickname: string): Promise<Page> {
 		localStorage.setItem('huntboard.nickname', name);
 	}, nickname);
 	const page = await context.newPage();
-	page.on('console', (message) => {
-		if (message.text().includes('Content Security Policy')) cspViolations.push(message.text());
-	});
+	watchCsp(page);
 	return page;
 }
 

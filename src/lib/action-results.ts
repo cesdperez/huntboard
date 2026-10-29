@@ -1,5 +1,6 @@
 // Imported by the browser too, so everything from the server stays a type-only import.
 import type { ChallengesFormResult } from '#lib/server/use-cases/challenge-setup.js';
+import type { ClaimFormResult } from '#lib/server/use-cases/claim-game.js';
 import type { MediaFormResult } from '#lib/server/use-cases/claim-media.js';
 import type { GameSettingsFormData } from '#lib/server/use-cases/game-settings.js';
 import type { GameImageFormResult } from '#lib/server/use-cases/images.js';
@@ -12,6 +13,7 @@ import type { TeamsFormResult } from '#lib/server/use-cases/team-setup.js';
 /** The key a form action puts its result under in `page.form`, and the result it puts there. */
 export interface ActionResults {
 	challenges: ChallengesFormResult;
+	claim: ClaimFormResult;
 	gameImage: GameImageFormResult;
 	gameSettings: GameSettingsFormData;
 	judge: JudgeFormResult;

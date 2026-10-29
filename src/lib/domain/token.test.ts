@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodeBase64Url, generateToken } from './token.js';
+import { encodeBase64Url, generateToken, sha256Base64Url } from './token.js';
 
 describe('generateToken', () => {
 	it('encodes 128 bits as 22 base64url characters without padding', () => {
@@ -35,5 +35,11 @@ describe('encodeBase64Url', () => {
 
 	it('encodes an empty input as an empty string', () => {
 		expect(encodeBase64Url(new Uint8Array())).toBe('');
+	});
+});
+
+describe('sha256Base64Url', () => {
+	it('hashes text to the base64url SHA-256 digest', async () => {
+		expect(await sha256Base64Url('abc')).toBe('ungWv48Bz-pBQUDeXa4iI7ADYaOWF3qctBD_YfIAFa0');
 	});
 });

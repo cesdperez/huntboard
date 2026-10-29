@@ -10,3 +10,9 @@ export function encodeBase64Url(bytes: Uint8Array): string {
 	const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
 	return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }
+
+/** SHA-256 in base64url: how secrets that grant access are stored. */
+export async function sha256Base64Url(value: string): Promise<string> {
+	const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+	return encodeBase64Url(new Uint8Array(digest));
+}

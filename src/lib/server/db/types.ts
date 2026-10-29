@@ -15,6 +15,8 @@ export interface GameRow {
 	/** Key in the IMAGES bucket, or null without a game image. */
 	image_key: string | null;
 	image_label: string;
+	/** The account that created or claimed the game, or null for a game nobody claimed yet. */
+	owner_user_id: number | null;
 }
 
 export interface TeamRow {
@@ -75,3 +77,31 @@ export interface WithClaimCount {
 export type TeamWithClaimCount = TeamRow & WithClaimCount;
 
 export type ChallengeWithClaimCount = ChallengeRow & WithClaimCount;
+
+export interface UserRow {
+	id: number;
+	/** Lowercase. */
+	email: string;
+	display_name: string;
+	created_at: string;
+}
+
+export interface SignInRequestRow {
+	id: string;
+	/** SHA-256 of the link token, in base64url. */
+	token_hash: string;
+	/** SHA-256 of the request id and the code, in base64url. */
+	code_hash: string;
+	email: string;
+	next_path: string;
+	code_attempts: number;
+	expires_at: string;
+	created_at: string;
+}
+
+export interface SessionRow {
+	/** SHA-256 of the cookie token, in base64url. */
+	id: string;
+	user_id: number;
+	expires_at: string;
+}

@@ -168,6 +168,8 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
 - Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
 
+A game made before accounts opens Setup with a "My games" section: "Add to My games" for a signed-in visitor, or "Sign in to add it to your games", which returns to Setup after sign-in. A game with an owner has no such section.
+
 The game settings end with the theme, one option per registered theme, saved with the rest of the form.
 
 Each row in the Setup links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
@@ -181,6 +183,18 @@ In the Setup team list, a team's edit form shows its picture with "Remove pictur
 Before the reset, Setup has a "Claim media" section: how many claims have a photo or video, "Download all media", and "Delete all media". The download is one zip with a folder per team and a file per claim, named after the challenge and the claim number. "Delete all media" shows only after a download in the same visit, or when no claim has media, so nobody deletes what they never saved. It confirms first and keeps the claims and scores. Media is deleted 30 days after upload anyway, and the section says so.
 
 Setup ends with "Reset game", which returns the game to how `/new` created it: the name, the theme and the admin and scoreboard links stay, everything else goes, the game image and claim media included. The theme stays because, like the name, it belongs to the event, and a reset clears a rehearsal before that same event. It confirms first, naming what gets deleted.
+
+### Sign-in and My games
+
+These pages belong to no game, so they wear the default theme.
+
+- Sign-in asks only for "Email", with "Email me a sign-in link" as the one primary button. Sign-up is the same form: the hint says the link also creates an account.
+- After sending, the page becomes "Check your email": the address, a "Code" field and "Sign in", then "Use a different email" as a ghost button. A reload keeps this step while the code still works.
+- A new address learns it is new only after a right code or from the link's page. Then "Your name" appears above the button, and the link's button reads "Create account".
+- The link opens a page that names the address and waits for "Sign in". An expired link says so and offers "Ask for a new email".
+- The dev server sends no email. It shows the link and code in a dashed box under the address instead.
+- My games: "New game" as the primary button, then the games, newest first, each opening its admin link. "Sign out" comes last, as a ghost button.
+- Sign-in errors show in place, above the button they are about.
 
 ### Scoreboard
 

@@ -1,10 +1,11 @@
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
+import { failOnCspViolations, watchCsp } from './csp.js';
 import { POLL_INTERVAL_MS } from '../src/lib/client/live-updates.js';
+import { openNewGameSignedIn } from './sign-in.js';
 
 // A short game played end to end: 4 teams, 10 challenges, every kind of judging, a late arrival
 // and a tie. The final totals are worked out by hand in FINAL_STANDINGS.
 
-const CREATE_GAME_CODE = process.env.CREATE_GAME_CODE ?? 'letmein';
 const PENALTY_PER_MINUTE = 2;
 // The scoreboard has no actions of its own, so it changes only on its next poll.
 const SCOREBOARD_POLL_TIMEOUT = POLL_INTERVAL_MS + 10_000;
@@ -43,21 +44,17 @@ const FINAL_STANDINGS = [
 	['3rd', 'Tulip Squad', '32']
 ];
 
-const cspViolations: string[] = [];
-
-test.afterEach(() => {
-	expect(cspViolations).toEqual([]);
-});
+failOnCspViolations();
 
 test('rehearsal: a 4-team, 10-challenge game from creation to final scores', async ({
 	browser
 }) => {
 	const admin = await openAs(browser, 'Rehearsal judge');
+	const gameName = `Rehearsal ${new Date().toISOString().slice(11, 19)}`;
 
 	await test.step('create the game', async () => {
-		await admin.goto('/new');
-		await admin.getByLabel('Game name').fill(`Rehearsal ${new Date().toISOString().slice(11, 19)}`);
-		await admin.getByLabel('Creation code').fill(CREATE_GAME_CODE);
+		await openNewGameSignedIn(admin, 'Rehearsal judge');
+		await admin.getByLabel('Game name').fill(gameName);
 		await admin.getByRole('button', { name: 'Create game' }).click();
 		await expect(admin).toHaveURL(/\/a\/[^/]+\/setup$/);
 		await expect(admin.locator('html')).toHaveAttribute('data-game-theme', 'highland-bru');
@@ -266,6 +263,11 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 			);
 		}
 	});
+
+	await test.step("the game is on its creator's My games", async () => {
+		await admin.goto('/games');
+		await expect(admin.getByRole('list', { name: 'My games' })).toContainText(gameName);
+	});
 });
 
 async function openAs(
@@ -280,9 +282,7 @@ async function openAs(
 		}, nickname);
 	}
 	const page = await context.newPage();
-	page.on('console', (message) => {
-		if (message.text().includes('Content Security Policy')) cspViolations.push(message.text());
-	});
+	watchCsp(page);
 	return page;
 }
 

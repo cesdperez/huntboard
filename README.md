@@ -2,7 +2,7 @@
 
 A live scoreboard for team scavenger hunts. Teams check off challenges from their phones, organisers judge and award points, and everyone watches one shared leaderboard.
 
-No accounts. Each team joins through its own secret link, so teams see only their own progress and the totals of everyone else. Creating a game needs a creation code.
+Only game creators have accounts. Each team joins through its own secret link, so teams see only their own progress and the totals of everyone else. Judges share the admin link, and spectators use the scoreboard link.
 
 | Team | Judge |
 |---|---|
@@ -19,10 +19,12 @@ No accounts. Each team joins through its own secret link, so teams see only thei
 
 | Role | How they get in | What they can do |
 |---|---|---|
-| Creator | `/new` plus the creation code | Create a game. They land on its admin page |
+| Creator | An account: their email address | Create games at `/new` and find them again on My games (`/games`). They land on the new game's admin page |
 | Admin | The admin link | Edit the game, challenges and teams, judge claims, add adjustments, record arrivals, rotate links |
 | Player | Their team's link | See all challenges, mark them done with an optional note and photo or video, undo a pending claim, rename the team |
 | Spectator | The scoreboard link | See team names, members and totals |
+
+A creator signs in with their email address. The email holds a link and a six-digit code: the link works in any browser, and the code works in the tab that asked for it, for phones that open links inside the mail app. The first sign-in for an address creates the account and asks only for a display name. A game made before accounts has no owner: a signed-in creator who opens its admin link adds it to their games from the Setup tab.
 
 Players and admins type a nickname on first visit. It is kept in the browser and only shows who marked or judged something. It is not an account.
 
@@ -59,9 +61,9 @@ Use cases, queries and the image store take the database or bucket as an argumen
 
 `src/lib/server`:
 
-- `actions/`: thin form action adapters. They read the request, call a use case, and turn its outcome into a response, a failure or a redirect.
+- `actions/`: thin form action and endpoint adapters. They read the request, call a use case, and turn its outcome into a response, a failure or a redirect.
 - `pages/`: page load builders.
-- `http/`: request guards, security headers, the D1 usage meter for the load test, and the admin and team link guards that answer 404.
+- `http/`: request guards, security headers, the D1 usage meter for the load test, the admin and team link guards that answer 404, and the session cookie, and the Resend sender.
 - `use-cases/`: what each form action does, tested without HTTP, and the form field readers they share.
 - `db/`: D1 queries, including the team link lookup.
 - `storage/`: the R2 image and media stores. They also build the responses for image and media requests, byte ranges and the media zip included. `media-upload.ts` signs uploads to R2, `dev-media-upload.ts` stands in for R2 under `pnpm dev`, and `r2-s3.ts` holds the account id and the R2 S3 origin that the CSP in `vite.config.ts` also reads.
@@ -84,7 +86,11 @@ pnpm db:migrate
 pnpm dev
 ```
 
-`.env.dev` is gitignored. `CREATE_GAME_CODE` is the code `/new` asks for before it creates a game. After adding or renaming a variable, run `pnpm gen` to update `worker-configuration.d.ts`.
+`.env.dev` is gitignored. After adding or renaming a variable, run `pnpm gen` to update `worker-configuration.d.ts`.
+
+Without `RESEND_API_KEY` in `.env.dev`, the dev server sends no sign-in email and shows its link and code on the sign-in page. With the key, it sends real email (see [Sign-in email](#sign-in-email)). A deployment without the key refuses to sign anyone in.
+
+`/dev/sign-in?name=<name>&next=<path>` signs in as a test account with that name, with no credential. The rehearsal uses it. It answers 404 outside `pnpm dev`: production builds compile it out, so no setting can turn it on in a deployment.
 
 `/dev/design` shows every component in every theme: `/dev/design?theme=<id>&mode=dark`. It answers 404 outside `pnpm dev`.
 
@@ -109,10 +115,10 @@ pnpm exec playwright install chromium   # once
 pnpm rehearsal
 ```
 
-To rehearse against a deployment, set `HUNTBOARD_URL` and that deployment's `CREATE_GAME_CODE`:
+A deployment has no test sign-in. To rehearse against one, sign in there in a browser, copy the value of the `session` cookie, and pass it with `HUNTBOARD_URL`. The accounts spec reads the sign-in email from the dev server's page, so it runs only against the local server.
 
 ```sh
-HUNTBOARD_URL=https://huntboard.example.com CREATE_GAME_CODE=... pnpm rehearsal
+HUNTBOARD_URL=https://huntboard.example.com HUNTBOARD_SESSION=... pnpm rehearsal
 ```
 
 Each run creates a new game named `Rehearsal ...`. Delete them before a real event:
@@ -170,11 +176,21 @@ Put the `database_id` that `d1 create` prints into `wrangler.jsonc`, and change 
 
 ```sh
 pnpm db:migrate:remote
-pnpm exec wrangler secret put CREATE_GAME_CODE
+pnpm exec wrangler secret put RESEND_API_KEY
 pnpm run deploy
 ```
 
-The creation code is the only guard on game creation, so make it random: at least 24 characters from a password generator.
+Sign-in needs a sending domain in Resend first (see [Sign-in email](#sign-in-email)).
+
+### Sign-in email
+
+Sign-in emails go through [Resend](https://resend.com). Its free plan sends 3,000 emails a month and 100 a day.
+
+1. Create a Resend account and an API key with sending access.
+2. Add a sending domain on a zone you own, for example `send.example.com`, and add the DNS records Resend lists. Wait until Resend shows it as verified.
+3. Set `EMAIL_FROM` in `wrangler.jsonc` to an address on that domain, and put the key in the Worker secret above.
+
+Cloudflare's own Email Service sends only to verified addresses on the free plan, so it cannot send sign-in emails to strangers.
 
 ### Claim media
 
@@ -225,10 +241,12 @@ A game of about 180 claims stores about 1 GB of media. It is deleted after the g
 ## Security
 
 - **Access.** Admin, team and scoreboard links each carry a 128-bit random token, looked up separately per role. Every server action checks its own token and scopes its queries to that game or team. Team and scoreboard pages never receive another team's claims or any privileged token. The scoreboard's QR code is built in the browser from its own route token, so it can only encode the scoreboard link. Unknown links answer 404.
-- **Game creation.** `/new` needs the `CREATE_GAME_CODE` secret, compared in constant time. An unset secret matches nothing.
+- **Accounts.** `/new` and My games need a session. A session is a 128-bit random token in an `HttpOnly`, `SameSite=Lax` cookie, `Secure` outside localhost. The database stores only its SHA-256 hash. It lasts 30 days, and a session used in its second half is renewed. Sign-out deletes it. Owning a game only lists it on My games; access to a game is still its links.
+- **Sign-in.** An email holds a 128-bit link token and a six-digit code. The database stores only their SHA-256 hashes, the code's salted with its request ID. Both expire after 15 minutes and sign in once. The link opens a page with a button, because mail scanners open links and must not use them up. The code works only with the request ID in the asking browser's `HttpOnly` cookie, and five wrong codes end the request. Each address can have at most three unused sign-in emails from the last 15 minutes; a used one stops counting, since only the inbox owner can use it. New and existing addresses get the same email, so the form does not reveal who has an account. There are no passwords, because hashing them does not fit the Workers free plan's 10 ms CPU limit.
+- **Test sign-in.** `/dev/sign-in` exists only in `pnpm dev`. Production builds compile it out.
 - **Headers.** SvelteKit sets an enforced CSP with per-request script nonces. `src/hooks.server.ts` adds `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, HSTS and `X-Robots-Tag: noindex` to every Worker response, and `Cache-Control: no-store` to secret-link pages. `_headers` applies the static ones to assets. `robots.txt` disallows everything.
 - **Requests.** Plain HTTP redirects to HTTPS. Bodies without `Content-Length` get 411 and bodies over 2 MiB get 413, before any parsing. Uploaded images are checked for size, declared type and magic bytes.
 - **Claim media.** Phones upload straight to R2, never through the Worker. The team action `mediaUpload` checks the game window, the declared type and the size limit, then signs one PUT URL for 15 minutes. It covers one new random key under the game id, and its signature covers the content type and length, so R2 refuses any other file. The R2 API token behind it can only read and write the media bucket. Marking done with media checks the object again in the bucket: the key belongs to this game, the size is within the limit, the stored type matches the key, and the first bytes are a JPEG, WebP, MP4, QuickTime or WebM file. A failed check stores no claim.
 - **Media keys are secrets.** `/media/<game id>/claims/<file>` serves an object without reading D1, like `/images/`, so the 128-bit random name is the only guard. Only the claiming team and the admins receive it.
 - **Abuse limits.** The Worker is served only on its custom domain; `workers_dev` and `preview_urls` are off in `wrangler.jsonc`, so every request passes the zone's WAF. A zone rate-limiting rule, configured in Cloudflare and not in this repo, blocks an IP for 10 seconds after 300 requests in 10 seconds, skipping static paths. The cap is high because a whole party often shares one Wi-Fi IP. A distributed attack can still spend the daily free-tier allowance; stopping that needs Cloudflare's paid bot and DDoS features.
-- **Accepted trade-offs.** A link is a bearer credential with no expiry until it is rotated. Nicknames are labels, not identities. Team names and members lines are visible to anyone with the scoreboard link.
+- **Accepted trade-offs.** A link is a bearer credential with no expiry until it is rotated. Anyone with the admin link of a game nobody owns can add it to their games; that changes only their list, not who can open the game. Whoever controls an email inbox controls its account. Spread over many addresses or IPs, the form can still spend Resend's daily free quota. Anyone can create an account and games; the abuse limits above are what cap that. Nicknames are labels, not identities. Team names and members lines are visible to anyone with the scoreboard link.

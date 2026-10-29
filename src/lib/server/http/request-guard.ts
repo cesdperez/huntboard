@@ -4,7 +4,8 @@ import { DEV_MEDIA_PATH } from '../storage/dev-media-upload.js';
 export const MAX_BODY_BYTES = 2 * 1024 * 1024;
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
-const SECRET_LINK_PATH = /^\/[ats]\/([^/]+)/;
+// Secret links, and pages that show who is signed in.
+const PRIVATE_PATH = /^\/(?:[ats]\/[^/]+|login|games|new)(?:\/|$)/;
 const BODYLESS_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /** A response that ends the request before routing, or null to continue. */
@@ -40,7 +41,7 @@ export function securityHeaders(url: URL): Record<string, string> {
 	if (url.protocol === 'https:') {
 		headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
 	}
-	if (SECRET_LINK_PATH.test(url.pathname)) {
+	if (PRIVATE_PATH.test(url.pathname)) {
 		headers['Cache-Control'] = 'no-store';
 	}
 	return headers;
