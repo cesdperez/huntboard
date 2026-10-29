@@ -13,6 +13,9 @@ import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js
 import { markClaim, undoClaim } from '../db/claims.js';
 import { setTeamAvatar } from '../db/images.js';
 import { updateTeam } from '../db/teams.js';
+import { deleteObjects } from '../storage/bucket-objects.js';
+import type { MediaBucket } from '../storage/media-store.js';
+import { checkClaimMedia } from './claim-media.js';
 import { conflictMessage } from './conflict-message.js';
 import { readId, readString } from './form.js';
 import { replaceImage, type ImageBucket } from '../storage/image-store.js';
@@ -35,8 +38,10 @@ type TeamOutcome = ActionOutcome<TeamFormResult>;
 
 const CHALLENGE_GONE = 'That challenge is not in this game any more.';
 
+/** Media is optional. When sent, it must already be in the bucket and pass checkClaimMedia. */
 export async function markDone(
 	db: D1Database,
+	media: MediaBucket,
 	{ team, game }: TeamLink,
 	data: FormData,
 	now: Date
@@ -52,13 +57,17 @@ export async function markDone(
 	}
 	const challengeId = readId(data, 'challengeId');
 	if (challengeId === null) return error(404, CHALLENGE_GONE);
+	const mediaKey = readString(data, 'mediaKey') || null;
+	const mediaError = mediaKey === null ? null : await checkClaimMedia(media, game.id, mediaKey);
+	if (mediaError) return error(400, mediaError);
 
 	const result = await markClaim(db, {
 		gameId: game.id,
 		teamId: team.id,
 		challengeId,
 		note: note || null,
-		markedBy
+		markedBy,
+		mediaKey
 	});
 	switch (result.status) {
 		case 'marked':
@@ -72,6 +81,7 @@ export async function markDone(
 
 export async function undoOwnClaim(
 	db: D1Database,
+	media: MediaBucket,
 	{ team, game }: TeamLink,
 	data: FormData,
 	now: Date
@@ -83,6 +93,7 @@ export async function undoOwnClaim(
 	const result = claimId === null ? null : await undoClaim(db, team.id, claimId);
 	switch (result?.status) {
 		case 'undone':
+			await deleteObjects(media, [result.mediaKey]);
 			return { status: 200, result: { kind: 'undone' } };
 		case 'conflict':
 			return error(409, conflictMessage(result.claim));

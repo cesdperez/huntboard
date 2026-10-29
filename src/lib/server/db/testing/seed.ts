@@ -54,7 +54,8 @@ export function seedClaim(
 		points: fields.points ?? null,
 		judged_by: fields.judged_by ?? null,
 		judged_at: fields.judged_at ?? null,
-		judge_note: fields.judge_note ?? null
+		judge_note: fields.judge_note ?? null,
+		media_key: fields.media_key ?? null
 	});
 }
 

@@ -21,12 +21,14 @@ export const load: PageServerLoad = async ({ params, depends, locals }) => {
 export const actions = {
 	mark: async ({ params, request }) => {
 		const link = await requireTeamLink(params.token);
-		return respond('team', await markDone(env.DB, link, await request.formData(), new Date()));
+		const data = await request.formData();
+		return respond('team', await markDone(env.DB, env.MEDIA, link, data, new Date()));
 	},
 
 	undo: async ({ params, request }) => {
 		const link = await requireTeamLink(params.token);
-		return respond('team', await undoOwnClaim(env.DB, link, await request.formData(), new Date()));
+		const data = await request.formData();
+		return respond('team', await undoOwnClaim(env.DB, env.MEDIA, link, data, new Date()));
 	},
 
 	rename: async ({ params, request }) => {

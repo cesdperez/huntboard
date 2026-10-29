@@ -60,7 +60,7 @@ describe('replaceImage', () => {
 
 		expect(stored).toBe(true);
 		expect(bucket.keys()).toEqual([committed]);
-		expect(bucket.objects.get(committed!)).toEqual({
+		expect(bucket.objects.get(committed!)).toMatchObject({
 			bytes: WEBP_UPLOAD.bytes,
 			contentType: 'image/webp'
 		});

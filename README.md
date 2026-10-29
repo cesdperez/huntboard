@@ -21,7 +21,7 @@ No accounts. Each team joins through its own secret link, so teams see only thei
 |---|---|---|
 | Creator | `/new` plus the creation code | Create a game. They land on its admin page |
 | Admin | The admin link | Edit the game, challenges and teams, judge claims, add adjustments, record arrivals, rotate links |
-| Player | Their team's link | See all challenges, mark them done with an optional note, undo a pending claim, rename the team |
+| Player | Their team's link | See all challenges, mark them done with an optional note and photo or video, undo a pending claim, rename the team |
 | Spectator | The scoreboard link | See team names, members and totals |
 
 Players and admins type a nickname on first visit. It is kept in the browser and only shows who marked or judged something. It is not an account.
@@ -34,12 +34,13 @@ Players and admins type a nickname on first visit. It is kept in the browser and
 - **Late penalty.** Whole minutes late, rounded down, times the penalty per minute, with no cap. A team that never arrives gets no automatic penalty; the admin adds an adjustment.
 - **Times are stored in UTC** and shown in each viewer's own time zone.
 - **Teams see every challenge but not each other's claims.** The scoreboard shows totals only.
-- **Proof stays outside the app**, in the group chat or in person. The app stores only one image per game (an invitation, poster or map) and one picture per team, in R2.
+- **Proof is an optional photo or video on a claim.** The phone shrinks it when it can, uploads it to R2, and the judge sees it beside the claim. Proof can still go to the group chat or come in person, because a claim needs no media. The server checks each upload's size and type before the claim points at it. Media lives in its own R2 bucket under the game id and is deleted after the game: by "Delete all media" in Setup, by a reset, and by a 30-day rule on the bucket. Undoing a claim deletes its media; a rejected claim keeps it as history.
+- **Images.** Besides claim media, the app stores one image per game (an invitation, poster or map) and one picture per team, in R2.
 - **Themes live in code.** A game picks a registered theme in Setup; see [Themes](DESIGN.md#themes).
 
 ## Stack
 
-SvelteKit and TypeScript on Cloudflare Workers, D1 (SQLite) for data, R2 for images, pnpm. Tailwind and shadcn-svelte for components. Raw SQL through thin query modules. Everything fits the Cloudflare free tier.
+SvelteKit and TypeScript on Cloudflare Workers, D1 (SQLite) for data, R2 for images and claim media, pnpm. Tailwind and shadcn-svelte for components. Raw SQL through thin query modules. Everything fits the Cloudflare free tier.
 
 ## Code layout
 

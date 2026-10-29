@@ -15,6 +15,8 @@ export interface NewClaim {
 	challengeId: number;
 	note: string | null;
 	markedBy: string;
+	/** Checked against the MEDIA bucket by the caller. */
+	mediaKey: string | null;
 }
 
 export type MarkClaimResult =
@@ -31,12 +33,19 @@ export async function markClaim(db: D1Database, claim: NewClaim): Promise<MarkCl
 		// The only conflict possible is the one active claim per team and challenge.
 		db
 			.prepare(
-				`INSERT INTO claim (team_id, challenge_id, status, note, marked_by)
-				SELECT ?, id, 'pending', ?, ? FROM challenge WHERE id = ? AND game_id = ?
+				`INSERT INTO claim (team_id, challenge_id, status, note, marked_by, media_key)
+				SELECT ?, id, 'pending', ?, ?, ? FROM challenge WHERE id = ? AND game_id = ?
 				ON CONFLICT DO NOTHING
 				RETURNING *`
 			)
-			.bind(claim.teamId, claim.note, claim.markedBy, claim.challengeId, claim.gameId),
+			.bind(
+				claim.teamId,
+				claim.note,
+				claim.markedBy,
+				claim.mediaKey,
+				claim.challengeId,
+				claim.gameId
+			),
 		db
 			.prepare(
 				`SELECT * FROM claim WHERE team_id = ? AND challenge_id = ? AND status IN ('pending', 'scored')`
@@ -50,7 +59,7 @@ export async function markClaim(db: D1Database, claim: NewClaim): Promise<MarkCl
 }
 
 export type UndoClaimResult =
-	| { status: 'undone' }
+	| { status: 'undone'; mediaKey: string | null }
 	/** A judge got to it first: the claim as it is now. */
 	| { status: 'conflict'; claim: ClaimRow }
 	| { status: 'not-found' };
@@ -62,10 +71,12 @@ export async function undoClaim(
 	claimId: number
 ): Promise<UndoClaimResult> {
 	const undone = await db
-		.prepare(`DELETE FROM claim WHERE id = ? AND team_id = ? AND status = 'pending' RETURNING id`)
+		.prepare(
+			`DELETE FROM claim WHERE id = ? AND team_id = ? AND status = 'pending' RETURNING media_key`
+		)
 		.bind(claimId, teamId)
-		.first<number>('id');
-	if (undone !== null) return { status: 'undone' };
+		.first<Pick<ClaimRow, 'media_key'>>();
+	if (undone !== null) return { status: 'undone', mediaKey: undone.media_key };
 
 	const claim = await db
 		.prepare('SELECT * FROM claim WHERE id = ? AND team_id = ?')
