@@ -232,7 +232,7 @@ pnpm exec wrangler r2 bucket lifecycle add huntboard-media expire-media --expire
 
 Without the two secrets, attaching media fails with a message, and claims without media still work.
 
-Media whose claim is gone stays in the bucket until "Delete all media", a reset or the lifecycle rule removes it. That happens when an admin deletes a team, because its claims go with it. A re-import that deletes a challenge deletes the media of its claims too.
+A re-import that deletes a challenge deletes the media of its claims too. A team with claims cannot be deleted, so deleting a team leaves no media behind. Uploads that never reached a claim stay in the bucket until "Delete all media", a reset or the lifecycle rule removes them.
 
 "Download all media" on the Setup tab zips every claim's media in the Worker. That takes seconds of CPU for about 1 GB, past the free plan's 10 ms, so it needs Workers Paid ($5 a month). Everything else stays on the free plan.
 
