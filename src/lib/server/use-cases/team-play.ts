@@ -41,7 +41,7 @@ export type TeamFormResult =
 type TeamOutcome = ActionOutcome<TeamFormResult>;
 
 const CHALLENGE_GONE = 'That challenge is not in this game any more.';
-export const MEDIA_TAKEN = 'This photo or video is already on another claim. Add it again.';
+export const MEDIA_TAKEN = 'This photo or video is already on another claim. Attach it again.';
 export const MEDIA_UPLOADS_OFF =
 	'Photos and videos cannot be attached right now. Mark it done without one and send the proof another way.';
 

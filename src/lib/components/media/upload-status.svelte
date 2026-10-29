@@ -52,7 +52,10 @@
 					{#if percent === null}
 						<div class="h-full w-full bg-ink/40 motion-safe:animate-pulse"></div>
 					{:else}
-						<div class="h-full bg-ink transition-[width]" style:width="{percent}%"></div>
+						<!-- A new phase starts its bar empty rather than shrinking back from the last one. -->
+						{#key phase}
+							<div class="h-full bg-ink transition-[width]" style:width="{percent}%"></div>
+						{/key}
 					{/if}
 				</div>
 			{/if}
