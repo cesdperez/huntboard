@@ -63,3 +63,9 @@ export function claimMedia(key: string | null): ClaimMedia | null {
 	if (key === null || type === null) return null;
 	return { src: mediaSrc(key), kind: isVideoType(type) ? 'video' : 'photo' };
 }
+
+// Room for a retry or a changed mind on every challenge.
+export const TEAM_UPLOADS_PER_CHALLENGE = 3;
+// The model game stores about 1 GB in all, about 150 MB a team.
+export const TEAM_MEDIA_MAX_BYTES = 500 * 1024 * 1024;
+export const GAME_MEDIA_MAX_BYTES = 3 * 1024 * 1024 * 1024;

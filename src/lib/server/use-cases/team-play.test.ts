@@ -3,16 +3,25 @@ import { CLAIM_NOTE_MAX_LENGTH } from '#lib/domain/claim-note.js';
 import { listTeamClaims } from '../db/claims.js';
 import { createGame, updateGameSettings } from '../db/games.js';
 import { getTeamByToken } from '../db/links.js';
+import { isTeamUpload, recordMediaUpload } from '../db/media-uploads.js';
 import { deleteTeam } from '../db/teams.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from '../db/types.js';
-import { ORIGINAL_VIDEO_MAX_BYTES, PHOTO_MAX_BYTES } from '#lib/domain/claim-media.js';
+import {
+	GAME_MEDIA_MAX_BYTES,
+	ORIGINAL_VIDEO_MAX_BYTES,
+	PHOTO_MAX_BYTES,
+	TEAM_MEDIA_MAX_BYTES,
+	TEAM_UPLOADS_PER_CHALLENGE
+} from '#lib/domain/claim-media.js';
 import { MEDIA_NOT_UPLOADED, NOT_MEDIA, PHOTO_TOO_LARGE, VIDEO_TOO_LARGE } from './claim-media.js';
 import { NOT_AN_IMAGE } from './image-upload.js';
 import {
+	GAME_MEDIA_FULL,
 	MEDIA_TAKEN,
 	MEDIA_UPLOADS_OFF,
+	TEAM_MEDIA_FULL,
 	markDone,
 	renameOwnTeam,
 	requestMediaUpload,
@@ -51,6 +60,11 @@ function form(fields: Record<string, string>): FormData {
 	const data = new FormData();
 	for (const [key, value] of Object.entries(fields)) data.set(key, value);
 	return data;
+}
+
+function signedFor(team: TeamRow, key: string, size = 1, gameId = game.id) {
+	const roomy = { uploadsPerChallenge: 1000, teamMaxBytes: 2 ** 40, gameMaxBytes: 2 ** 40 };
+	return recordMediaUpload(db, { gameId, teamId: team.id, key, size }, roomy);
 }
 
 function markForm(fields: Record<string, string> = {}) {
@@ -170,6 +184,7 @@ describe('markDone with media', () => {
 	async function uploaded(bytes = JPEG, contentType = 'image/jpeg') {
 		const key = newMediaKey(game.id, 'image/jpeg');
 		await media.put(key, bytes, { httpMetadata: { contentType } });
+		await signedFor(rats, key);
 		return key;
 	}
 
@@ -243,6 +258,27 @@ describe('markDone with media', () => {
 		expect(await media.head(key)).not.toBeNull();
 	});
 
+	it('refuses a key signed for another team', async () => {
+		const owls = await seedTeam(db, game.id, { name: 'Bridge Owls' });
+		const key = newMediaKey(game.id, 'image/jpeg');
+		await media.put(key, JPEG, { httpMetadata: { contentType: 'image/jpeg' } });
+		await signedFor(owls, key);
+
+		const outcome = await markDone(
+			db,
+			media.asBucket(),
+			{ team: rats, game },
+			markForm({ mediaKey: key }),
+			DURING
+		);
+
+		expect(outcome).toEqual({
+			status: 400,
+			result: { kind: 'error', message: MEDIA_NOT_UPLOADED }
+		});
+		expect(await listTeamClaims(db, rats.id)).toEqual([]);
+	});
+
 	it('refuses outside the game window before looking at the media', async () => {
 		const head = vi.spyOn(media, 'head');
 
@@ -271,6 +307,7 @@ describe('requestMediaUpload', () => {
 
 	it('presigns a new key under the game for the declared type and size', async () => {
 		const outcome = await requestMediaUpload(
+			db,
 			presign,
 			{ team: rats, game },
 			uploadForm('video/mp4', 1234),
@@ -290,6 +327,7 @@ describe('requestMediaUpload', () => {
 
 	it('refuses outside the game window', async () => {
 		const outcome = await requestMediaUpload(
+			db,
 			presign,
 			{ team: rats, game },
 			uploadForm('image/jpeg', 100),
@@ -311,13 +349,67 @@ describe('requestMediaUpload', () => {
 			VIDEO_TOO_LARGE
 		]
 	])('refuses %s', async (_, data, message) => {
-		const outcome = await requestMediaUpload(presign, { team: rats, game }, data, DURING);
+		const outcome = await requestMediaUpload(db, presign, { team: rats, game }, data, DURING);
 
 		expect(outcome).toEqual({ status: 400, result: { kind: 'error', message } });
 	});
 
+	it('records the key as signed for the team', async () => {
+		const outcome = await requestMediaUpload(
+			db,
+			presign,
+			{ team: rats, game },
+			uploadForm('image/jpeg', 100),
+			DURING
+		);
+
+		const { key } = outcome.result as { key: string };
+		expect(await isTeamUpload(db, rats.id, key)).toBe(true);
+	});
+
+	it(`allows ${TEAM_UPLOADS_PER_CHALLENGE} uploads per challenge for each team`, async () => {
+		const ask = () =>
+			requestMediaUpload(db, presign, { team: rats, game }, uploadForm('image/jpeg', 100), DURING);
+		for (let i = 0; i < TEAM_UPLOADS_PER_CHALLENGE; i++) expect((await ask()).status).toBe(200);
+
+		expect(await ask()).toEqual({
+			status: 400,
+			result: { kind: 'error', message: TEAM_MEDIA_FULL }
+		});
+	});
+
+	it('refuses an upload past the team bytes', async () => {
+		await signedFor(rats, 'earlier', TEAM_MEDIA_MAX_BYTES - 99);
+
+		const outcome = await requestMediaUpload(
+			db,
+			presign,
+			{ team: rats, game },
+			uploadForm('image/jpeg', 100),
+			DURING
+		);
+
+		expect(outcome).toEqual({ status: 400, result: { kind: 'error', message: TEAM_MEDIA_FULL } });
+	});
+
+	it('refuses an upload past the game bytes, whichever team sent the rest', async () => {
+		const owls = await seedTeam(db, game.id, { name: 'Bridge Owls' });
+		await signedFor(owls, 'earlier', GAME_MEDIA_MAX_BYTES - 99);
+
+		const outcome = await requestMediaUpload(
+			db,
+			presign,
+			{ team: rats, game },
+			uploadForm('image/jpeg', 100),
+			DURING
+		);
+
+		expect(outcome).toEqual({ status: 400, result: { kind: 'error', message: GAME_MEDIA_FULL } });
+	});
+
 	it('says uploads are off when the server cannot presign', async () => {
 		const outcome = await requestMediaUpload(
+			db,
 			null,
 			{ team: rats, game },
 			uploadForm('image/jpeg', 100),

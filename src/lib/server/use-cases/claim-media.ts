@@ -8,6 +8,7 @@ import {
 import { safeFileName } from '#lib/format/file-name.js';
 import type { ActionOutcome } from './action-outcome.js';
 import { clearGameMedia, listGameMedia, type GameMediaRow } from '../db/claim-media.js';
+import { clearGameUploads } from '../db/media-uploads.js';
 import type { GameRow } from '../db/types.js';
 import { deleteGameObjects } from '../storage/bucket-objects.js';
 import { mediaZipResponse, type MediaBucket, type ZipEntry } from '../storage/media-store.js';
@@ -101,6 +102,7 @@ export async function deleteAllMedia(
 	gameId: number
 ): Promise<ActionOutcome<MediaFormResult>> {
 	await clearGameMedia(db, gameId);
+	await clearGameUploads(db, gameId);
 	await deleteGameObjects(bucket, gameId);
 	return { status: 200, result: { deleted: true } };
 }

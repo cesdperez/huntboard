@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { recordMediaUpload } from '../db/media-uploads.js';
 import { PHOTO_MAX_BYTES, type MediaType } from '#lib/domain/claim-media.js';
 import { newMediaKey } from '../storage/media-store.js';
 import { MemoryBucket } from '../testing/memory-bucket.js';
@@ -203,5 +204,19 @@ describe('deleteAllMedia', () => {
 		expect(outcome).toEqual({ status: 200, result: { deleted: true } });
 		expect(bucket.keys()).toEqual([theirs]);
 		expect(await countGameMedia(db, game.id)).toBe(0);
+	});
+
+	it('frees the game for new uploads', async () => {
+		const db = createTestDb();
+		const game = await createGame(db, 'Canal hunt');
+		const rats = await seedTeam(db, game.id);
+		await seedChallenge(db, game.id);
+		const roomy = { uploadsPerChallenge: 1, teamMaxBytes: 10, gameMaxBytes: 10 };
+		const upload = { gameId: game.id, teamId: rats.id, key: 'a', size: 10 };
+		await recordMediaUpload(db, upload, roomy);
+
+		await deleteAllMedia(db, new MemoryBucket().asBucket(), game.id);
+
+		expect(await recordMediaUpload(db, { ...upload, key: 'b' }, roomy)).toBe('recorded');
 	});
 });
