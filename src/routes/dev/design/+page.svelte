@@ -359,7 +359,11 @@
 			<MediaThumb kind="video" class="size-10" />
 			<span class="type-secondary">Thumbnails on a team row and in its sheet</span>
 		</div>
-		<ClaimMediaView media={{ src: sampleImage.src, kind: 'photo' }} label="Canal Rats, Swim" />
+		<ClaimMediaView
+			media={{ src: sampleImage.src, kind: 'photo' }}
+			label="Canal Rats, Swim"
+			preload="none"
+		/>
 		<p class="type-secondary">Judges see a video in the same box, with the browser's controls.</p>
 	</section>
 

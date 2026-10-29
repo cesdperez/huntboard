@@ -81,9 +81,15 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1600);
 		const clip = queueItem(admin, VIDEO_CHALLENGE).locator('video');
 		await expect(clip).toHaveAttribute('aria-label', `Video from ${TEAM}, ${VIDEO_CHALLENGE}`);
+		await expect(clip).toHaveAttribute('preload', 'none');
+		await clip.evaluate((v: HTMLVideoElement) => {
+			v.muted = true;
+			return v.play();
+		});
 		await expect
 			.poll(() => clip.evaluate((v: HTMLVideoElement) => v.readyState))
 			.toBeGreaterThan(0);
+		await clip.evaluate((v: HTMLVideoElement) => v.pause());
 
 		const src = await clip.getAttribute('src');
 		const range = await admin.request.get(src!, { headers: { Range: 'bytes=0-99' } });

@@ -88,7 +88,7 @@
 					</div>
 				</div>
 				{#if claim.media}
-					<ClaimMediaView media={claim.media} label="{team.name}, {row.title}" />
+					<ClaimMediaView media={claim.media} label="{team.name}, {row.title}" preload="metadata" />
 				{/if}
 			{/if}
 

@@ -49,7 +49,7 @@
 	</div>
 
 	{#if claim.media}
-		<ClaimMediaView media={claim.media} {label} />
+		<ClaimMediaView media={claim.media} {label} preload="none" />
 	{/if}
 
 	{#if live}

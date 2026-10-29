@@ -5,9 +5,11 @@
 		media: ClaimMedia;
 		/** What it shows, e.g. "Canal Rats, Swim in a fountain". */
 		label: string;
+		/** `none` where many videos list at once, since each metadata read is a Worker request. */
+		preload: 'none' | 'metadata';
 	};
 
-	let { media, label }: Props = $props();
+	let { media, label, preload }: Props = $props();
 </script>
 
 <!-- Bounded height, so the judging buttons stay within reach under a tall photo. -->
@@ -36,7 +38,7 @@
 		src={media.src}
 		controls
 		playsinline
-		preload="metadata"
+		{preload}
 		aria-label="Video from {label}"
 		class="max-h-64 w-full self-stretch rounded-sm bg-ink"
 	></video>
