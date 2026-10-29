@@ -8,5 +8,5 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
-	default: createNewGameAction(env.DB)
+	default: createNewGameAction(env)
 };
