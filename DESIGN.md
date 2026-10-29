@@ -150,7 +150,7 @@ The points picker buttons are at least 56px tall. Tapping a quick value scores a
 - "Reject" opens an optional reason field and a "Reject claim" button. That second tap is the confirmation.
 - A claim judged or undone elsewhere stays in the queue where it was, showing the conflict ("Sam already scored this: 15 points.") and an "OK" button, until the judge dismisses it. It never just vanishes under a thumb.
 - An earlier rejection of the same team and challenge shows under the note in `--danger`, so the judge knows what failed before.
-- A claim's photo or video shows inline under the note, full column width and at most 256px high, so the judging buttons stay within reach. A photo fits inside the box on `--paper` and opens whole in a new tab when tapped. A video has the browser's own controls, plays inline and loads only its metadata until played. A claim without media looks as before. The media stays while the item shows a conflict.
+- A claim's photo or video shows inline under the note, full column width and at most 256px high, so the judging buttons stay within reach. A photo fits inside the box on `--paper` and opens whole in a new tab when tapped. A video has the browser's own controls and plays inline. In the queue it loads nothing until played, so a long queue reads no media. In the grid sheet it loads its metadata. A claim without media looks as before. The media stays while the item shows a conflict.
 - On admin pages the toast sits above the tab bar.
 
 The grid has team names as columns and a sticky first column of challenge titles, so it scrolls horizontally on a phone and fits on a laptop. Each cell is a marker. Tapping a cell opens the same judging panel as the queue, in a sheet.
