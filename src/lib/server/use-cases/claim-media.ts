@@ -26,7 +26,10 @@ export const NOT_MEDIA =
 	'This file is not a photo or video the app takes. Choose a JPEG or WebP photo, or an MP4, MOV or WebM video.';
 
 const SNIFF_BYTES = 32;
-const FTYP = new TextEncoder().encode('ftyp');
+// QuickTime files from older cameras lead with one of these atoms instead of ftyp.
+const ISO_FIRST_ATOMS = ['ftyp', 'moov', 'mdat', 'wide', 'free'].map((atom) =>
+	new TextEncoder().encode(atom)
+);
 const EBML = Uint8Array.of(0x1a, 0x45, 0xdf, 0xa3);
 
 export function mediaTooLarge(type: MediaType): string {
@@ -42,7 +45,7 @@ export function matchesMediaType(bytes: Uint8Array, type: MediaType): boolean {
 		// Phones label the same ISO media container either way, so the brand is not checked.
 		case 'video/mp4':
 		case 'video/quicktime':
-			return startsWith(bytes, FTYP, 4);
+			return ISO_FIRST_ATOMS.some((atom) => startsWith(bytes, atom, 4));
 		case 'video/webm':
 			return startsWith(bytes, EBML, 0);
 	}
@@ -61,14 +64,13 @@ export async function checkClaimMedia(
 	const type = key.startsWith(`${gameId}/`) ? mediaKeyType(key) : null;
 	if (type === null) return MEDIA_NOT_UPLOADED;
 
-	const head = await bucket.head(key);
-	if (!head) return MEDIA_NOT_UPLOADED;
-	if (head.size > maxMediaBytes(type)) return mediaTooLarge(type);
-	// The media route serves the type the key names, so the bytes must be that type too.
-	if (head.httpMetadata?.contentType !== type) return NOT_MEDIA;
-
+	// A ranged read still reports the whole object's size and metadata.
 	const start = await bucket.get(key, { range: { offset: 0, length: SNIFF_BYTES } });
 	if (!start) return MEDIA_NOT_UPLOADED;
+	if (start.size > maxMediaBytes(type)) return mediaTooLarge(type);
+	// The media route serves the type the key names, so the bytes must be that type too.
+	if (start.httpMetadata?.contentType !== type) return NOT_MEDIA;
+
 	const bytes = new Uint8Array(await new Response(start.body).arrayBuffer());
 	return matchesMediaType(bytes, type) ? null : NOT_MEDIA;
 }

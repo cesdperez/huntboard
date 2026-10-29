@@ -40,6 +40,13 @@ describe('matchesMediaType', () => {
 		expect(matchesMediaType(SAMPLES['video/mp4'], 'video/quicktime')).toBe(true);
 	});
 
+	it.each(['wide', 'mdat', 'moov', 'free'])(
+		'recognises a QuickTime file that starts with a %s atom instead of ftyp',
+		(atom) => {
+			expect(matchesMediaType(bytes([0, 0, 0, 8], atom), 'video/quicktime')).toBe(true);
+		}
+	);
+
 	it.each([
 		['image/jpeg', SAMPLES['video/webm']],
 		['image/webp', SAMPLES['image/jpeg']],
@@ -84,6 +91,20 @@ describe('checkClaimMedia', () => {
 		await checkClaimMedia(bucket.asBucket(), GAME_ID, key);
 
 		expect(reads).toEqual([{ range: { offset: 0, length: 32 } }]);
+	});
+
+	it('reads size and type from the ranged read, without a separate head', async () => {
+		const key = await upload('image/jpeg');
+		let heads = 0;
+		const head = bucket.head.bind(bucket);
+		bucket.head = (key) => {
+			heads++;
+			return head(key);
+		};
+
+		await checkClaimMedia(bucket.asBucket(), GAME_ID, key);
+
+		expect(heads).toBe(0);
 	});
 
 	it('refuses a key of another game without asking the bucket', async () => {

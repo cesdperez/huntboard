@@ -25,6 +25,10 @@ export class MemoryBucket {
 	}
 
 	async head(key: string) {
+		return this.#describe(key);
+	}
+
+	#describe(key: string) {
 		const object = this.objects.get(key);
 		if (!object) return null;
 		return {
@@ -38,7 +42,7 @@ export class MemoryBucket {
 
 	/** Takes only an offset and length range, which is all the stores ask R2 for. */
 	async get(key: string, options?: R2GetOptions) {
-		const head = await this.head(key);
+		const head = this.#describe(key);
 		if (!head) return null;
 		const range = options?.range as { offset: number; length?: number } | undefined;
 		const bytes = this.objects.get(key)!.bytes;
