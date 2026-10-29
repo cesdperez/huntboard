@@ -97,7 +97,8 @@ export async function pendingRequestEmail(
 	requestId: string,
 	now = new Date()
 ): Promise<string | null> {
-	return (await findRequest(db, requestId, now.toISOString()))?.email ?? null;
+	const request = await findRequest(db, requestId, now.toISOString());
+	return request && request.code_attempts < MAX_CODE_ATTEMPTS ? request.email : null;
 }
 
 /** What the link's page shows before anyone presses Sign in, or null for a dead link. */

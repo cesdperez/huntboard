@@ -1,4 +1,5 @@
 import { generateToken, sha256Base64Url } from '#lib/domain/token.js';
+import { MS_PER_DAY } from '#lib/format/duration.js';
 import {
 	deleteExpiredSessions,
 	deleteSession,
@@ -9,7 +10,6 @@ import {
 import type { UserRow } from '../db/types.js';
 
 export const SESSION_DAYS = 30;
-const DAY_MS = 24 * 60 * 60 * 1000;
 // Renewing at most once per half lifetime keeps session writes rare.
 const RENEW_WHEN_DAYS_LEFT = SESSION_DAYS / 2;
 
@@ -31,13 +31,12 @@ export async function startSession(
 	now = new Date()
 ): Promise<StartedSession> {
 	const token = generateToken();
-	const expiresAt = new Date(now.getTime() + SESSION_DAYS * DAY_MS);
-	await deleteExpiredSessions(db, userId, now.toISOString());
-	await insertSession(db, {
-		id: await sha256Base64Url(token),
-		user_id: userId,
-		expires_at: expiresAt.toISOString()
-	});
+	const expiresAt = new Date(now.getTime() + SESSION_DAYS * MS_PER_DAY);
+	const id = await sha256Base64Url(token);
+	await Promise.all([
+		deleteExpiredSessions(db, userId, now.toISOString()),
+		insertSession(db, { id, user_id: userId, expires_at: expiresAt.toISOString() })
+	]);
 	return { token, expiresAt };
 }
 
@@ -56,10 +55,10 @@ export async function validateSession(
 		await deleteSession(db, id);
 		return null;
 	}
-	if (expiresAt.getTime() - now.getTime() > RENEW_WHEN_DAYS_LEFT * DAY_MS) {
+	if (expiresAt.getTime() - now.getTime() > RENEW_WHEN_DAYS_LEFT * MS_PER_DAY) {
 		return { user: found.user, renewedUntil: null };
 	}
-	const renewedUntil = new Date(now.getTime() + SESSION_DAYS * DAY_MS);
+	const renewedUntil = new Date(now.getTime() + SESSION_DAYS * MS_PER_DAY);
 	await extendSession(db, id, renewedUntil.toISOString());
 	return { user: found.user, renewedUntil };
 }

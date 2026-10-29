@@ -12,6 +12,8 @@ export function nextPath(value: string | null | undefined): string {
 	if (!value || !value.startsWith('/') || value.startsWith('//') || /[\s\\]/.test(value)) {
 		return '/games';
 	}
+	// The sign-in page sends a signed-in user to next, so next on it would redirect forever.
+	if (/^\/login(?:[/?#]|$)/.test(value)) return '/games';
 	return value;
 }
 

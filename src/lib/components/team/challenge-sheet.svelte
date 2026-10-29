@@ -32,6 +32,8 @@
 	);
 
 	const media = new ClaimMediaUpload((phase) => clock.closedMessageFor(phase));
+	// Leaving the team page must stop the upload and free the photo preview.
+	$effect(() => () => media.clear());
 	let fileInput = $state<HTMLInputElement | null>(null);
 
 	const claim = $derived(challenge?.claim ?? null);

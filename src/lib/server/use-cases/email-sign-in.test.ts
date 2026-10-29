@@ -6,6 +6,7 @@ import {
 	MAX_REQUESTS_PER_WINDOW,
 	finishWithCode,
 	finishWithLink,
+	pendingRequestEmail,
 	previewLink,
 	requestSignIn,
 	type SendEmail
@@ -154,6 +155,16 @@ describe('finishWithCode', () => {
 			kind: 'error',
 			message: expect.stringContaining('Ask for a new email')
 		});
+	});
+
+	it('stops offering the code form once the codes run out', async () => {
+		const { requestId, code } = await sent();
+		const wrong = code === '000000' ? '111111' : '000000';
+		expect(await pendingRequestEmail(db, requestId, NOW)).toBe('sam@example.com');
+
+		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++) await finishWithCode(db, requestId, wrong, '', NOW);
+
+		expect(await pendingRequestEmail(db, requestId, NOW)).toBeNull();
 	});
 
 	it('refuses a code from another request', async () => {

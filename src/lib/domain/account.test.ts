@@ -15,7 +15,9 @@ describe('nextPath', () => {
 		['a backslash URL', '/\\evil.example/'],
 		['a tab browsers strip into //', '/\t/evil.example/'],
 		['a newline browsers strip into //', '/\n/evil.example/'],
-		['a relative path', 'games']
+		['a relative path', 'games'],
+		['the sign-in page, which a signed-in user would loop on', '/login'],
+		['the sign-in page with a query', '/login?next=/login']
 	])('goes to My games for %s', (_, value) => {
 		expect(nextPath(value)).toBe('/games');
 	});
