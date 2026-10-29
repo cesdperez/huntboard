@@ -23,6 +23,8 @@ export interface TeamRow {
 	id: number;
 	game_id: number;
 	name: string;
+	/** teamNameKey(name), unique within the game. */
+	name_key: string;
 	members: string;
 	token: string;
 	position: number;

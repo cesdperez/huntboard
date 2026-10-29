@@ -12,6 +12,7 @@ import { AVATAR_MAX_BYTES } from '#lib/domain/images.js';
 import { normalizeNickname } from '#lib/domain/nickname.js';
 import {
 	TEAM_MEMBERS_ERROR,
+	TEAM_NAME_TAKEN_ERROR,
 	TEAM_NAME_ERROR,
 	normalizeTeamMembers,
 	normalizeTeamName
@@ -180,10 +181,14 @@ export async function renameOwnTeam(
 	if (!name) return error(400, TEAM_NAME_ERROR);
 	const members = normalizeTeamMembers(data.get('members'));
 	if (members === null) return error(400, TEAM_MEMBERS_ERROR);
-	if (!(await updateTeam(db, game.id, team.id, { name, members }))) {
-		return error(404, DEAD_LINK_MESSAGE);
+	switch (await updateTeam(db, game.id, team.id, { name, members })) {
+		case 'not-found':
+			return error(404, DEAD_LINK_MESSAGE);
+		case 'name-taken':
+			return error(409, TEAM_NAME_TAKEN_ERROR);
+		case 'updated':
+			return { status: 200, result: { kind: 'renamed' } };
 	}
-	return { status: 200, result: { kind: 'renamed' } };
 }
 
 /** Allowed outside the game window, like a rename. */

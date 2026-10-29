@@ -571,6 +571,21 @@ describe('renameOwnTeam', () => {
 		});
 		expect((await getTeamByToken(db, rats.token))?.name).toBe('Canal Rats');
 	});
+
+	it('refuses the name of another team in the game and keeps the old one', async () => {
+		await seedTeam(db, game.id, { name: 'Night Owls' });
+
+		const outcome = await renameOwnTeam(db, { team: rats, game }, form({ name: 'night owls' }));
+
+		expect(outcome).toEqual({
+			status: 409,
+			result: {
+				kind: 'error',
+				message: 'Another team already has this name. Choose another one.'
+			}
+		});
+		expect((await getTeamByToken(db, rats.token))?.name).toBe('Canal Rats');
+	});
 });
 
 describe('saveOwnAvatar', () => {

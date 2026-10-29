@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	TEAM_MEMBERS_ERROR,
 	TEAM_MEMBERS_MAX_LENGTH,
-	TEAM_NAME_ERROR
+	TEAM_NAME_ERROR,
+	TEAM_NAME_TAKEN_ERROR
 } from '#lib/domain/team-name.js';
 import { createGame } from '../db/games.js';
 import { listTeamsWithClaimCounts } from '../db/teams.js';
@@ -76,6 +77,16 @@ describe('createTeam', () => {
 			result: { error: TEAM_MEMBERS_ERROR, name: 'Pier Gulls', members }
 		});
 	});
+
+	it('refuses a name another team has and returns what was typed', async () => {
+		const outcome = await createTeam(db, game.id, form({ name: ' night owls ', members: 'Sam' }));
+
+		expect(outcome).toEqual({
+			status: 409,
+			result: { error: TEAM_NAME_TAKEN_ERROR, name: 'night owls', members: 'Sam' }
+		});
+		expect(await teamNames()).toEqual(['Canal Rats', 'Night Owls']);
+	});
 });
 
 describe('editTeam', () => {
@@ -90,6 +101,20 @@ describe('editTeam', () => {
 		expect((await listTeamsWithClaimCounts(db, game.id))[0]).toEqual(
 			expect.objectContaining({ name: 'Canal Kings', members: 'Sam, Alex' })
 		);
+	});
+
+	it('refuses the name of another team and returns what was typed', async () => {
+		const outcome = await editTeam(
+			db,
+			game.id,
+			form({ teamId: String(rats.id), name: 'NIGHT OWLS', members: 'Sam' })
+		);
+
+		expect(outcome).toEqual({
+			status: 409,
+			result: { error: TEAM_NAME_TAKEN_ERROR, teamId: rats.id, name: 'NIGHT OWLS', members: 'Sam' }
+		});
+		expect(await teamNames()).toEqual(['Canal Rats', 'Night Owls']);
 	});
 
 	it('refuses a missing team id', async () => {

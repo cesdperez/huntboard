@@ -74,8 +74,10 @@ describe('addTeam', () => {
 	it('adds the team at the end with its own link token', async () => {
 		await seedTeam(db, game.id, { name: 'Canal Rats' });
 
-		const owls = await addTeam(db, game.id, 'Night Owls', 'Ana, Bo');
+		const added = await addTeam(db, game.id, 'Night Owls', 'Ana, Bo');
 
+		if (added.status !== 'added') throw new Error('expected the team to be added');
+		const owls = added.team;
 		expect(owls).toMatchObject({
 			game_id: game.id,
 			name: 'Night Owls',
@@ -90,7 +92,24 @@ describe('addTeam', () => {
 		const other = await createGame(db, 'Other hunt');
 		await seedTeam(db, other.id);
 
-		expect((await addTeam(db, game.id, 'Canal Rats', '')).position).toBe(0);
+		expect(await addTeam(db, game.id, 'Canal Rats', '')).toMatchObject({
+			status: 'added',
+			team: { position: 0 }
+		});
+	});
+
+	it('refuses a name another team in this game has, in any case', async () => {
+		await seedTeam(db, game.id, { name: 'Équipe Rats' });
+
+		expect(await addTeam(db, game.id, 'éQUIPE rats', '')).toEqual({ status: 'name-taken' });
+		expect(await names()).toEqual(['0:Équipe Rats']);
+	});
+
+	it('takes a name a team in another game has', async () => {
+		const other = await createGame(db, 'Other hunt');
+		await seedTeam(db, other.id, { name: 'Canal Rats' });
+
+		expect((await addTeam(db, game.id, 'Canal Rats', '')).status).toBe('added');
 	});
 });
 
@@ -99,7 +118,7 @@ describe('updateTeam', () => {
 		const rats = await seedTeam(db, game.id, { name: 'Canal Rats', members: 'Ana' });
 
 		expect(await updateTeam(db, game.id, rats.id, { name: 'Sewer Rats', members: 'Ana, Bo' })).toBe(
-			true
+			'updated'
 		);
 		const [team] = await listTeamsWithClaimCounts(db, game.id);
 		expect(team).toMatchObject({ name: 'Sewer Rats', members: 'Ana, Bo' });
@@ -110,9 +129,28 @@ describe('updateTeam', () => {
 		const elsewhere = await seedTeam(db, other.id, { name: 'Elsewhere' });
 
 		expect(await updateTeam(db, game.id, elsewhere.id, { name: 'Hijacked', members: '' })).toBe(
-			false
+			'not-found'
 		);
 		expect(await names(other.id)).toEqual(['0:Elsewhere']);
+	});
+
+	it('refuses the name of another team in this game, in any case', async () => {
+		await seedTeam(db, game.id, { name: 'Canal Rats' });
+		const owls = await seedTeam(db, game.id, { name: 'Night Owls' });
+
+		expect(await updateTeam(db, game.id, owls.id, { name: 'CANAL RATS', members: '' })).toBe(
+			'name-taken'
+		);
+		expect(await names()).toEqual(['0:Canal Rats', '1:Night Owls']);
+	});
+
+	it('changes only the case of its own name', async () => {
+		const rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
+
+		expect(await updateTeam(db, game.id, rats.id, { name: 'canal rats', members: '' })).toBe(
+			'updated'
+		);
+		expect(await names()).toEqual(['0:canal rats']);
 	});
 });
 
