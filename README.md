@@ -102,7 +102,7 @@ All three pass before a commit. Query tests run on in-memory SQLite with every m
 
 ### Rehearsal
 
-`pnpm rehearsal` plays a short game end to end in a browser: 4 teams, 10 challenges, judging from the queue and the grid, adjustments, a late arrival and a tie. It also fails on any CSP violation. It runs against the local dev server, and starts one if none is running.
+`pnpm rehearsal` plays a short game end to end in a browser: 4 teams, 10 challenges, judging from the queue and the grid, adjustments, a late arrival and a tie. Two shorter games cover the game image and team pictures, and claim media: a photo and a video compressed in the browser, judged inline, zipped and deleted. It also fails on any CSP violation. It runs against the local dev server, and starts one if none is running.
 
 ```sh
 pnpm exec playwright install chromium   # once
