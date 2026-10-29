@@ -10,8 +10,10 @@
 	import RenameSheet from '#lib/components/team/rename-sheet.svelte';
 	import SectionHeading from '#lib/components/team/section-heading.svelte';
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
-	import { Toast } from '#lib/components/toast/index.js';
+	import { Toast, toast } from '#lib/components/toast/index.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
+	import { judgedClaimMessages } from '#lib/domain/judged-claims.js';
+	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import { groupBySection } from '#lib/format/group-by-section.js';
 	import { startPolling } from '#lib/client/live-updates.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
@@ -28,6 +30,14 @@
 	let renaming = $state(false);
 	const selected = $derived(data.challenges.find((c) => c.id === selectedId) ?? null);
 
+	// Null until the first load is shown, so opening the page announces nothing.
+	let shownChallenges: TeamChallenge[] | null = null;
+	$effect(() => {
+		const challenges = data.challenges;
+		if (shownChallenges) announceJudged(judgedClaimMessages(shownChallenges, challenges));
+		shownChallenges = challenges;
+	});
+
 	onMount(() => {
 		const stopClock = clock.start();
 		const stopPolling = startPolling(refreshGameData);
@@ -36,6 +46,12 @@
 			stopPolling();
 		};
 	});
+
+	function announceJudged(messages: string[]) {
+		if (messages.length === 0) return;
+		toast.queue(...messages);
+		navigator.vibrate?.(200);
+	}
 
 	function select(id: number) {
 		selectedId = id;
