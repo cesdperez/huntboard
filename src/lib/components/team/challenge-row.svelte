@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import { Marker } from '#lib/components/marker/index.js';
+	import { MediaThumb } from '#lib/components/media/index.js';
 	import { Points } from '#lib/components/points/index.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
@@ -33,6 +34,9 @@
 				</span>
 			{/if}
 		</span>
+		{#if claim?.media}
+			<MediaThumb kind={claim.media.kind} src={claim.media.src} class="size-8" />
+		{/if}
 		{#if event}
 			<span class="flex min-w-18 shrink-0 flex-col items-end">
 				<Points

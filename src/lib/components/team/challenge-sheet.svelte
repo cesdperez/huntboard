@@ -11,6 +11,8 @@
 	import { claimLine } from '#lib/domain/claim-messages.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import type { GameClock } from '#lib/client/game-clock.svelte.js';
+	import { MediaThumb, UploadStatus } from '#lib/components/media/index.js';
+	import { ClaimMediaUpload } from './claim-media-upload.svelte.js';
 	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = {
@@ -29,12 +31,23 @@
 		() => `${challenge?.id}:${challenge?.claim?.id}:${challenge?.claim?.status}`
 	);
 
+	const media = new ClaimMediaUpload((phase) => clock.closedMessageFor(phase));
+	let fileInput = $state<HTMLInputElement | null>(null);
+
 	const claim = $derived(challenge?.claim ?? null);
 	const canMark = $derived(!claim || claim.status === 'rejected');
 
 	function close() {
 		action.clearError();
+		media.clear();
 		onclose();
+	}
+
+	function picked() {
+		const file = fileInput?.files?.[0];
+		if (file) void media.start(file);
+		// An empty input lets the same file be picked again after Remove.
+		if (fileInput) fileInput.value = '';
 	}
 
 	function marked(formData: FormData) {
@@ -84,6 +97,12 @@
 						{#if claim.note}
 							<p class="type-secondary break-words">Note: {claim.note}</p>
 						{/if}
+						{#if claim.media}
+							<p class="flex items-center gap-2 type-secondary">
+								<MediaThumb kind={claim.media.kind} src={claim.media.src} class="size-10" />
+								{claim.media.kind === 'video' ? 'Video sent' : 'Photo sent'}
+							</p>
+						{/if}
 					</div>
 				</div>
 			{/if}
@@ -131,14 +150,36 @@
 							bind:value={drafts[challenge.id]}
 						/>
 					</div>
+					<input type="hidden" name="mediaKey" value={media.key ?? ''} />
+					{#if media.phase !== 'idle' && media.kind}
+						<UploadStatus
+							phase={media.phase}
+							kind={media.kind}
+							progress={media.progress}
+							preview={media.preview}
+							error={media.error}
+							onremove={() => media.clear()}
+						/>
+					{:else if clock.closedMessage === null}
+						<input
+							bind:this={fileInput}
+							type="file"
+							accept="image/*,video/*"
+							class="hidden"
+							aria-hidden="true"
+							tabindex="-1"
+							onchange={picked}
+						/>
+						<Button onclick={() => fileInput?.click()}>Add photo or video</Button>
+					{/if}
 					{@render message()}
 					<Button
 						type="submit"
 						variant="primary"
 						size="lg"
-						disabled={action.busy || clock.closedMessage !== null}
+						disabled={action.busy || media.busy || clock.closedMessage !== null}
 					>
-						Mark done
+						{media.busy ? 'Waiting for the upload' : 'Mark done'}
 					</Button>
 				</form>
 			{/if}

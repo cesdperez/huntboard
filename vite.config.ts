@@ -21,8 +21,11 @@ export default defineConfig({
 					// Svelte and bits-ui render style attributes, which nonces cannot cover.
 					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
 					'font-src': ['self', 'https://fonts.gstatic.com'],
-					'img-src': ['self', 'data:'],
+					// blob: shows the photo a team is sending before the upload ends.
+					'img-src': ['self', 'data:', 'blob:'],
 					'media-src': ['self'],
+					// mediabunny runs a timer worker from a blob, so video compression goes on in a background tab.
+					'worker-src': ['self', 'blob:'],
 					// Claim media uploads go straight from the phone to R2.
 					'connect-src': ['self', R2_S3_ORIGIN],
 					'frame-ancestors': ['none'],

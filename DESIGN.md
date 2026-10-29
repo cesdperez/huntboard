@@ -1,6 +1,6 @@
 # Design
 
-Huntboard is used on a phone, outdoors, in a hurry, often one-handed while the other hand holds a bike or a drink. The organiser judges between WhatsApp messages. Every screen is designed for a 390px wide phone first and grows from there.
+Huntboard is used on a phone, outdoors, in a hurry, often one-handed while the other hand holds a bike or a drink. The organiser judges between WhatsApp messages, and between the photos and videos teams attach to their claims. Every screen is designed for a 390px wide phone first and grows from there.
 
 ## Direction: the control flag
 
@@ -105,7 +105,7 @@ The bottom third of the screen is where thumbs reach. Primary actions live there
 +--------------------------------+
 ```
 
-Tapping a row opens a bottom sheet with the description, the note field and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
+Tapping a row opens a bottom sheet with the description, the note field, "Add photo or video" and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
 
 - The strip shows the rank in display type at 28px and the total at the full 40px, so the team name keeps room at 390px. Tapping it expands the scoreboard in place, with the team's own row marked by an `--own` bar on its left edge and a semibold name. "Edit team" and "Add picture" sit side by side under that list.
 - "Add picture" opens the phone's photo picker and saves at once: no preview, no second tap. While it uploads the button reads "Saving picture". Once the team has a picture it reads "Change picture". The toast says "Picture saved". Teams cannot remove their picture; the organiser can.
@@ -116,6 +116,10 @@ Tapping a row opens a bottom sheet with the description, the note field and one 
 - Outside the game window the sheet keeps "Mark done" visible but disabled, with the closed message above it.
 - An error in the sheet stays only while the claim it is about is unchanged. Once a poll shows a new state, the error goes, so it never contradicts the button under it.
 - A confirmation shows as a toast: a `--ink` pill above the bottom edge for three seconds.
+- "Add photo or video" is an optional secondary button under the note. It opens the phone's picker for photos and videos, and the work starts at once: no second tap. The button gives way to a status row: a 56px thumbnail (the photo itself, or a play tile for a video), a label, a progress bar and "Remove". The labels are "Shrinking photo", "Compressing video" and "Uploading" with a percentage, then "Photo attached" or "Video attached". The bar is indeterminate until the step reports progress: shrinking a photo never does, compressing a video and uploading do.
+- While the media is on its way, "Mark done" stays disabled and reads "Waiting for the upload". Once attached, "Mark done" sends it with the note. A claim needs no media, so the team can still send proof in the group chat or show it in person.
+- "Remove", closing the sheet, or marking done stops any step still running and forgets the file. An error shows in place under the status row, and "Remove" clears it so the team can pick another file. Outside the game window the button is hidden.
+- A claim with media shows its thumbnail on the row, 32px between the title and the points, and in the sheet, 40px beside "Photo sent" or "Video sent". A video shows the play tile, so a list never loads videos. Thumbnails have 8px corners, so they never read as a 3px marker.
 
 ### Admin
 
@@ -288,6 +292,12 @@ A team picture is a circle, so it never reads as a marker. Without a picture a t
 - The game image label names the image for everyone: it is the event header text, the sheet title and the alt text. Without a label it reads "Game image".
 - Images are shrunk in the browser before upload: team pictures to a 256px square cropped from the middle, the game image to 1600px on its long edge. A phone never uploads a full-size photo.
 
+### Claim media
+
+- Photos are shrunk in the browser to 1600px on their long edge, like the game image, and stay under 512 KB.
+- Videos are re-encoded in the browser to 720p H.264 at about 2 Mbps, at most 60 seconds long. A video that already fits that budget goes as it is. A phone that cannot re-encode sends the original MP4, MOV or WebM, up to 80 MB.
+- The phone uploads straight to storage, never through the app, so a slow upload never blocks other requests.
+
 ## Motion
 
 One moment matters: when a poll brings a new score, the scoreboard rows reorder with a 300ms FLIP animation, a climbing team sliding over the rows it passes, and the changed total counts up over 600ms, easing out. That is the only unprompted motion. It runs on the public scoreboard and on the team strip, both its total and its expanded list. A total counts from the value it showed, never from 0 on page load. Screen readers get only the final total.
@@ -309,6 +319,14 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
 - An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast, the one toast that is not a confirmation.
 - A file the browser cannot open: "This file is not an image this browser can read. Choose a JPEG, PNG or WebP image." A file that stays too large after shrinking: "This image stays too large even when shrunk. Choose another one." Both show in place before anything is sent.
+- Claim media errors show in place in the sheet, under the status row:
+  - A file that is neither: "Choose a photo or a video."
+  - A video over the time limit: "This video is longer than 60 seconds. Trim it and try again."
+  - A video the phone cannot convert: "This phone cannot convert this video. Send an MP4, MOV or WebM video." One it cannot read: "This file is not a video this browser can read. Choose an MP4, MOV or WebM video."
+  - Too large: "This video is too large to send from this phone. Send a shorter one." and "This video stays too large even when compressed. Send a shorter one."
+  - When the server refuses the file at "Mark done": "This photo or video did not finish uploading. Attach it again." or "This file is not a photo or video the app takes. Choose a JPEG or WebP photo, or an MP4, MOV or WebM video."
+  - When the server takes no uploads: "Photos and videos cannot be attached right now. Mark it done without one and send the proof another way."
+  - A failed upload gets the usual "This did not go through. Check your connection and try again."
 
 ## Accessibility floor
 
