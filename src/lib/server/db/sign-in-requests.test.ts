@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	checkCode,
 	deleteExpiredRequests,
-	findRequest,
 	findRequestByToken,
+	findRequests,
 	insertSignInRequest,
 	takeRequest
 } from './sign-in-requests.js';
@@ -30,13 +30,29 @@ beforeEach(async () => {
 	await insertSignInRequest(db, request, NO_LIMIT);
 });
 
-describe('findRequest and findRequestByToken', () => {
-	it('find a request by its id or its token until it expires', async () => {
-		expect(await findRequest(db, 'request-1', NOW)).toMatchObject({ ...request, code_attempts: 0 });
+describe('findRequests and findRequestByToken', () => {
+	it('find requests by their ids or a token until they expire', async () => {
+		expect(await findRequests(db, ['request-1'], NOW)).toEqual([{ ...request, code_attempts: 0 }]);
 		expect(await findRequestByToken(db, 'token-hash-1', NOW)).toMatchObject({ id: 'request-1' });
 
-		expect(await findRequest(db, 'request-1', request.expires_at)).toBeNull();
+		expect(await findRequests(db, ['request-1'], request.expires_at)).toEqual([]);
 		expect(await findRequestByToken(db, 'token-hash-1', request.expires_at)).toBeNull();
+	});
+
+	it('find several requests at once, newest first', async () => {
+		const later = {
+			...request,
+			id: 'request-2',
+			token_hash: 'token-hash-2',
+			created_at: request.expires_at
+		};
+		await insertSignInRequest(db, later, NO_LIMIT);
+
+		expect(await findRequests(db, ['request-1', 'request-2', 'unknown'], NOW)).toMatchObject([
+			{ id: 'request-2' },
+			{ id: 'request-1' }
+		]);
+		expect(await findRequests(db, [], NOW)).toEqual([]);
 	});
 });
 
@@ -44,7 +60,7 @@ describe('takeRequest', () => {
 	it('deletes the request once, so a second use finds nothing', async () => {
 		expect(await takeRequest(db, 'request-1')).toBe(true);
 		expect(await takeRequest(db, 'request-1')).toBe(false);
-		expect(await findRequest(db, 'request-1', NOW)).toBeNull();
+		expect(await findRequests(db, ['request-1'], NOW)).toEqual([]);
 	});
 });
 
@@ -78,7 +94,7 @@ describe('insertSignInRequest', () => {
 		expect(
 			await insertSignInRequest(db, { ...another('other'), email: 'alex@example.com' }, limit)
 		).toBe(true);
-		expect(await findRequest(db, 'request-3', NOW)).toBeNull();
+		expect(await findRequests(db, ['request-3'], NOW)).toEqual([]);
 	});
 });
 

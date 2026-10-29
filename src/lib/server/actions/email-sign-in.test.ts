@@ -42,11 +42,11 @@ async function run(
 }
 
 /** Asks for an email in preview mode and returns the cookie jar holding the request. */
-async function requested(email: string) {
+async function requested(email: string, earlier = new Map<string, string>()) {
 	const { result, cookies } = await run(
 		emailSignInActions(env, true).request,
 		{ email },
-		{ query: '?/request&next=%2Fnew' }
+		{ jar: earlier, query: '?/request&next=%2Fnew' }
 	);
 	const jar = new Map([['sign_in_request', cookies.get('sign_in_request') ?? '']]);
 	const { link, code } = (result as unknown as { preview: { link: string; code: string } }).preview;
@@ -124,6 +124,16 @@ describe('code', () => {
 		expect(
 			(await run(actions.code, { code, displayName: 'New Organiser' }, { jar })).thrown
 		).toMatchObject({ status: 303, location: '/new' });
+	});
+
+	it('takes the code from an earlier email after this browser asked for another', async () => {
+		await findOrCreateUser(env.DB, 'sam@example.com', 'Sam');
+		const first = await requested('sam@example.com');
+		const { jar } = await requested('sam@example.com', first.jar);
+
+		const { thrown } = await run(emailSignInActions(env, true).code, { code: first.code }, { jar });
+
+		expect(thrown).toMatchObject({ status: 303, location: '/new' });
 	});
 
 	it('refuses a code without the request cookie', async () => {

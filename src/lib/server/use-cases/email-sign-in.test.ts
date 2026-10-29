@@ -24,8 +24,17 @@ beforeEach(() => {
 	send = vi.fn<SendEmail>().mockResolvedValue(true);
 });
 
-async function sent(email = 'sam@example.com', next: string | null = '/new') {
-	const result = await requestSignIn(db, send, { email, next, origin: ORIGIN }, NOW);
+async function sent(
+	email = 'sam@example.com',
+	next: string | null = '/new',
+	earlierRequestIds: string[] = []
+) {
+	const result = await requestSignIn(
+		db,
+		send,
+		{ email, next, origin: ORIGIN, earlierRequestIds },
+		NOW
+	);
 	if (result.kind !== 'sent') throw new Error(`Expected a sent email, got ${result.message}`);
 	return { ...result, token: new URL(result.link).searchParams.get('token') ?? '' };
 }
@@ -46,7 +55,12 @@ describe('requestSignIn', () => {
 	});
 
 	it('refuses an address that is not an email, and sends nothing', async () => {
-		const result = await requestSignIn(db, send, { email: 'sam', next: null, origin: ORIGIN }, NOW);
+		const result = await requestSignIn(
+			db,
+			send,
+			{ email: 'sam', next: null, origin: ORIGIN, earlierRequestIds: [] },
+			NOW
+		);
 
 		expect(result).toMatchObject({ kind: 'error', status: 400 });
 		expect(send).not.toHaveBeenCalled();
@@ -58,7 +72,7 @@ describe('requestSignIn', () => {
 		const result = await requestSignIn(
 			db,
 			send,
-			{ email: 'sam@example.com', next: null, origin: ORIGIN },
+			{ email: 'sam@example.com', next: null, origin: ORIGIN, earlierRequestIds: [] },
 			NOW
 		);
 		expect(result).toMatchObject({ kind: 'error', status: 429 });
@@ -70,7 +84,7 @@ describe('requestSignIn', () => {
 		const result = await requestSignIn(
 			db,
 			send,
-			{ email: 'sam@example.com', next: null, origin: ORIGIN },
+			{ email: 'sam@example.com', next: null, origin: ORIGIN, earlierRequestIds: [] },
 			NOW
 		);
 
@@ -124,19 +138,19 @@ describe('finishWithCode', () => {
 		const { requestId, code } = await sent();
 
 		expect(
-			await finishWithCode(db, requestId, ` ${code.slice(0, 3)} ${code.slice(3)} `, '', NOW)
+			await finishWithCode(db, [requestId], ` ${code.slice(0, 3)} ${code.slice(3)} `, '', NOW)
 		).toEqual({ kind: 'signed-in', userId: sam.id, next: '/new' });
-		expect(await finishWithCode(db, requestId, code, '', NOW)).toMatchObject({ kind: 'error' });
+		expect(await finishWithCode(db, [requestId], code, '', NOW)).toMatchObject({ kind: 'error' });
 	});
 
 	it('asks a new address for a name after the right code', async () => {
 		const { requestId, code } = await sent('new@example.com');
 
-		expect(await finishWithCode(db, requestId, code, '', NOW)).toEqual({
+		expect(await finishWithCode(db, [requestId], code, '', NOW)).toEqual({
 			kind: 'needs-name',
 			email: 'new@example.com'
 		});
-		expect(await finishWithCode(db, requestId, code, 'New Organiser', NOW)).toMatchObject({
+		expect(await finishWithCode(db, [requestId], code, 'New Organiser', NOW)).toMatchObject({
 			kind: 'signed-in'
 		});
 	});
@@ -145,13 +159,14 @@ describe('finishWithCode', () => {
 		const { requestId, code } = await sent('new@example.com');
 		const wrong = code === '000000' ? '111111' : '000000';
 
-		for (let i = 0; i < MAX_CODE_ATTEMPTS - 1; i++) await finishWithCode(db, requestId, wrong, '', NOW);
+		for (let i = 0; i < MAX_CODE_ATTEMPTS - 1; i++)
+			await finishWithCode(db, [requestId], wrong, '', NOW);
 		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++) {
-			expect(await finishWithCode(db, requestId, code, ' ', NOW)).toMatchObject({
+			expect(await finishWithCode(db, [requestId], code, ' ', NOW)).toMatchObject({
 				kind: 'needs-name'
 			});
 		}
-		expect(await finishWithCode(db, requestId, code, 'New Organiser', NOW)).toMatchObject({
+		expect(await finishWithCode(db, [requestId], code, 'New Organiser', NOW)).toMatchObject({
 			kind: 'signed-in'
 		});
 	});
@@ -161,12 +176,12 @@ describe('finishWithCode', () => {
 		const wrong = code === '000000' ? '111111' : '000000';
 
 		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++) {
-			expect(await finishWithCode(db, requestId, wrong, '', NOW)).toEqual({
+			expect(await finishWithCode(db, [requestId], wrong, '', NOW)).toEqual({
 				kind: 'error',
 				message: 'That code is not right. Check the email and try again.'
 			});
 		}
-		expect(await finishWithCode(db, requestId, code, '', NOW)).toMatchObject({
+		expect(await finishWithCode(db, [requestId], code, '', NOW)).toMatchObject({
 			kind: 'error',
 			message: expect.stringContaining('Ask for a new email')
 		});
@@ -175,11 +190,12 @@ describe('finishWithCode', () => {
 	it('stops offering the code form once the codes run out', async () => {
 		const { requestId, code } = await sent();
 		const wrong = code === '000000' ? '111111' : '000000';
-		expect(await pendingRequestEmail(db, requestId, NOW)).toBe('sam@example.com');
+		expect(await pendingRequestEmail(db, [requestId], NOW)).toBe('sam@example.com');
 
-		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++) await finishWithCode(db, requestId, wrong, '', NOW);
+		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++)
+			await finishWithCode(db, [requestId], wrong, '', NOW);
 
-		expect(await pendingRequestEmail(db, requestId, NOW)).toBeNull();
+		expect(await pendingRequestEmail(db, [requestId], NOW)).toBeNull();
 	});
 
 	it('refuses a code from another request', async () => {
@@ -187,15 +203,52 @@ describe('finishWithCode', () => {
 		const { requestId, code } = await sent();
 		const other = await sent();
 
-		expect(await finishWithCode(db, other.requestId, other.code, '', NOW)).toMatchObject({
+		expect(await finishWithCode(db, [other.requestId], other.code, '', NOW)).toMatchObject({
 			kind: 'signed-in'
 		});
-		expect(await finishWithCode(db, other.requestId, code, '', NOW)).toMatchObject({
+		expect(await finishWithCode(db, [other.requestId], code, '', NOW)).toMatchObject({
 			kind: 'error'
 		});
-		expect(await finishWithCode(db, requestId, code, '', NOW)).toMatchObject({
+		expect(await finishWithCode(db, [requestId], code, '', NOW)).toMatchObject({
 			kind: 'signed-in'
 		});
-		expect(await finishWithCode(db, 'unknown', code, '', NOW)).toMatchObject({ kind: 'error' });
+		expect(await finishWithCode(db, ['unknown'], code, '', NOW)).toMatchObject({ kind: 'error' });
+	});
+
+	it("takes the code from any of this browser's emails to the same address", async () => {
+		const sam = await findOrCreateUser(db, 'sam@example.com', 'Sam');
+		const first = await sent();
+		const second = await sent('sam@example.com', '/new', first.requestIds);
+
+		expect(second.requestIds).toEqual([second.requestId, first.requestId]);
+		expect(await finishWithCode(db, second.requestIds, first.code, '', NOW)).toEqual({
+			kind: 'signed-in',
+			userId: sam.id,
+			next: '/new'
+		});
+	});
+
+	it('forgets the earlier emails once the browser asks for another address', async () => {
+		const first = await sent();
+		const other = await sent('alex@example.com', '/new', first.requestIds);
+
+		expect(other.requestIds).toEqual([other.requestId]);
+	});
+
+	it('counts a wrong code against every email it was tried on', async () => {
+		const first = await sent();
+		const second = await sent('sam@example.com', '/new', first.requestIds);
+		const wrong = [first.code, second.code].includes('000000') ? '111111' : '000000';
+
+		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++) {
+			await finishWithCode(db, second.requestIds, wrong, '', NOW);
+		}
+
+		expect(await finishWithCode(db, [first.requestId], first.code, '', NOW)).toMatchObject({
+			kind: 'error'
+		});
+		expect(await finishWithCode(db, [second.requestId], second.code, '', NOW)).toMatchObject({
+			kind: 'error'
+		});
 	});
 });

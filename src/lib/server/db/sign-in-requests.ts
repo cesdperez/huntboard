@@ -30,15 +30,21 @@ export async function insertSignInRequest(
 	return result.meta.changes > 0;
 }
 
-export function findRequest(
+/** The unexpired requests among `ids`, newest first. */
+export async function findRequests(
 	db: D1Database,
-	id: string,
+	ids: readonly string[],
 	now: string
-): Promise<SignInRequestRow | null> {
-	return db
-		.prepare('SELECT * FROM sign_in_request WHERE id = ? AND expires_at > ?')
-		.bind(id, now)
-		.first<SignInRequestRow>();
+): Promise<SignInRequestRow[]> {
+	const { results } = await db
+		.prepare(
+			`SELECT * FROM sign_in_request
+			WHERE id IN (SELECT value FROM json_each(?)) AND expires_at > ?
+			ORDER BY created_at DESC`
+		)
+		.bind(JSON.stringify(ids), now)
+		.all<SignInRequestRow>();
+	return results;
 }
 
 export function findRequestByToken(

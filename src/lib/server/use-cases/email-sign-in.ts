@@ -4,8 +4,8 @@ import { MS_PER_MINUTE } from '#lib/format/duration.js';
 import {
 	checkCode,
 	deleteExpiredRequests,
-	findRequest,
 	findRequestByToken,
+	findRequests,
 	insertSignInRequest,
 	takeRequest
 } from '../db/sign-in-requests.js';
@@ -28,7 +28,15 @@ export const MAX_REQUESTS_PER_WINDOW = 3;
 export const MAX_CODE_ATTEMPTS = 5;
 
 export type RequestResult =
-	| { kind: 'sent'; requestId: string; email: string; link: string; code: string }
+	| {
+			kind: 'sent';
+			requestId: string;
+			/** Every request whose code this browser can still use, newest first. */
+			requestIds: string[];
+			email: string;
+			link: string;
+			code: string;
+	  }
 	| { kind: 'error'; status: 400 | 429 | 502; message: string };
 
 /** A user to sign in, a new address that still needs a name, or why the sign-in failed. */
@@ -49,7 +57,13 @@ const EXPIRED: FinishResult = {
 export async function requestSignIn(
 	db: D1Database,
 	send: SendEmail,
-	input: { email: string; next: string | null; origin: string },
+	input: {
+		email: string;
+		next: string | null;
+		origin: string;
+		/** Emails arrive late, so a code from an earlier email to the same address keeps working. */
+		earlierRequestIds: readonly string[];
+	},
 	now = new Date()
 ): Promise<RequestResult> {
 	const email = normalizeEmail(input.email);
@@ -88,17 +102,31 @@ export async function requestSignIn(
 		await takeRequest(db, requestId);
 		return { kind: 'error', status: 502, message: 'We could not send the email. Try again.' };
 	}
-	return { kind: 'sent', requestId, email, link, code };
+	const earlier = await codeRequests(db, input.earlierRequestIds, now);
+	const requestIds = [
+		requestId,
+		...earlier.filter((request) => request.email === email).map(({ id }) => id)
+	].slice(0, MAX_REQUESTS_PER_WINDOW);
+	return { kind: 'sent', requestId, requestIds, email, link, code };
 }
 
-/** The address a request is waiting on, while its code still works. */
+/** The address the browser's requests are waiting on, while a code still works. */
 export async function pendingRequestEmail(
 	db: D1Database,
-	requestId: string,
+	requestIds: readonly string[],
 	now = new Date()
 ): Promise<string | null> {
-	const request = await findRequest(db, requestId, now.toISOString());
-	return request && request.code_attempts < MAX_CODE_ATTEMPTS ? request.email : null;
+	const [newest] = await codeRequests(db, requestIds, now);
+	return newest?.email ?? null;
+}
+
+async function codeRequests(db: D1Database, requestIds: readonly string[], now: Date) {
+	const requests = await findRequests(
+		db,
+		requestIds.slice(0, MAX_REQUESTS_PER_WINDOW),
+		now.toISOString()
+	);
+	return requests.filter((request) => request.code_attempts < MAX_CODE_ATTEMPTS);
 }
 
 /** What the link's page shows before anyone presses Sign in, or null for a dead link. */
@@ -122,21 +150,29 @@ export async function finishWithLink(
 	return request ? complete(db, request, displayName) : EXPIRED;
 }
 
-/** The code works only with the request id from the browser that asked for the email. */
+/**
+ * The code works only with the request ids from the browser that asked for the emails. A wrong code
+ * spends an attempt on each of them, so asking for more emails buys no extra guesses per email.
+ */
 export async function finishWithCode(
 	db: D1Database,
-	requestId: string,
+	requestIds: readonly string[],
 	code: string,
 	displayName: string,
 	now = new Date()
 ): Promise<FinishResult> {
-	const hash = await codeHash(requestId, code.replace(/\s/g, ''));
-	const request = await checkCode(db, requestId, hash, MAX_CODE_ATTEMPTS, now.toISOString());
-	if (!request) return EXPIRED;
-	if (request.code_hash !== hash) {
-		return { kind: 'error', message: 'That code is not right. Check the email and try again.' };
-	}
-	return complete(db, request, displayName);
+	const typed = code.replace(/\s/g, '');
+	const checked = await Promise.all(
+		requestIds.slice(0, MAX_REQUESTS_PER_WINDOW).map(async (id) => {
+			const hash = await codeHash(id, typed);
+			const request = await checkCode(db, id, hash, MAX_CODE_ATTEMPTS, now.toISOString());
+			return { request, right: request?.code_hash === hash };
+		})
+	);
+	const match = checked.find(({ right }) => right);
+	if (match?.request) return complete(db, match.request, displayName);
+	if (!checked.some(({ request }) => request)) return EXPIRED;
+	return { kind: 'error', message: 'That code is not right. Check the email and try again.' };
 }
 
 async function complete(
