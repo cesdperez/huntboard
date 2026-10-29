@@ -14,7 +14,7 @@
 <!-- The event banner for a page without a game: no image, no clock. -->
 <section class="surface-banner">
 	<div class="page-banner-grid mx-auto max-w-content gap-x-3 gap-y-2 px-gutter py-5">
-		<h1 class="page-banner-title self-end font-banner leading-[0.85] break-words uppercase">
+		<h1 class="page-banner-title self-end font-banner leading-[0.85] break-words">
 			{title}
 		</h1>
 		{#if children}
@@ -38,6 +38,9 @@
 	.page-banner-title {
 		grid-area: title;
 		font-size: clamp(48px, 15vw, 72px);
+		font-weight: var(--banner-weight);
+		text-transform: var(--banner-transform);
+		letter-spacing: var(--banner-tracking);
 	}
 
 	.page-banner-text {

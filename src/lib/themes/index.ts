@@ -15,6 +15,8 @@ export interface Theme {
 	/** Stylesheets for every family the theme's tokens name, Archivo too if it keeps the flag sans. */
 	fonts: readonly string[];
 	layout: ThemeLayout;
+	/** Artwork the event layout's app bar shows in place of the Huntboard name. */
+	wordmark?: { src: string; alt: string };
 }
 
 /** The theme a page gets, and the mode it forces. A null mode follows the OS. */

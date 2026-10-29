@@ -157,7 +157,11 @@
 @utility surface-banner {
 	--ink: var(--on-banner);
 	--muted: var(--on-banner);
-	background-color: var(--banner);
+	/* The edging sits in its own padding, under the content. */
+	padding-bottom: var(--banner-edge-size);
+	background:
+		var(--banner-edge) left bottom / 100% var(--banner-edge-size) no-repeat,
+		var(--banner);
 	color: var(--on-banner);
 }
 

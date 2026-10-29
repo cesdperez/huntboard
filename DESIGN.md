@@ -75,7 +75,7 @@ One family: **Archivo** (variable, Google Fonts), using its width axis as the ac
 Rules:
 
 - Numbers that change (totals, points, countdowns) always use `font-variant-numeric: tabular-nums` so they do not jitter when they update.
-- Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings. A theme may set the game name in its event banner in capitals, as decoration.
+- Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings. A theme may set the game name in its event banner in capitals, or its section headings in small capitals, as decoration.
 - Inputs are at least 16px so iOS does not zoom on focus.
 - One exception to the single family: a pasted line quoted back in a parse error uses the system monospace font, so brackets, dashes and indentation read exactly as typed.
 - Body text lines stay under 70 characters. On wide screens the content column is capped, not stretched.
@@ -203,9 +203,9 @@ The admin picks a theme for the game in Setup. It changes every page of that gam
 
 A theme is two things:
 
-- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, and its [layout](#layouts).
+- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), and optionally a `wordmark`: an image and its alt text that the event app bar shows in place of "Huntboard".
 - A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
-- Images in `static/themes/<id>/`: `icon.svg` for the browser tab, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. `node scripts/theme-images.ts` renders the two PNGs, the preview from a card in that script.
+- Images in `static/themes/<id>/`: `icon.svg` for the browser tab, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. `node scripts/theme-images.ts` renders the two PNGs, the preview from a card in that script. A theme's wordmark lives here too.
 
 The server writes `data-game-theme` on `<html>`, so the first paint and the sheets portalled to `<body>` already wear the theme. A stored id that is no longer registered shows `DEFAULT_THEME`.
 
@@ -233,7 +233,11 @@ Components use roles, never a theme's own colour names.
 | `--app-bar`, `--on-app-bar` | `--ink`, `--paper` | Event layout: the app bar background (a colour or a gradient) and its text. An event theme also sets `--app-bar-base`, its main colour, which the browser chrome matches |
 | `--banner`, `--on-banner` | `--flag`, `--on-flag` | Event layout: the event banner and its text |
 | `--banner-art` | none | Event layout: an image drawn in the banner's own column, never behind text |
-| `--section-rule`, `--section-ornament` | `--line`, none | Event layout: the rule after a section heading and the image before it |
+| `--banner-title-size`, `--banner-weight`, `--banner-tracking`, `--banner-transform` | `clamp(48px, 17vw, 80px)`, 450, normal, uppercase | Event layout: size, weight, letter spacing and case of the game name in the banner (the admin banner and the page banner take all but the size) |
+| `--banner-title-tail-display`, `--banner-title-tail-style`, `--banner-title-tail-weight` | inline, normal, `--banner-weight` | Event layout: the last word of a game name of two or more words, which a theme may set on its own line or in italic |
+| `--banner-edge`, `--banner-edge-size` | none, 0px | Event layout: a band along the bottom of the banner, in its own padding |
+| `--section-heading-font`, `--section-heading-tracking` | `700 26px/1.25 --font-display`, normal | Event layout: the `font` shorthand and letter spacing of section headings, which take `--on-section` |
+| `--section-rule`, `--section-rule-width`, `--section-ornament`, `--section-ornament-order` | `--line`, 2px, none, 0 | Event layout: the rule after a section heading, the image before it, and its flex order (1 puts it after the rule) |
 | `--font-sans` | Archivo | All text without a display role |
 | `--font-display` | Archivo | Screen titles, ranks, section headings, sheet titles, team names on the admin Teams tab and in the event strip |
 | `--font-score` | `--font-display` | Score totals |
