@@ -10,7 +10,7 @@
 	let pending = $state(false);
 
 	const submit: SubmitFunction = ({ cancel }) => {
-		const warning = `Reset ${game.name}? This deletes every team, challenge, claim, score and claim photo and video, and team links stop working. It cannot be undone.`;
+		const warning = `Reset ${game.name}? This deletes every team, challenge, claim, score, claim photo and video, and the game image, and team links stop working. It cannot be undone.`;
 		if (!confirm(warning)) {
 			cancel();
 			return;
@@ -27,9 +27,9 @@
 <section aria-labelledby="reset-heading" class="flex flex-col gap-3">
 	<h2 id="reset-heading" class="font-display type-heading">Reset</h2>
 	<p id="reset-hint" class="type-secondary">
-		Start over with a blank game. Deletes all teams, challenges, claims, scores and claim media, and
-		clears the times and late penalty. The game name, the theme and the admin and scoreboard links
-		stay.
+		Start over with a blank game. Deletes all teams, challenges, claims, scores, claim media and the
+		game image, and clears the times and late penalty. The game name, the theme and the admin and
+		scoreboard links stay.
 	</p>
 	<form method="POST" action="?/gameSettingsReset" use:enhance={submit}>
 		<Button
