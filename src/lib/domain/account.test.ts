@@ -15,6 +15,12 @@ describe('nextPath', () => {
 		['a backslash URL', '/\\evil.example/'],
 		['a tab browsers strip into //', '/\t/evil.example/'],
 		['a newline browsers strip into //', '/\n/evil.example/'],
+		['a NUL character', '/\x00'],
+		['an escape character', '/a\x1b'],
+		['a DEL character', '/a\x7f'],
+		['a C1 control character', '/a\x85'],
+		['a non-ASCII character', '/café'],
+		['a character a Location header cannot carry', '/日本'],
 		['a relative path', 'games'],
 		['the sign-in page, which a signed-in user would loop on', '/login'],
 		['the sign-in page with a query', '/login?next=/login']

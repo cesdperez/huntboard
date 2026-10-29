@@ -9,7 +9,14 @@ export const normalizeDisplayName = (value: unknown) =>
 /** Where to go after signing in: a path on this site, or My games for anything else. */
 export function nextPath(value: string | null | undefined): string {
 	// "//host" and "/\host" leave the site, and browsers drop tabs and newlines to make them.
-	if (!value || !value.startsWith('/') || value.startsWith('//') || /[\s\\]/.test(value)) {
+	// Only visible ASCII is safe in a Location header: other characters fail the response.
+	if (
+		!value ||
+		!value.startsWith('/') ||
+		value.startsWith('//') ||
+		value.includes('\\') ||
+		!/^[\x21-\x7e]+$/.test(value)
+	) {
 		return '/games';
 	}
 	// The sign-in page sends a signed-in user to next, so next on it would redirect forever.
