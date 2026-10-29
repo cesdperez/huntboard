@@ -14,7 +14,7 @@ import {
 } from '../domain/claim-media.js';
 import { resizeImage, type ImageSpec } from './image-resize.js';
 
-export const CLAIM_PHOTO_SPEC: ImageSpec = {
+const CLAIM_PHOTO_SPEC: ImageSpec = {
 	shape: 'fit',
 	size: PHOTO_LONG_EDGE,
 	maxBytes: PHOTO_MAX_BYTES
@@ -120,14 +120,14 @@ export function originalVideo(file: File): PreparedMedia {
 	return { ok: true, file: typed, type: type as VideoType };
 }
 
-export function compressedVideo(buffer: ArrayBuffer): PreparedMedia {
+function compressedVideo(buffer: ArrayBuffer): PreparedMedia {
 	if (buffer.byteLength > VIDEO_MAX_BYTES)
 		return { ok: false, message: COMPRESSED_VIDEO_TOO_LARGE };
 	const type: VideoType = 'video/mp4';
 	return { ok: true, file: new File([buffer], `video.${MEDIA_EXTENSIONS[type]}`, { type }), type };
 }
 
-export async function probeVideo(input: Input): Promise<VideoProbe | null> {
+async function probeVideo(input: Input): Promise<VideoProbe | null> {
 	const video = await input.getPrimaryVideoTrack();
 	if (!video) return null;
 	const audio = await input.getPrimaryAudioTrack();
