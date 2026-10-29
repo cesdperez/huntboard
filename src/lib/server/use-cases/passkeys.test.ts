@@ -107,6 +107,34 @@ describe('finishPasskeyRegistration', () => {
 		});
 	});
 
+	it.each([
+		['sign-up', () => ({ kind: 'sign-up', displayName: 'Mallory' }) as const],
+		['link', (userId: number) => ({ kind: 'link', userId }) as const]
+	])(
+		'refuses a %s with a credential id that already exists, so only a signature can open its account',
+		async (_, intent) => {
+			const sam = await samWithPasskey();
+			const mallory = await createUserWithIdentity(db, 'Mallory', {
+				provider: 'test',
+				subject: 'mallory'
+			});
+
+			const outcome = await finishPasskeyRegistration(
+				db,
+				rp,
+				'challenge-1',
+				registration,
+				intent(mallory.id)
+			);
+
+			expect(outcome).toMatchObject({ kind: 'error' });
+			expect(await findIdentity(db, 'passkey', 'credential-1')).toMatchObject({
+				user_id: sam.id,
+				public_key: 'AQID'
+			});
+		}
+	);
+
 	it('refuses without a stored challenge', async () => {
 		const outcome = await finishPasskeyRegistration(db, rp, null, registration, {
 			kind: 'sign-up',

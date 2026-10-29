@@ -2,7 +2,8 @@ import type { Cookies } from '@sveltejs/kit';
 import { nextPath, normalizeDisplayName } from '#lib/domain/account.js';
 import type { UserRow } from '../db/types.js';
 import type { GoogleAttempt } from '../use-cases/google-sign-in.js';
-import type { SignInIntent } from '../use-cases/sign-in.js';
+import type { SignInIntent, SignInOutcome } from '../use-cases/sign-in.js';
+import { getSignedInUser, signIn } from './session.js';
 
 const ATTEMPT_COOKIE = 'sign_in_attempt';
 const ERROR_COOKIE = 'sign_in_error';
@@ -22,7 +23,18 @@ export interface SignInAttempt {
 	challenge?: string;
 }
 
-export function saveAttempt(cookies: Cookies, attempt: SignInAttempt): void {
+/** Stores a new attempt. Adding a method returns to My games; anything else to the checked next. */
+export function saveAttempt(
+	cookies: Cookies,
+	intent: IntentKind,
+	fields: { displayName: string; next: unknown } & Pick<SignInAttempt, 'google' | 'challenge'>
+): void {
+	const attempt: SignInAttempt = {
+		...fields,
+		intent,
+		next:
+			intent === 'link' ? '/games' : nextPath(typeof fields.next === 'string' ? fields.next : null)
+	};
 	cookies.set(ATTEMPT_COOKIE, JSON.stringify(attempt), {
 		path: '/',
 		httpOnly: true,
@@ -37,6 +49,20 @@ export function takeAttempt(cookies: Cookies): SignInAttempt | null {
 	const value = cookies.get(ATTEMPT_COOKIE);
 	cookies.delete(ATTEMPT_COOKIE, { path: '/' });
 	return value ? parseAttempt(value) : null;
+}
+
+/** The stored attempt with its intent resolved against who is signed in now, or null. */
+export async function takeResolvedAttempt(
+	cookies: Cookies
+): Promise<{ attempt: SignInAttempt; intent: SignInIntent } | null> {
+	const attempt = takeAttempt(cookies);
+	const intent = attempt && resolveIntent(attempt, await getSignedInUser(cookies));
+	return attempt && intent ? { attempt, intent } : null;
+}
+
+/** Starts the session a finished sign-in or sign-up earned. Adding a method keeps the current one. */
+export async function applyOutcome(cookies: Cookies, outcome: SignInOutcome): Promise<void> {
+	if (outcome.kind === 'signed-in') await signIn(cookies, outcome.userId);
 }
 
 export function parseAttempt(value: string): SignInAttempt | null {

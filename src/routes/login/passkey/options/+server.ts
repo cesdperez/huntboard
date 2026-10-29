@@ -1,4 +1,5 @@
+import { env } from 'cloudflare:workers';
 import { passkeyOptions } from '#lib/server/actions/passkeys.js';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = passkeyOptions;
+export const POST: RequestHandler = passkeyOptions(env);

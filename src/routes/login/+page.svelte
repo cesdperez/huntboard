@@ -73,14 +73,13 @@
 			computer{data.googleEnabled ? ', or your Google account' : ''}.
 		</p>
 
-		<!-- Without Google, Enter in the name field would post a sign-up the server cannot start. -->
 		<form
 			method="POST"
 			action={googleAction}
 			class="flex flex-col gap-4"
-			use:enhance
-			onsubmit={(submitEvent) => {
-				if (!data.googleEnabled) submitEvent.preventDefault();
+			use:enhance={({ cancel }) => {
+				// Without Google, Enter in the name field would post a sign-up the server cannot start.
+				if (!data.googleEnabled) cancel();
 			}}
 		>
 			<input type="hidden" name="intent" value="sign-up" />

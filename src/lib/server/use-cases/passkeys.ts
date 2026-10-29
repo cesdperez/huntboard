@@ -77,6 +77,11 @@ export async function finishPasskeyRegistration(
 		return { kind: 'error', message: FAILED_MESSAGE };
 	}
 
+	// Attestation 'none' signs nothing, so anyone can register a known credential id with their own
+	// key. Only finishPasskeySignIn, which checks the stored key, may open an existing passkey's account.
+	if (await findIdentity(db, 'passkey', credential.id)) {
+		return { kind: 'error', message: FAILED_MESSAGE };
+	}
 	return applySignIn(
 		db,
 		{
