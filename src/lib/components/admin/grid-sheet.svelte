@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Marker, markerLabel } from '#lib/components/marker/index.js';
+	import { ClaimMediaView } from '#lib/components/media/index.js';
 	import { Points } from '#lib/components/points/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { formatClockTime } from '#lib/format/clock-time.js';
@@ -86,6 +87,9 @@
 						{/if}
 					</div>
 				</div>
+				{#if claim.media}
+					<ClaimMediaView media={claim.media} label="{team.name}, {row.title}" />
+				{/if}
 			{/if}
 
 			{#if hint}<p class="type-secondary">{hint}</p>{/if}

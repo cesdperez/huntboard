@@ -150,6 +150,7 @@ The points picker buttons are at least 56px tall. Tapping a quick value scores a
 - "Reject" opens an optional reason field and a "Reject claim" button. That second tap is the confirmation.
 - A claim judged or undone elsewhere stays in the queue where it was, showing the conflict ("Sam already scored this: 15 points.") and an "OK" button, until the judge dismisses it. It never just vanishes under a thumb.
 - An earlier rejection of the same team and challenge shows under the note in `--danger`, so the judge knows what failed before.
+- A claim's photo or video shows inline under the note, full column width and at most 256px high, so the judging buttons stay within reach. A photo fits inside the box on `--paper` and opens whole in a new tab when tapped. A video has the browser's own controls, plays inline and loads only its metadata until played. A claim without media looks as before. The media stays while the item shows a conflict.
 - On admin pages the toast sits above the tab bar.
 
 The grid has team names as columns and a sticky first column of challenge titles, so it scrolls horizontally on a phone and fits on a laptop. Each cell is a marker. Tapping a cell opens the same judging panel as the queue, in a sheet.
@@ -157,6 +158,7 @@ The grid has team names as columns and a sticky first column of challenge titles
 - The grid is the one admin screen wider than the content column. It scrolls inside its own box, so the header row and the challenge column both stay in view.
 - The sheet says what a tap does in each state: score an open or rejected cell without a team claim, judge a pending one, fix or reject a scored one.
 - A conflict shows under the refreshed state of the cell, the same way the team sheet does.
+- The sheet shows the claim's photo or video under the claim's details, the same way the queue does.
 - A tap acts on the state the sheet showed when it opened or after its last answer. If a poll changed the cell in between, the tap gets the conflict message instead of quietly doing something else.
 
 The Teams tab lists teams in their setup order, not by rank, so a row does not move while the judge taps it. Each team shows its rank and total, then the breakdown: scored claims, adjustments, and the late penalty with its minutes.

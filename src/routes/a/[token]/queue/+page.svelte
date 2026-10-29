@@ -5,13 +5,13 @@
 	import { emptyQueueMessage } from '#lib/domain/claim-messages.js';
 	import { getGameClock } from '#lib/client/game-clock.svelte.js';
 	import { startPolling } from '#lib/client/live-updates.js';
-	import type { PendingClaimRow } from '#lib/server/db/judging.js';
+	import type { QueueClaim } from '#lib/server/pages/judging-pages.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
 	// A claim judged elsewhere drops out of the data, but its notice says who judged it, so it stays until dismissed.
-	let notices = $state<Record<number, { claim: PendingClaimRow; message: string }>>({});
+	let notices = $state<Record<number, { claim: QueueClaim; message: string }>>({});
 	const clock = getGameClock();
 
 	const liveIds = $derived(new Set(data.claims.map((claim) => claim.id)));
