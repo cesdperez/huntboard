@@ -7,6 +7,7 @@
 	import { OfflineNotice, refreshGameData } from '#lib/components/connection/index.js';
 	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { GameImageHeader, TeamAvatar } from '#lib/components/images/index.js';
+	import { absoluteLink } from '#lib/client/absolute-link.js';
 	import { CountingPoints } from '#lib/components/points/index.js';
 	import { QrCode } from '#lib/components/qr/index.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
@@ -24,9 +25,9 @@
 	const layout = $derived(pageLayout());
 	// Phones already hold the link, and the server renders no code, so only a big screen draws one.
 	const bigScreen = new MediaQuery('min-width: 1024px', false);
-	// From the route's own token, never page data or the full URL, so the code can only open this scoreboard.
+	// From the route's own token, never page data, so the code can only open this scoreboard.
 	const scoreboardLink = $derived(
-		new URL(resolve('/s/[token]', { token: page.params.token ?? '' }), page.url.origin).href
+		absoluteLink(resolve('/s/[token]', { token: page.params.token ?? '' }), page.url.href)
 	);
 
 	onMount(() => {
