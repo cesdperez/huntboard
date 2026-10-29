@@ -101,7 +101,7 @@ export interface IdentityRow {
 }
 
 export interface SessionRow {
-	/** SHA-256 of the cookie token, in hex. */
+	/** SHA-256 of the cookie token, in base64url. */
 	id: string;
 	user_id: number;
 	expires_at: string;

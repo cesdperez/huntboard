@@ -28,7 +28,7 @@ CREATE TABLE identity (
 CREATE INDEX identity_user_id ON identity (user_id);
 
 CREATE TABLE session (
-	-- SHA-256 of the cookie's token in hex, so a leaked table does not open sessions.
+	-- SHA-256 of the cookie's token in base64url, so a leaked table does not open sessions.
 	id TEXT PRIMARY KEY,
 	user_id INTEGER NOT NULL REFERENCES user (id) ON DELETE CASCADE,
 	expires_at TEXT NOT NULL
