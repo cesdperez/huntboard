@@ -78,25 +78,22 @@ export type ChallengeWithClaimCount = ChallengeRow & WithClaimCount;
 
 export interface UserRow {
 	id: number;
+	/** Lowercase. */
+	email: string;
 	display_name: string;
 	created_at: string;
 }
 
-export type IdentityProvider = 'google' | 'passkey' | 'test';
-
-export interface IdentityRow {
-	id: number;
-	user_id: number;
-	provider: IdentityProvider;
-	/** Google's sub claim, or the passkey credential id in base64url. */
-	subject: string;
-	/** The Google email, or empty for a passkey. */
-	label: string;
-	/** Passkeys only: the COSE public key in base64url. */
-	public_key: string | null;
-	sign_count: number | null;
-	/** Passkeys only: the authenticator transports as a JSON array. */
-	transports: string | null;
+export interface SignInRequestRow {
+	id: string;
+	/** SHA-256 of the link token, in base64url. */
+	token_hash: string;
+	/** SHA-256 of the request id and the code, in base64url. */
+	code_hash: string;
+	email: string;
+	next_path: string;
+	code_attempts: number;
+	expires_at: string;
 	created_at: string;
 }
 

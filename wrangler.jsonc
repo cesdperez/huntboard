@@ -22,6 +22,10 @@
 			"bucket_name": "huntboard-images"
 		}
 	],
+	"vars": {
+		// Resend sends sign-in emails from this address. Its domain must be verified in Resend.
+		"EMAIL_FROM": "Huntboard <sign-in@send.checho.xyz>"
+	},
 	"routes": [{ "pattern": "huntboard.checho.xyz", "custom_domain": true }],
 	"workers_dev": false,
 	"preview_urls": false

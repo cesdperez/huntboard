@@ -18,17 +18,15 @@ export async function getSessionWithUser(
 ): Promise<SessionWithUser | null> {
 	const row = await db
 		.prepare(
-			`SELECT session.expires_at, user.id AS user_id, user.display_name, user.created_at
+			`SELECT session.expires_at, user.*
 			FROM session JOIN user ON user.id = session.user_id
 			WHERE session.id = ?`
 		)
 		.bind(id)
-		.first<{ expires_at: string; user_id: number; display_name: string; created_at: string }>();
+		.first<UserRow & Pick<SessionRow, 'expires_at'>>();
 	if (!row) return null;
-	return {
-		session: { id, user_id: row.user_id, expires_at: row.expires_at },
-		user: { id: row.user_id, display_name: row.display_name, created_at: row.created_at }
-	};
+	const { expires_at, ...user } = row;
+	return { session: { id, user_id: user.id, expires_at }, user };
 }
 
 export async function extendSession(db: D1Database, id: string, expiresAt: string): Promise<void> {

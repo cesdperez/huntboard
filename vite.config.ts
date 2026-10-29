@@ -23,8 +23,7 @@ export default defineConfig({
 					'img-src': ['self', 'data:'],
 					'connect-src': ['self'],
 					'frame-ancestors': ['none'],
-					// Chrome checks form-action on a form's redirect too, and Google sign-in forms redirect there.
-					'form-action': ['self', 'https://accounts.google.com'],
+					'form-action': ['self'],
 					'base-uri': ['none'],
 					'object-src': ['none']
 				}

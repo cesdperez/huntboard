@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb } from '../db/testing/test-db.js';
-import { createUserWithIdentity } from '../db/users.js';
+import { findOrCreateUser } from '../db/users.js';
 import { endSession, SESSION_DAYS, startSession, validateSession } from './sessions.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -11,7 +11,7 @@ let userId: number;
 
 beforeEach(async () => {
 	db = createTestDb();
-	userId = (await createUserWithIdentity(db, 'Sam', { provider: 'test', subject: 'sam' })).id;
+	userId = (await findOrCreateUser(db, 'sam@example.com', 'Sam')).id;
 });
 
 function daysAfter(date: Date, days: number) {

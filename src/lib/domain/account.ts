@@ -14,3 +14,14 @@ export function nextPath(value: string | null | undefined): string {
 	}
 	return value;
 }
+
+/** The longest address SMTP delivers. */
+export const EMAIL_MAX_LENGTH = 254;
+
+/** A trimmed, lowercase address that looks deliverable, or null. Sending the email is the real check. */
+export function normalizeEmail(value: unknown): string | null {
+	if (typeof value !== 'string') return null;
+	const email = value.trim().toLowerCase();
+	if (email.length > EMAIL_MAX_LENGTH || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+	return email;
+}

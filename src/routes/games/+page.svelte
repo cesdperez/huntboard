@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import PasskeyButton from '#lib/components/account/passkey-button.svelte';
 	import { AppBar, PageBanner } from '#lib/components/event/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
@@ -8,13 +7,7 @@
 
 	let { data }: PageProps = $props();
 
-	let methodError = $state<string | null>(null);
-
 	const event = $derived(pageLayout() === 'event');
-	const hasGoogle = $derived(data.methods.some((method) => method.provider === 'google'));
-	const shownMethodError = $derived(methodError ?? data.error);
-
-	const methodName = { google: 'Google', passkey: 'Passkey', test: 'Test sign-in' } as const;
 </script>
 
 <svelte:head>
@@ -22,7 +15,7 @@
 </svelte:head>
 
 {#snippet signedInAs()}
-	Signed in as {data.displayName}.
+	Signed in as {data.displayName} ({data.email}).
 {/snippet}
 
 {#if event}
@@ -63,38 +56,6 @@
 				tab.
 			</p>
 		{/if}
-	</section>
-
-	<section aria-labelledby="methods-heading" class="flex flex-col gap-4">
-		<h2 id="methods-heading" class="font-display type-heading">Ways to sign in</h2>
-		<p class="type-secondary">Add a second way, so you can still get in if you lose one.</p>
-
-		<ul aria-label="Ways to sign in" class="flex flex-col border-t border-line">
-			{#each data.methods as method, index (index)}
-				<li class="flex min-h-row flex-col justify-center border-b border-line py-2">
-					<span class="font-semibold">{methodName[method.provider]}</span>
-					{#if method.label}
-						<span class="type-secondary break-words">{method.label}</span>
-					{/if}
-				</li>
-			{/each}
-		</ul>
-
-		{#if shownMethodError}
-			<p class="text-[15px] text-danger" role="alert">{shownMethodError}</p>
-		{/if}
-
-		<div class="flex flex-col gap-3">
-			<PasskeyButton intent="link" class="w-full" onerror={(message) => (methodError = message)}>
-				Add a passkey
-			</PasskeyButton>
-			{#if data.googleEnabled && !hasGoogle}
-				<form method="POST" action="/login?/google">
-					<input type="hidden" name="intent" value="link" />
-					<Button type="submit" class="w-full">Add Google</Button>
-				</form>
-			{/if}
-		</div>
 	</section>
 
 	<form method="POST" action="/logout">

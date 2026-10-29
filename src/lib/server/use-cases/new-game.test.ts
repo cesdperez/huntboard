@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { getGameByAdminToken } from '../db/games.js';
 import { createTestDb } from '../db/testing/test-db.js';
-import { createUserWithIdentity } from '../db/users.js';
+import { findOrCreateUser } from '../db/users.js';
 import { createNewGame } from './new-game.js';
 
 let db: D1Database;
@@ -9,7 +9,7 @@ let userId: number;
 
 beforeEach(async () => {
 	db = createTestDb();
-	userId = (await createUserWithIdentity(db, 'Sam', { provider: 'test', subject: 'sam' })).id;
+	userId = (await findOrCreateUser(db, 'sam@example.com', 'Sam')).id;
 });
 
 function form(fields: Record<string, string>): FormData {

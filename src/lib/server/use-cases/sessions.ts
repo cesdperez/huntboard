@@ -1,4 +1,4 @@
-import { encodeBase64Url, generateToken } from '#lib/domain/token.js';
+import { generateToken, sha256Base64Url } from '#lib/domain/token.js';
 import {
 	deleteExpiredSessions,
 	deleteSession,
@@ -34,7 +34,7 @@ export async function startSession(
 	const expiresAt = new Date(now.getTime() + SESSION_DAYS * DAY_MS);
 	await deleteExpiredSessions(db, userId, now.toISOString());
 	await insertSession(db, {
-		id: await sessionId(token),
+		id: await sha256Base64Url(token),
 		user_id: userId,
 		expires_at: expiresAt.toISOString()
 	});
@@ -47,7 +47,7 @@ export async function validateSession(
 	token: string,
 	now = new Date()
 ): Promise<ValidSession | null> {
-	const id = await sessionId(token);
+	const id = await sha256Base64Url(token);
 	const found = await getSessionWithUser(db, id);
 	if (!found) return null;
 
@@ -65,10 +65,5 @@ export async function validateSession(
 }
 
 export async function endSession(db: D1Database, token: string): Promise<void> {
-	await deleteSession(db, await sessionId(token));
-}
-
-async function sessionId(token: string): Promise<string> {
-	const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
-	return encodeBase64Url(new Uint8Array(digest));
+	await deleteSession(db, await sha256Base64Url(token));
 }

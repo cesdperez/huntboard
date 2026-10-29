@@ -11,7 +11,7 @@ import {
 import { setGameImage } from './images.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import { createTestDb } from './testing/test-db.js';
-import { createUserWithIdentity } from './users.js';
+import { findOrCreateUser } from './users.js';
 
 let db: D1Database;
 
@@ -38,7 +38,7 @@ describe('createGame', () => {
 
 describe('game owners', () => {
 	async function user(name: string) {
-		return (await createUserWithIdentity(db, name, { provider: 'test', subject: name })).id;
+		return (await findOrCreateUser(db, `${name.toLowerCase()}@example.com`, name)).id;
 	}
 
 	it('stores the owner and lists only their games, newest first', async () => {

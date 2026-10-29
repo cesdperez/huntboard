@@ -1,30 +1,22 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import PasskeyButton from '#lib/components/account/passkey-button.svelte';
+	import DisplayNameField from '#lib/components/account/display-name-field.svelte';
 	import { AppBar, PageBanner } from '#lib/components/event/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
-	import { DISPLAY_NAME_MAX_LENGTH, normalizeDisplayName } from '#lib/domain/account.js';
+	import { EMAIL_MAX_LENGTH } from '#lib/domain/account.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 
-	let signInError = $state<string | null>(null);
-	let signUpError = $state<string | null>(null);
-	let nameInput = $state<HTMLInputElement | null>(null);
+	let otherEmail = $state(false);
 
 	const event = $derived(pageLayout() === 'event');
-	const googleAction = $derived(`?/google&next=${encodeURIComponent(data.next)}`);
-	const shownSignInError = $derived(signInError ?? data.error);
-	const shownSignUpError = $derived(signUpError ?? form?.error ?? null);
-
-	function typedName(): string | null {
-		const name = normalizeDisplayName(nameInput?.value);
-		if (!name) nameInput?.reportValidity();
-		return name;
-	}
+	const sentTo = $derived(otherEmail ? null : (form?.sent ?? data.pendingEmail));
+	const requestAction = $derived(`?/request&next=${encodeURIComponent(data.next)}`);
+	const formError = $derived(form?.error ?? null);
 </script>
 
 <svelte:head>
@@ -36,83 +28,94 @@
 	<PageBanner title="Sign in">For organisers. Players only need their team link.</PageBanner>
 {/if}
 
-<main class="mx-auto flex max-w-content flex-col gap-10 px-gutter {event ? 'py-6' : 'py-10'}">
-	<section aria-labelledby="sign-in-heading" class="flex flex-col gap-4">
-		{#if event}
-			<h2 id="sign-in-heading" class="font-display type-heading">Welcome back</h2>
-		{:else}
-			<h1 id="sign-in-heading" class="type-title">Sign in</h1>
-			<p class="type-secondary">For organisers. Players only need their team link.</p>
-		{/if}
+<main class="mx-auto flex max-w-content flex-col gap-6 px-gutter {event ? 'py-6' : 'py-10'}">
+	{#if !event}
+		<div>
+			<h1 class="type-title">Sign in</h1>
+			<p class="mt-1 type-secondary">For organisers. Players only need their team link.</p>
+		</div>
+	{/if}
 
-		{#if shownSignInError}
-			<p class="text-[15px] text-danger" role="alert">{shownSignInError}</p>
-		{/if}
+	{#if sentTo}
+		<section aria-labelledby="check-heading" class="flex flex-col gap-4">
+			<h2 id="check-heading" class="font-display type-heading">Check your email</h2>
+			<p class="type-secondary">
+				We sent a sign-in link and a code to <strong class="text-ink">{sentTo}</strong>. Open the
+				link, or type the code here.
+			</p>
 
-		<PasskeyButton
-			intent="sign-in"
-			next={data.next}
-			variant="primary"
-			class="w-full"
-			onerror={(message) => (signInError = message)}
-		>
-			Sign in with a passkey
-		</PasskeyButton>
-		{#if data.googleEnabled}
-			<form method="POST" action={googleAction}>
-				<input type="hidden" name="intent" value="sign-in" />
-				<Button type="submit" class="w-full">Sign in with Google</Button>
-			</form>
-		{/if}
-	</section>
-
-	<section aria-labelledby="sign-up-heading" class="flex flex-col gap-4 border-t border-line pt-8">
-		<h2 id="sign-up-heading" class="font-display type-heading">New here?</h2>
-		<p class="type-secondary">
-			Create an account to make games and find them again later. Use a passkey on this phone or
-			computer{data.googleEnabled ? ', or your Google account' : ''}.
-		</p>
-
-		<form method="POST" action={googleAction} class="flex flex-col gap-4" use:enhance>
-			{#if !data.googleEnabled}
-				<!-- A disabled default button stops Enter from submitting, even before hydration. -->
-				<button type="submit" disabled class="hidden" aria-hidden="true" tabindex="-1"></button>
+			{#if form && 'preview' in form && form.preview}
+				<div
+					class="flex flex-col gap-1 border-2 border-dashed border-line p-3"
+					data-testid="preview"
+				>
+					<p class="font-semibold">Dev server: no email was sent.</p>
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+					<a href={form.preview.link} class="break-all underline">Sign-in link</a>
+					<p>Code: <span data-testid="preview-code">{form.preview.code}</span></p>
+				</div>
 			{/if}
-			<input type="hidden" name="intent" value="sign-up" />
+
+			<form method="POST" action="?/code" class="flex flex-col gap-4" use:enhance>
+				<div class="flex flex-col gap-2">
+					<Label for="code">Code</Label>
+					<Input
+						id="code"
+						name="code"
+						required
+						inputmode="numeric"
+						autocomplete="one-time-code"
+						maxlength={7}
+						value={form && 'code' in form ? form.code : ''}
+						aria-invalid={formError ? true : undefined}
+					/>
+				</div>
+				{#if form && 'needsName' in form && form.needsName}
+					<DisplayNameField error={formError} />
+				{/if}
+				{#if formError}
+					<p class="text-[15px] text-danger" role="alert">{formError}</p>
+				{/if}
+				<Button type="submit" variant="primary" size="lg">Sign in</Button>
+			</form>
+
+			<Button variant="ghost" class="w-full" onclick={() => (otherEmail = true)}>
+				Use a different email
+			</Button>
+		</section>
+	{:else}
+		<form
+			method="POST"
+			action={requestAction}
+			class="flex flex-col gap-4"
+			use:enhance={() => {
+				return async ({ update }) => {
+					otherEmail = false;
+					await update({ reset: false });
+				};
+			}}
+		>
 			<div class="flex flex-col gap-2">
-				<Label for="display-name">Your name</Label>
+				<Label for="email">Email</Label>
 				<Input
-					id="display-name"
-					name="displayName"
+					id="email"
+					name="email"
+					type="email"
 					required
-					autocomplete="name"
-					maxlength={DISPLAY_NAME_MAX_LENGTH}
-					value={form?.displayName ?? ''}
-					bind:ref={nameInput}
-					aria-invalid={shownSignUpError ? true : undefined}
-					aria-describedby="display-name-hint{shownSignUpError ? ' sign-up-error' : ''}"
+					autocomplete="email"
+					maxlength={EMAIL_MAX_LENGTH}
+					value={form && 'email' in form ? form.email : ''}
+					aria-invalid={formError ? true : undefined}
+					aria-describedby="email-hint"
 				/>
-				<p id="display-name-hint" class="type-secondary">
-					Shown on your account. Players do not see it.
+				<p id="email-hint" class="type-secondary">
+					We email you a link to sign in. New here? The same link creates your account.
 				</p>
 			</div>
-
-			{#if shownSignUpError}
-				<p id="sign-up-error" class="text-[15px] text-danger" role="alert">{shownSignUpError}</p>
+			{#if formError}
+				<p class="text-[15px] text-danger" role="alert">{formError}</p>
 			{/if}
-
-			<PasskeyButton
-				intent="sign-up"
-				next={data.next}
-				class="w-full"
-				displayName={typedName}
-				onerror={(message) => (signUpError = message)}
-			>
-				Create account with a passkey
-			</PasskeyButton>
-			{#if data.googleEnabled}
-				<Button type="submit" class="w-full">Create account with Google</Button>
-			{/if}
+			<Button type="submit" variant="primary" size="lg">Email me a sign-in link</Button>
 		</form>
-	</section>
+	{/if}
 </main>

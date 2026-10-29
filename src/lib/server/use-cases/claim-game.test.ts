@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createGame, getGameById } from '../db/games.js';
 import { createTestDb } from '../db/testing/test-db.js';
-import { createUserWithIdentity } from '../db/users.js';
+import { findOrCreateUser } from '../db/users.js';
 import { claimGame } from './claim-game.js';
 
 let db: D1Database;
@@ -10,8 +10,8 @@ let alex: number;
 
 beforeEach(async () => {
 	db = createTestDb();
-	sam = (await createUserWithIdentity(db, 'Sam', { provider: 'test', subject: 'sam' })).id;
-	alex = (await createUserWithIdentity(db, 'Alex', { provider: 'test', subject: 'alex' })).id;
+	sam = (await findOrCreateUser(db, 'sam@example.com', 'Sam')).id;
+	alex = (await findOrCreateUser(db, 'alex@example.com', 'Alex')).id;
 });
 
 describe('claimGame', () => {

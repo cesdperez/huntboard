@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { deleteSession, extendSession, getSessionWithUser, insertSession } from './sessions.js';
 import { createTestDb } from './testing/test-db.js';
-import { createUserWithIdentity } from './users.js';
+import { findOrCreateUser } from './users.js';
 
 let db: D1Database;
 let userId: number;
 
 beforeEach(async () => {
 	db = createTestDb();
-	userId = (await createUserWithIdentity(db, 'Sam', { provider: 'test', subject: 'sam' })).id;
+	userId = (await findOrCreateUser(db, 'sam@example.com', 'Sam')).id;
 });
 
 describe('sessions', () => {
