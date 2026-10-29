@@ -1,3 +1,4 @@
+import { judgedClaimMessage } from './claim-messages.js';
 import type { TeamChallenge, TeamClaim } from './team-board.js';
 
 /**
@@ -9,7 +10,7 @@ export function judgedClaimMessages(before: TeamChallenge[], after: TeamChalleng
 	return after.flatMap((challenge) => {
 		const claim = challenge.claim;
 		if (!claim || !wasJudged(claimsBefore.get(challenge.id) ?? null, claim)) return [];
-		return [judgedMessage(challenge.title, claim)];
+		return [judgedClaimMessage(challenge.title, claim)];
 	});
 }
 
@@ -29,10 +30,4 @@ function wasJudged(before: TeamClaim | null, after: TeamClaim): boolean {
 			// An undo shows the earlier rejection again, which has a lower id than the undone claim.
 			return after.id > before.id;
 	}
-}
-
-function judgedMessage(title: string, claim: TeamClaim): string {
-	if (claim.status === 'scored') return `Scored ${claim.points ?? 0} for ${title}`;
-	const reason = claim.judgeNote ? `: ${claim.judgeNote}` : '';
-	return `Rejected ${title}${reason}. You can mark it done again.`;
 }
