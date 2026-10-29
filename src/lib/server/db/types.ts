@@ -15,6 +15,8 @@ export interface GameRow {
 	/** Key in the IMAGES bucket, or null without a game image. */
 	image_key: string | null;
 	image_label: string;
+	/** The account that created or claimed the game, or null for a game nobody claimed yet. */
+	owner_user_id: number | null;
 }
 
 export interface TeamRow {
@@ -73,3 +75,34 @@ export interface WithClaimCount {
 export type TeamWithClaimCount = TeamRow & WithClaimCount;
 
 export type ChallengeWithClaimCount = ChallengeRow & WithClaimCount;
+
+export interface UserRow {
+	id: number;
+	display_name: string;
+	created_at: string;
+}
+
+export type IdentityProvider = 'google' | 'passkey' | 'test';
+
+export interface IdentityRow {
+	id: number;
+	user_id: number;
+	provider: IdentityProvider;
+	/** Google's sub claim, or the passkey credential id in base64url. */
+	subject: string;
+	/** The Google email, or empty for a passkey. */
+	label: string;
+	/** Passkeys only: the COSE public key in base64url. */
+	public_key: string | null;
+	sign_count: number | null;
+	/** Passkeys only: the authenticator transports as a JSON array. */
+	transports: string | null;
+	created_at: string;
+}
+
+export interface SessionRow {
+	/** SHA-256 of the cookie token, in hex. */
+	id: string;
+	user_id: number;
+	expires_at: string;
+}

@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	claimGame,
 	createGame,
 	getGameByAdminToken,
 	getGameById,
+	listGamesByOwner,
 	resetGame,
 	updateGameSettings
 } from './games.js';
 import { setGameImage } from './images.js';
 import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import { createTestDb } from './testing/test-db.js';
+import { createUserWithIdentity } from './users.js';
 
 let db: D1Database;
 
@@ -30,6 +33,40 @@ describe('createGame', () => {
 		expect(game.admin_token).toMatch(/^[A-Za-z0-9_-]{22}$/);
 		expect(game.scoreboard_token).toMatch(/^[A-Za-z0-9_-]{22}$/);
 		expect(game.admin_token).not.toBe(game.scoreboard_token);
+	});
+});
+
+describe('game owners', () => {
+	async function user(name: string) {
+		return (await createUserWithIdentity(db, name, { provider: 'test', subject: name })).id;
+	}
+
+	it('stores the owner and lists only their games, newest first', async () => {
+		const sam = await user('Sam');
+		const alex = await user('Alex');
+		const first = await createGame(db, 'Canal hunt', sam);
+		await createGame(db, 'Other hunt', alex);
+		await db
+			.prepare("UPDATE game SET created_at = '2020-01-01T00:00:00.000Z' WHERE id = ?")
+			.bind(first.id)
+			.run();
+		await createGame(db, 'Bike hunt', sam);
+
+		expect(first.owner_user_id).toBe(sam);
+		expect((await listGamesByOwner(db, sam)).map((game) => game.name)).toEqual([
+			'Bike hunt',
+			'Canal hunt'
+		]);
+	});
+
+	it('claims a game without an owner only once', async () => {
+		const sam = await user('Sam');
+		const alex = await user('Alex');
+		const game = await createGame(db, 'Canal hunt');
+
+		expect(await claimGame(db, game.id, sam)).toBe(true);
+		expect(await claimGame(db, game.id, alex)).toBe(false);
+		expect(await getGameById(db, game.id)).toMatchObject({ owner_user_id: sam });
 	});
 });
 

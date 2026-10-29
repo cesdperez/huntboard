@@ -2,12 +2,17 @@ import { generateToken } from '#lib/domain/token.js';
 import { DEFAULT_THEME } from '#lib/themes/index.js';
 import type { GameRow } from './types.js';
 
-export async function createGame(db: D1Database, name: string): Promise<GameRow> {
+export async function createGame(
+	db: D1Database,
+	name: string,
+	ownerUserId: number | null = null
+): Promise<GameRow> {
 	const game = await db
 		.prepare(
-			'INSERT INTO game (name, admin_token, scoreboard_token, theme) VALUES (?, ?, ?, ?) RETURNING *'
+			`INSERT INTO game (name, admin_token, scoreboard_token, theme, owner_user_id)
+			VALUES (?, ?, ?, ?, ?) RETURNING *`
 		)
-		.bind(name, generateToken(), generateToken(), DEFAULT_THEME.id)
+		.bind(name, generateToken(), generateToken(), DEFAULT_THEME.id, ownerUserId)
 		.first<GameRow>();
 	if (!game) throw new Error('Inserting a game returned no row');
 	return game;
@@ -19,6 +24,23 @@ export function getGameByAdminToken(db: D1Database, token: string): Promise<Game
 
 export function getGameById(db: D1Database, id: number): Promise<GameRow | null> {
 	return db.prepare('SELECT * FROM game WHERE id = ?').bind(id).first<GameRow>();
+}
+
+export async function listGamesByOwner(db: D1Database, userId: number): Promise<GameRow[]> {
+	const { results } = await db
+		.prepare('SELECT * FROM game WHERE owner_user_id = ? ORDER BY created_at DESC, id DESC')
+		.bind(userId)
+		.all<GameRow>();
+	return results;
+}
+
+/** Makes the user the owner of a game nobody owns yet. False when it already has an owner. */
+export async function claimGame(db: D1Database, gameId: number, userId: number): Promise<boolean> {
+	const result = await db
+		.prepare('UPDATE game SET owner_user_id = ? WHERE id = ? AND owner_user_id IS NULL')
+		.bind(userId, gameId)
+		.run();
+	return result.meta.changes > 0;
 }
 
 export type GameSettings = Pick<
