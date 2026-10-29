@@ -7,10 +7,19 @@ import { deleteTeam } from '../db/teams.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from '../db/types.js';
-import { MEDIA_NOT_UPLOADED, NOT_MEDIA } from './claim-media.js';
+import { ORIGINAL_VIDEO_MAX_BYTES, PHOTO_MAX_BYTES } from '#lib/domain/claim-media.js';
+import { MEDIA_NOT_UPLOADED, NOT_MEDIA, PHOTO_TOO_LARGE, VIDEO_TOO_LARGE } from './claim-media.js';
 import { NOT_AN_IMAGE } from './image-upload.js';
-import { markDone, renameOwnTeam, saveOwnAvatar, undoOwnClaim } from './team-play.js';
+import {
+	MEDIA_UPLOADS_OFF,
+	markDone,
+	renameOwnTeam,
+	requestMediaUpload,
+	saveOwnAvatar,
+	undoOwnClaim
+} from './team-play.js';
 import { newMediaKey } from '../storage/media-store.js';
+import type { MediaPresigner } from '../storage/media-upload.js';
 import { MemoryBucket } from '../testing/memory-bucket.js';
 
 const DURING = new Date('2026-06-01T18:00:00.000Z');
@@ -226,6 +235,75 @@ describe('markDone with media', () => {
 
 		expect(outcome.status).toBe(403);
 		expect(head).not.toHaveBeenCalled();
+	});
+});
+
+describe('requestMediaUpload', () => {
+	const presign: MediaPresigner = async (key, type, size) => ({
+		url: `https://r2.example/${key}?size=${size}`,
+		headers: { 'Content-Type': type }
+	});
+
+	function uploadForm(type: string, size: number | string) {
+		return form({ type, size: String(size) });
+	}
+
+	it('presigns a new key under the game for the declared type and size', async () => {
+		const outcome = await requestMediaUpload(
+			presign,
+			{ team: rats, game },
+			uploadForm('video/mp4', 1234),
+			DURING
+		);
+
+		expect(outcome).toEqual({
+			status: 200,
+			result: {
+				kind: 'media-upload',
+				key: expect.stringMatching(new RegExp(`^${game.id}/claims/[A-Za-z0-9_-]{22}\\.mp4$`)),
+				url: expect.stringMatching(/^https:\/\/r2\.example\/.+\?size=1234$/),
+				headers: { 'Content-Type': 'video/mp4' }
+			}
+		});
+	});
+
+	it('refuses outside the game window', async () => {
+		const outcome = await requestMediaUpload(
+			presign,
+			{ team: rats, game },
+			uploadForm('image/jpeg', 100),
+			AFTER
+		);
+
+		expect(outcome).toEqual({ status: 403, result: { kind: 'closed', phase: 'after' } });
+	});
+
+	it.each([
+		['a type the app does not take', uploadForm('image/png', 100), NOT_MEDIA],
+		['a missing size', uploadForm('image/jpeg', ''), NOT_MEDIA],
+		['an empty file', uploadForm('image/jpeg', 0), NOT_MEDIA],
+		['a size that is not a whole number', uploadForm('image/jpeg', '1.5'), NOT_MEDIA],
+		['a photo over the limit', uploadForm('image/jpeg', PHOTO_MAX_BYTES + 1), PHOTO_TOO_LARGE],
+		[
+			'a video over the limit',
+			uploadForm('video/webm', ORIGINAL_VIDEO_MAX_BYTES + 1),
+			VIDEO_TOO_LARGE
+		]
+	])('refuses %s', async (_, data, message) => {
+		const outcome = await requestMediaUpload(presign, { team: rats, game }, data, DURING);
+
+		expect(outcome).toEqual({ status: 400, result: { kind: 'error', message } });
+	});
+
+	it('says uploads are off when the server cannot presign', async () => {
+		const outcome = await requestMediaUpload(
+			null,
+			{ team: rats, game },
+			uploadForm('image/jpeg', 100),
+			DURING
+		);
+
+		expect(outcome).toEqual({ status: 503, result: { kind: 'error', message: MEDIA_UPLOADS_OFF } });
 	});
 });
 

@@ -1,3 +1,4 @@
+import { isMediaType, maxMediaBytes } from '#lib/domain/claim-media.js';
 import { CLAIM_NOTE_MAX_LENGTH } from '#lib/domain/claim-note.js';
 import { DEAD_LINK_MESSAGE } from '#lib/domain/dead-link.js';
 import { gamePhase, type GamePhase } from '#lib/domain/game-window.js';
@@ -14,8 +15,9 @@ import { markClaim, undoClaim } from '../db/claims.js';
 import { setTeamAvatar } from '../db/images.js';
 import { updateTeam } from '../db/teams.js';
 import { deleteObjects } from '../storage/bucket-objects.js';
-import type { MediaBucket } from '../storage/media-store.js';
-import { checkClaimMedia } from './claim-media.js';
+import { newMediaKey, type MediaBucket } from '../storage/media-store.js';
+import type { MediaPresigner, MediaUploadTarget } from '../storage/media-upload.js';
+import { checkClaimMedia, mediaTooLarge, NOT_MEDIA } from './claim-media.js';
 import { conflictMessage } from './conflict-message.js';
 import { readId, readString } from './form.js';
 import { replaceImage, type ImageBucket } from '../storage/image-store.js';
@@ -31,12 +33,16 @@ export type TeamFormResult =
 	| { kind: 'undone' }
 	| { kind: 'renamed' }
 	| { kind: 'avatar-saved' }
+	/** Where to PUT the file before marking done with `mediaKey` set to key. */
+	| ({ kind: 'media-upload'; key: string } & MediaUploadTarget)
 	| { kind: 'closed'; phase: Exclude<GamePhase, 'during'> }
 	| ErrorResult;
 
 type TeamOutcome = ActionOutcome<TeamFormResult>;
 
 const CHALLENGE_GONE = 'That challenge is not in this game any more.';
+export const MEDIA_UPLOADS_OFF =
+	'Photos and videos cannot be attached right now. Mark it done without one and send the proof another way.';
 
 /** Media is optional. When sent, it must already be in the bucket and pass checkClaimMedia. */
 export async function markDone(
@@ -77,6 +83,32 @@ export async function markDone(
 		case 'not-found':
 			return error(404, CHALLENGE_GONE);
 	}
+}
+
+/**
+ * Presigns the upload of one photo or video of the declared type and size. A null presigner
+ * means this server has no way to take uploads.
+ */
+export async function requestMediaUpload(
+	presign: MediaPresigner | null,
+	{ game }: TeamLink,
+	data: FormData,
+	now: Date
+): Promise<TeamOutcome> {
+	const closed = closedOutcome(game, now);
+	if (closed) return closed;
+	if (!presign) return error(503, MEDIA_UPLOADS_OFF);
+
+	const type = data.get('type');
+	const size = Number(readString(data, 'size'));
+	if (!isMediaType(type) || !Number.isSafeInteger(size) || size <= 0) {
+		return error(400, NOT_MEDIA);
+	}
+	if (size > maxMediaBytes(type)) return error(400, mediaTooLarge(type));
+
+	const key = newMediaKey(game.id, type);
+	const target = await presign(key, type, size, now);
+	return { status: 200, result: { kind: 'media-upload', key, ...target } };
 }
 
 export async function undoOwnClaim(

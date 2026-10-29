@@ -88,6 +88,8 @@ pnpm dev
 
 `/dev/design` shows every component in every theme: `/dev/design?theme=<id>&mode=dark`. It answers 404 outside `pnpm dev`.
 
+`pnpm dev` has no R2 S3 endpoint for claim media. While `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are blank, it signs uploads to `/dev/media/...` instead, which stores them in the local `MEDIA` bucket and also answers 404 outside `pnpm dev`. A deployment with the secrets blank refuses uploads.
+
 ## Testing
 
 ```sh
@@ -222,5 +224,6 @@ A game of about 180 claims stores about 1 GB of media. It is deleted after the g
 - **Game creation.** `/new` needs the `CREATE_GAME_CODE` secret, compared in constant time. An unset secret matches nothing.
 - **Headers.** SvelteKit sets an enforced CSP with per-request script nonces. `src/hooks.server.ts` adds `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, HSTS and `X-Robots-Tag: noindex` to every Worker response, and `Cache-Control: no-store` to secret-link pages. `_headers` applies the static ones to assets. `robots.txt` disallows everything.
 - **Requests.** Plain HTTP redirects to HTTPS. Bodies without `Content-Length` get 411 and bodies over 2 MiB get 413, before any parsing. Uploaded images are checked for size, declared type and magic bytes.
+- **Claim media.** Phones upload straight to R2, never through the Worker. The team action `mediaUpload` checks the game window, the declared type and the size limit, then signs one PUT URL for 15 minutes. It covers one new random key under the game id, and its signature covers the content type and length, so R2 refuses any other file. The R2 API token behind it can only read and write the media bucket. Marking done with media checks the object again in the bucket: the key belongs to this game, the size is within the limit, the stored type matches the key, and the first bytes are a JPEG, WebP, MP4, QuickTime or WebM file. A failed check stores no claim.
 - **Abuse limits.** The Worker is served only on its custom domain; `workers_dev` and `preview_urls` are off in `wrangler.jsonc`, so every request passes the zone's WAF. A zone rate-limiting rule, configured in Cloudflare and not in this repo, blocks an IP for 10 seconds after 300 requests in 10 seconds, skipping static paths. The cap is high because a whole party often shares one Wi-Fi IP. A distributed attack can still spend the daily free-tier allowance; stopping that needs Cloudflare's paid bot and DDoS features.
 - **Accepted trade-offs.** A link is a bearer credential with no expiry until it is rotated. Nicknames are labels, not identities. Team names and members lines are visible to anyone with the scoreboard link.
