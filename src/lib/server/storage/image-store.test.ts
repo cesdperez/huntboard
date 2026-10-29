@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-	deleteGameImages,
-	deleteImages,
 	imageResponse,
 	isImageKey,
 	newImageKey,
@@ -95,34 +93,6 @@ describe('replaceImage', () => {
 
 		expect(stored).toBe(true);
 		expect(console.error).toHaveBeenCalled();
-	});
-});
-
-describe('deleteImages', () => {
-	it('deletes the given keys and skips absent ones', async () => {
-		await bucket.put('1/a', new Uint8Array());
-		await bucket.put('1/b', new Uint8Array());
-
-		await deleteImages(bucket.asBucket(), ['1/a', null]);
-
-		expect(bucket.keys()).toEqual(['1/b']);
-	});
-
-	it('does not throw when the bucket fails', async () => {
-		bucket.failDeletes = true;
-
-		await expect(deleteImages(bucket.asBucket(), ['1/a'])).resolves.toBeUndefined();
-	});
-});
-
-describe('deleteGameImages', () => {
-	it('deletes every image of the game, page by page, and leaves other games alone', async () => {
-		bucket.listLimit = 2;
-		for (const key of ['1/a', '1/b', '1/c', '12/a', '2/a']) await bucket.put(key, new Uint8Array());
-
-		await deleteGameImages(bucket.asBucket(), 1);
-
-		expect(bucket.keys()).toEqual(['12/a', '2/a']);
 	});
 });
 

@@ -1,4 +1,5 @@
 import { generateToken } from '#lib/domain/token.js';
+import { deleteObjects } from './bucket-objects.js';
 
 /** The formats the browser resizer produces. Anything else was not resized by this app. */
 export type ImageType = 'image/webp' | 'image/jpeg';
@@ -15,7 +16,6 @@ export type ImageCommit = (key: string) => Promise<{ previous: string | null } |
 
 const EXTENSIONS: Record<ImageType, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg' };
 const TYPES_BY_EXTENSION: Record<string, ImageType> = { webp: 'image/webp', jpg: 'image/jpeg' };
-const MAX_KEYS_PER_DELETE = 1000;
 const IMAGE_KEY = /^[1-9]\d*\/[A-Za-z0-9_-]{22}\.(webp|jpg)$/;
 // Safe because a replaced image gets a new key: no URL ever shows different bytes.
 const IMMUTABLE = 'public, max-age=31536000, immutable';
@@ -46,45 +46,15 @@ export async function replaceImage(
 	try {
 		committed = await commit(key);
 	} catch (error) {
-		await deleteImages(bucket, [key]);
+		await deleteObjects(bucket, [key]);
 		throw error;
 	}
 	if (!committed) {
-		await deleteImages(bucket, [key]);
+		await deleteObjects(bucket, [key]);
 		return false;
 	}
-	await deleteImages(bucket, [committed.previous]);
+	await deleteObjects(bucket, [committed.previous]);
 	return true;
-}
-
-/**
- * Best effort: the database no longer points at these keys, so a failed delete leaves an
- * unreachable object, which the next reset of the game sweeps.
- */
-export async function deleteImages(bucket: ImageBucket, keys: (string | null)[]): Promise<void> {
-	const present = keys.filter((key) => key !== null);
-	if (present.length === 0) return;
-	try {
-		await bucket.delete(present);
-	} catch (error) {
-		console.error('Deleting images failed', present, error);
-	}
-}
-
-/** Deletes every image stored for the game, including any a failed delete left behind. */
-export async function deleteGameImages(bucket: ImageBucket, gameId: number): Promise<void> {
-	const keys: string[] = [];
-	let cursor: string | undefined;
-	// Lists everything before deleting, so deleting cannot shift the pages still to come.
-	do {
-		const page = await bucket.list({ prefix: `${gameId}/`, cursor });
-		keys.push(...page.objects.map((object) => object.key));
-		cursor = page.truncated ? page.cursor : undefined;
-	} while (cursor);
-
-	for (let start = 0; start < keys.length; start += MAX_KEYS_PER_DELETE) {
-		await deleteImages(bucket, keys.slice(start, start + MAX_KEYS_PER_DELETE));
-	}
 }
 
 export async function imageResponse(bucket: ImageBucket, key: string): Promise<Response> {
