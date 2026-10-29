@@ -80,7 +80,12 @@ export async function requestSignIn(
 	now = new Date()
 ): Promise<RequestResult> {
 	const email = normalizeEmail(input.email);
-	if (!email) return { kind: 'error', status: 400, message: 'Type your email address.' };
+	if (!email) {
+		const message = input.email.trim()
+			? 'This does not look like an email address. Type it like name@example.com.'
+			: 'Type your email address.';
+		return { kind: 'error', status: 400, message };
+	}
 
 	await deleteExpiredRequests(db, now.toISOString());
 	const requestId = generateToken();

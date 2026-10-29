@@ -9,3 +9,6 @@ export const PUT: RequestHandler = ({ params, request }) => {
 	if (!dev) error(404, 'Not found');
 	return storeDevUpload(env.MEDIA, request, params.key, new Date());
 };
+
+// Without it, other methods answer 405 with `allow: PUT`, which shows the route exists.
+export const fallback: RequestHandler = () => error(404, 'Not found');

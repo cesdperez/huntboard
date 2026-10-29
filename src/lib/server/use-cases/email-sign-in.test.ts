@@ -66,6 +66,20 @@ describe('requestSignIn', () => {
 		expect(send).not.toHaveBeenCalled();
 	});
 
+	it.each([
+		['', 'Type your email address.'],
+		['you@localhost', 'This does not look like an email address. Type it like name@example.com.']
+	])('says what is wrong with %j', async (email, message) => {
+		const result = await requestSignIn(
+			db,
+			send,
+			{ email, next: null, origin: ORIGIN, earlierRequestIds: [] },
+			NOW
+		);
+
+		expect(result).toEqual({ kind: 'error', status: 400, message });
+	});
+
 	it('limits how many emails one address gets in a window', async () => {
 		for (let i = 0; i < MAX_REQUESTS_PER_WINDOW; i++) await sent();
 

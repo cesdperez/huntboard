@@ -17,3 +17,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	await signIn(cookies, userId);
 	redirect(303, nextPath(url.searchParams.get('next')));
 };
+
+// Without it, other methods answer 405 with `allow: GET`, which shows the route exists.
+export const fallback: RequestHandler = () => error(404, 'Not found');
