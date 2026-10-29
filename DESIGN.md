@@ -202,7 +202,7 @@ A ranked list. Rank and total in display type, the total in `--score`, team name
 
 - The QR code is `min(26dvh, 18vw)` wide, with "Scan to follow on your phone" under it in `--muted`. It encodes only the scoreboard link, built from the page's own token. Phones already have the link, so they never show it.
 
-- Under the game name, one status line: "Starts in 0:42:10", "Ends in 1:42:10" or "Ended at 21:00". The scoreboard keeps updating after the end, because judging goes on at the meeting point.
+- Under the game name, one status line: "Starts in 0:42:10", "Ends in 1:42:10" or "Ended at 21:00". With a day or more to go, the days come first: "Starts in 3 days 1:42:10". The scoreboard keeps updating after the end, because judging goes on at the meeting point.
 - Tied teams show the same rank and keep their setup order.
 - On the big screen every size follows one total size: 55% of the viewport height shared by the teams, counting at least 3, between 40px and 8vw. The 8vw cap keeps a name in view beside a four-digit total on a narrow or portrait screen, and the 3-team floor stops one or two teams from filling the screen with digits. Ranks are 0.6 of it, names 0.45, the title 0.45 and the status line 0.25, so 4 teams and 7 teams both fill a 1080px screen.
 - With no teams yet: "No teams yet. They show up here once the organiser adds them."

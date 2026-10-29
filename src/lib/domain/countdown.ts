@@ -1,3 +1,4 @@
+import { plural } from '../format/plural.js';
 import { gamePhase, type GameWindow } from './game-window.js';
 
 export type Countdown =
@@ -19,11 +20,13 @@ export function countdown(window: GameWindow, now: Date): Countdown {
 	}
 }
 
-/** "1:42:10". Hours always show and do not wrap at a day, so the width stays steady. */
+/** "1:42:10", or "3 days 1:42:10" once a day or more remains. Hours always show, so the width stays steady. */
 export function formatCountdown(ms: number): string {
 	const total = Math.max(0, Math.ceil(ms / 1000));
 	const pad = (n: number) => String(n).padStart(2, '0');
-	return `${Math.floor(total / 3600)}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)}`;
+	const days = Math.floor(total / 86_400);
+	const clock = `${Math.floor(total / 3600) % 24}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)}`;
+	return days > 0 ? `${plural(days, 'day')} ${clock}` : clock;
 }
 
 /** The countdown line on the team strip. formatTime shows a UTC ISO time to the viewer. */

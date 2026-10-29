@@ -43,8 +43,14 @@ describe('formatCountdown', () => {
 		expect(formatCountdown((5 * 60 + 3) * 1000)).toBe('0:05:03');
 	});
 
-	it('goes past 24 hours instead of wrapping', () => {
-		expect(formatCountdown(26 * 3600 * 1000)).toBe('26:00:00');
+	it('shows days once a day or more remains', () => {
+		expect(formatCountdown(24 * 3600 * 1000)).toBe('1 day 0:00:00');
+		expect(formatCountdown(26 * 3600 * 1000)).toBe('1 day 2:00:00');
+		expect(formatCountdown((3579 * 3600 + 17 * 60 + 23) * 1000)).toBe('149 days 3:17:23');
+	});
+
+	it('keeps hours alone just under a day', () => {
+		expect(formatCountdown((24 * 3600 - 1) * 1000)).toBe('23:59:59');
 	});
 
 	it('rounds a partial second up, so it reads 0:00:00 only at the moment itself', () => {
