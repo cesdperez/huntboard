@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	checkCode,
 	deleteExpiredRequests,
 	findRequest,
 	findRequestByToken,
 	insertSignInRequest,
-	spendCodeAttempt,
 	takeRequest
 } from './sign-in-requests.js';
 import { createTestDb } from './testing/test-db.js';
@@ -48,15 +48,23 @@ describe('takeRequest', () => {
 	});
 });
 
-describe('spendCodeAttempt', () => {
-	it('counts attempts up to the limit, then refuses', async () => {
-		expect(await spendCodeAttempt(db, 'request-1', 2, NOW)).toMatchObject({ code_attempts: 1 });
-		expect(await spendCodeAttempt(db, 'request-1', 2, NOW)).toMatchObject({ code_attempts: 2 });
-		expect(await spendCodeAttempt(db, 'request-1', 2, NOW)).toBeNull();
+describe('checkCode', () => {
+	it('counts wrong codes up to the limit, then refuses even the right one', async () => {
+		expect(await checkCode(db, 'request-1', 'wrong', 2, NOW)).toMatchObject({ code_attempts: 1 });
+		expect(await checkCode(db, 'request-1', 'wrong', 2, NOW)).toMatchObject({ code_attempts: 2 });
+		expect(await checkCode(db, 'request-1', 'code-hash-1', 2, NOW)).toBeNull();
+	});
+
+	it('spends nothing on the right code', async () => {
+		for (let i = 0; i < 2; i++) {
+			expect(await checkCode(db, 'request-1', 'code-hash-1', 1, NOW)).toMatchObject({
+				code_attempts: 0
+			});
+		}
 	});
 
 	it('refuses an expired request', async () => {
-		expect(await spendCodeAttempt(db, 'request-1', 5, request.expires_at)).toBeNull();
+		expect(await checkCode(db, 'request-1', 'code-hash-1', 5, request.expires_at)).toBeNull();
 	});
 });
 

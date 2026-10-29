@@ -2,11 +2,11 @@ import { nextPath, normalizeDisplayName, normalizeEmail } from '#lib/domain/acco
 import { generateToken, sha256Base64Url } from '#lib/domain/token.js';
 import { MS_PER_MINUTE } from '#lib/format/duration.js';
 import {
+	checkCode,
 	deleteExpiredRequests,
 	findRequest,
 	findRequestByToken,
 	insertSignInRequest,
-	spendCodeAttempt,
 	takeRequest
 } from '../db/sign-in-requests.js';
 import type { SignInRequestRow } from '../db/types.js';
@@ -130,9 +130,10 @@ export async function finishWithCode(
 	displayName: string,
 	now = new Date()
 ): Promise<FinishResult> {
-	const request = await spendCodeAttempt(db, requestId, MAX_CODE_ATTEMPTS, now.toISOString());
+	const hash = await codeHash(requestId, code.replace(/\s/g, ''));
+	const request = await checkCode(db, requestId, hash, MAX_CODE_ATTEMPTS, now.toISOString());
 	if (!request) return EXPIRED;
-	if ((await codeHash(requestId, code.replace(/\s/g, ''))) !== request.code_hash) {
+	if (request.code_hash !== hash) {
 		return { kind: 'error', message: 'That code is not right. Check the email and try again.' };
 	}
 	return complete(db, request, displayName);

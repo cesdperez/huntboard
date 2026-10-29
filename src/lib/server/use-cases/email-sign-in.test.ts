@@ -141,6 +141,21 @@ describe('finishWithCode', () => {
 		});
 	});
 
+	it('spends attempts only on wrong codes, so a new address can still add its name', async () => {
+		const { requestId, code } = await sent('new@example.com');
+		const wrong = code === '000000' ? '111111' : '000000';
+
+		for (let i = 0; i < MAX_CODE_ATTEMPTS - 1; i++) await finishWithCode(db, requestId, wrong, '', NOW);
+		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++) {
+			expect(await finishWithCode(db, requestId, code, ' ', NOW)).toMatchObject({
+				kind: 'needs-name'
+			});
+		}
+		expect(await finishWithCode(db, requestId, code, 'New Organiser', NOW)).toMatchObject({
+			kind: 'signed-in'
+		});
+	});
+
 	it('stops accepting codes after too many wrong ones', async () => {
 		const { requestId, code } = await sent();
 		const wrong = code === '000000' ? '111111' : '000000';
