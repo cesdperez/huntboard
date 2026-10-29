@@ -51,7 +51,7 @@ Use cases, queries and the image store take the database or bucket as an argumen
 `src/lib`:
 
 - `domain/`: pure game rules and shared limits, such as the challenge parser, scoring and points.
-- `format/`: display formatting, such as times, ordinals and plurals.
+- `format/`: display formatting, such as times, ordinals, plurals and safe file names.
 - `client/`: code for the page in the browser, such as live updates, the game clock and image resizing. Pages that render on the server use some of it too.
 - `themes/`: the theme registry and each theme's tokens.
 - `components/`: Svelte components, and the form action state they share.
@@ -64,8 +64,8 @@ Use cases, queries and the image store take the database or bucket as an argumen
 - `http/`: request guards, security headers, the D1 usage meter for the load test, and the admin and team link guards that answer 404.
 - `use-cases/`: what each form action does, tested without HTTP, and the form field readers they share.
 - `db/`: D1 queries, including the team link lookup.
-- `storage/`: the R2 image store. It also builds the response for an image request.
-- `testing/`: an in-memory R2 bucket for tests.
+- `storage/`: the R2 image and media stores. They also build the responses for image and media requests, byte ranges and the media zip included. `media-upload.ts` signs uploads to R2, `dev-media-upload.ts` stands in for R2 under `pnpm dev`, and `r2-s3.ts` holds the account id and the R2 S3 origin that the CSP in `vite.config.ts` also reads.
+- `testing/`: an in-memory R2 bucket for tests, with `head` and ranged `get`.
 
 The bottom layer is `domain/`, `format/` and the theme registry in `themes/index.ts`. These import nothing from `src/lib/server`. Browser code imports only types from `src/lib/server`.
 
@@ -121,7 +121,7 @@ Each run creates a new game named `Rehearsal ...`. Delete them before a real eve
 pnpm exec wrangler d1 execute huntboard --remote --command "DELETE FROM game WHERE name LIKE 'Rehearsal %'"
 ```
 
-Their images stay in R2 under `<game id>/`. Reset a rehearsal game from its Setup tab before deleting it to remove them too.
+Their images and claim media stay in R2 under `<game id>/`, in the images and media buckets. Reset a rehearsal game from its Setup tab before deleting it to remove them too. The 30-day rule on the media bucket catches any media left behind.
 
 ### Load test
 
@@ -146,6 +146,8 @@ The model game: 40 players in 7 teams, 3 admins, one big screen, 5 hours. Phones
 |---|---|---|---|
 | 30 s | 10,300 | 4.1 million | 83% |
 | 60 s | 6,700 | 2.7 million | 54% |
+
+Claim media adds Worker requests but no D1 rows. Each media claim costs one `mediaUpload` request; the upload itself goes to R2. Judges and the claiming team load each file from `/media/`, cached for a year in the browser, and a video plays through a few byte-range requests. For the model game that is about 1,000 to 3,000 more requests, well under the daily limit. R2 counts its own operations, far below its free monthly allowance.
 
 Claim queries start from the game's teams and use the `claim_team_id` index, so other games in the database add no rows to a poll. The scoreboard caches its standings per game for 15 seconds, so extra scoreboard viewers cost almost no rows. If polling ever gets too close to the limit, the next step is a cheap check that loads the page only when the game changed, and past that a Durable Object per game pushing changes over WebSockets.
 
@@ -213,6 +215,8 @@ pnpm exec wrangler r2 bucket lifecycle add huntboard-media expire-media --expire
 ```
 
 Without the two secrets, attaching media fails with a message, and claims without media still work.
+
+Media whose claim is gone stays in the bucket until "Delete all media", a reset or the lifecycle rule removes it. That happens when a re-import deletes a challenge or an admin deletes a team, because their claims go with them.
 
 "Download all media" on the Setup tab zips every claim's media in the Worker. That takes seconds of CPU for about 1 GB, past the free plan's 10 ms, so it needs Workers Paid ($5 a month). Everything else stays on the free plan.
 

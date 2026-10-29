@@ -1,11 +1,22 @@
 import {
 	isVideoType,
+	MEDIA_EXTENSIONS,
 	maxMediaBytes,
 	mediaKeyType,
 	type MediaType
 } from '#lib/domain/claim-media.js';
-import type { MediaBucket } from '../storage/media-store.js';
+import { safeFileName } from '#lib/format/file-name.js';
+import type { ActionOutcome } from './action-outcome.js';
+import { clearGameMedia, listGameMedia, type GameMediaRow } from '../db/claim-media.js';
+import type { GameRow } from '../db/types.js';
+import { deleteGameObjects } from '../storage/bucket-objects.js';
+import { mediaZipResponse, type MediaBucket, type ZipEntry } from '../storage/media-store.js';
 import { sniffImageType, startsWith } from './image-upload.js';
+
+/** What the media actions put under page.form.media. */
+export interface MediaFormResult {
+	deleted: true;
+}
 
 export const MEDIA_NOT_UPLOADED = 'This photo or video did not finish uploading. Attach it again.';
 export const PHOTO_TOO_LARGE = 'This photo is too large. Choose a smaller one.';
@@ -59,4 +70,37 @@ export async function checkClaimMedia(
 	if (!start) return MEDIA_NOT_UPLOADED;
 	const bytes = new Uint8Array(await new Response(start.body).arrayBuffer());
 	return matchesMediaType(bytes, type) ? null : NOT_MEDIA;
+}
+
+/** Zip paths `<team>/<challenge>-<claim id>.<ext>`: the claim id keeps every path unique. */
+export function mediaZipEntries(rows: GameMediaRow[]): ZipEntry[] {
+	return rows.flatMap((row) => {
+		const type = mediaKeyType(row.media_key);
+		if (type === null) return [];
+		const team = safeFileName(row.team_name, 'Team');
+		const challenge = safeFileName(row.challenge_title, 'Challenge', 60);
+		const name = `${team}/${challenge}-${row.claim_id}.${MEDIA_EXTENSIONS[type]}`;
+		return [{ key: row.media_key, name }];
+	});
+}
+
+/** Every claim's media in the game, any status, as one zip download. */
+export async function gameMediaZip(
+	db: D1Database,
+	bucket: MediaBucket,
+	game: GameRow
+): Promise<Response> {
+	const entries = mediaZipEntries(await listGameMedia(db, game.id));
+	return mediaZipResponse(bucket, `${safeFileName(game.name, 'Huntboard')}-media.zip`, entries);
+}
+
+/** Unlinks the claims first, so no claim ever points at a deleted object. The sweep takes orphans too. */
+export async function deleteAllMedia(
+	db: D1Database,
+	bucket: MediaBucket,
+	gameId: number
+): Promise<ActionOutcome<MediaFormResult>> {
+	await clearGameMedia(db, gameId);
+	await deleteGameObjects(bucket, gameId);
+	return { status: 200, result: { deleted: true } };
 }

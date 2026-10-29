@@ -1,5 +1,6 @@
 // Imported by the browser too, so everything from the server stays a type-only import.
 import type { ChallengesFormResult } from '#lib/server/use-cases/challenge-setup.js';
+import type { MediaFormResult } from '#lib/server/use-cases/claim-media.js';
 import type { GameSettingsFormData } from '#lib/server/use-cases/game-settings.js';
 import type { GameImageFormResult } from '#lib/server/use-cases/images.js';
 import type { JudgeFormResult } from '#lib/server/use-cases/judging.js';
@@ -15,6 +16,7 @@ export interface ActionResults {
 	gameSettings: GameSettingsFormData;
 	judge: JudgeFormResult;
 	links: LinksFormResult;
+	media: MediaFormResult;
 	team: TeamFormResult;
 	teamScores: TeamScoresFormResult;
 	teams: TeamsFormResult;

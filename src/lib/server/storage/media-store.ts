@@ -1,3 +1,4 @@
+import { downloadZip } from 'client-zip';
 import { MEDIA_EXTENSIONS, mediaKeyType, type MediaType } from '#lib/domain/claim-media.js';
 import { generateToken } from '#lib/domain/token.js';
 import { IMMUTABLE } from './image-store.js';
@@ -90,4 +91,43 @@ function mediaHeaders(type: MediaType, etag: string, length: number): Record<str
 
 function notFound(): Response {
 	return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
+}
+
+export interface ZipEntry {
+	key: string;
+	/** The path inside the zip. */
+	name: string;
+}
+
+/**
+ * Streams one store-only zip of the entries, reading one object at a time, so memory stays flat
+ * however large the media. An object that is gone, such as one the lifecycle rule expired, is left out.
+ */
+export function mediaZipResponse(bucket: MediaBucket, fileName: string, entries: ZipEntry[]) {
+	const zip = downloadZip(zipInputs(bucket, entries));
+	return new Response(zip.body, {
+		headers: {
+			'Content-Type': 'application/zip',
+			'Content-Disposition': attachment(fileName),
+			'Cache-Control': 'no-store'
+		}
+	});
+}
+
+async function* zipInputs(bucket: MediaBucket, entries: ZipEntry[]) {
+	for (const { key, name } of entries) {
+		const object = await bucket.get(key);
+		if (object)
+			yield { name, input: object.body, size: object.size, lastModified: object.uploaded };
+	}
+}
+
+// The plain filename is for old clients; filename* carries the name as typed.
+function attachment(fileName: string): string {
+	const ascii = fileName.replace(/[^\x20-\x7e]|"/g, '_');
+	const encoded = encodeURIComponent(fileName).replace(
+		/['()*]/g,
+		(char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+	);
+	return `attachment; filename="${ascii}"; filename*=UTF-8''${encoded}`;
 }

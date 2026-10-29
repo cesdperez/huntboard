@@ -11,6 +11,7 @@ import { deleteTeam, type DeleteTeamResult } from '../db/teams.js';
 import type { GameRow } from '../db/types.js';
 import { deleteGameObjects, deleteObjects } from '../storage/bucket-objects.js';
 import { replaceImage, type ImageBucket } from '../storage/image-store.js';
+import type { MediaBucket } from '../storage/media-store.js';
 import { readImageUpload } from './image-upload.js';
 import { readString } from './form.js';
 
@@ -79,13 +80,15 @@ export async function deleteTeamWithAvatar(
 	return result.status;
 }
 
-/** resetGame, then a sweep of every image stored under the game, orphans included. */
-export async function resetGameWithImages(
+/** resetGame, then a sweep of every image and claim media object of the game, orphans included. */
+export async function resetGameWithFiles(
 	db: D1Database,
-	bucket: ImageBucket,
+	images: ImageBucket,
+	media: MediaBucket,
 	gameId: number
 ): Promise<GameRow> {
 	const game = await resetGame(db, gameId);
-	await deleteGameObjects(bucket, gameId);
+	await deleteGameObjects(images, gameId);
+	await deleteGameObjects(media, gameId);
 	return game;
 }
