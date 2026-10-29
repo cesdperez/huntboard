@@ -18,6 +18,26 @@ describe('safeFileName', () => {
 		expect(safeFileName(name, 'Team')).toBe(safe);
 	});
 
+	it.each([
+		['CON', 'CON_'],
+		['nul', 'nul_'],
+		['Aux', 'Aux_'],
+		['PRN', 'PRN_'],
+		['COM1', 'COM1_'],
+		['lpt9', 'lpt9_'],
+		['con.txt', 'con_.txt'],
+		['NUL .jpg', 'NUL_ .jpg']
+	])('suffixes the Windows reserved name %j', (name, safe) => {
+		expect(safeFileName(name, 'Team')).toBe(safe);
+	});
+
+	it.each(['CONsole', 'Con artist', 'COM0', 'COM10', 'LPT', 'nullable.txt'])(
+		'keeps %j, which Windows allows',
+		(name) => {
+			expect(safeFileName(name, 'Team')).toBe(name);
+		}
+	);
+
 	it('caps the length by characters, never splitting one', () => {
 		expect(safeFileName('🐀'.repeat(100), 'Team', 10)).toBe('🐀'.repeat(10));
 		expect(safeFileName(`${'a'.repeat(9)} b`, 'Team', 10)).toBe('a'.repeat(9));
