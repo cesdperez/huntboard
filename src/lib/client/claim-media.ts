@@ -20,9 +20,9 @@ export const CLAIM_PHOTO_SPEC: ImageSpec = {
 	maxBytes: PHOTO_MAX_BYTES
 };
 
-export const NOT_MEDIA = 'Choose a photo or a video.';
+export const NOT_PHOTO_OR_VIDEO = 'Choose a photo or a video.';
 export const VIDEO_TOO_LONG = `This video is longer than ${VIDEO_MAX_SECONDS} seconds. Trim it and try again.`;
-export const VIDEO_TOO_LARGE =
+export const ORIGINAL_VIDEO_TOO_LARGE =
 	'This video is too large to send from this phone. Send a shorter one.';
 export const COMPRESSED_VIDEO_TOO_LARGE =
 	'This video stays too large even when compressed. Send a shorter one.';
@@ -77,7 +77,7 @@ export async function prepareClaimMedia(
 		case 'video':
 			return prepareVideo(file, onProgress, signal);
 		default:
-			return { ok: false, message: NOT_MEDIA };
+			return { ok: false, message: NOT_PHOTO_OR_VIDEO };
 	}
 }
 
@@ -115,7 +115,7 @@ export function canPassThrough(file: File, probe: VideoProbe): boolean {
 export function originalVideo(file: File): PreparedMedia {
 	const type = mediaTypeOf(file);
 	if (!ORIGINAL_VIDEO_TYPES.includes(type)) return { ok: false, message: UNSUPPORTED_VIDEO };
-	if (file.size > ORIGINAL_VIDEO_MAX_BYTES) return { ok: false, message: VIDEO_TOO_LARGE };
+	if (file.size > ORIGINAL_VIDEO_MAX_BYTES) return { ok: false, message: ORIGINAL_VIDEO_TOO_LARGE };
 	const typed = file.type === type ? file : new File([file], file.name, { type });
 	return { ok: true, file: typed, type: type as VideoType };
 }

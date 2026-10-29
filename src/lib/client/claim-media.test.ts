@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ORIGINAL_VIDEO_MAX_BYTES, VIDEO_MAX_BYTES } from '../domain/claim-media.js';
 import {
 	UNSUPPORTED_VIDEO,
-	VIDEO_TOO_LARGE,
+	ORIGINAL_VIDEO_TOO_LARGE,
 	canPassThrough,
 	classifyMedia,
 	isTooLong,
@@ -112,7 +112,7 @@ describe('originalVideo', () => {
 
 	it('refuses a file above the original size limit', () => {
 		const big = file('clip.mp4', 'video/mp4', ORIGINAL_VIDEO_MAX_BYTES + 1);
-		expect(originalVideo(big)).toEqual({ ok: false, message: VIDEO_TOO_LARGE });
+		expect(originalVideo(big)).toEqual({ ok: false, message: ORIGINAL_VIDEO_TOO_LARGE });
 	});
 
 	it('refuses a type the server does not store', () => {
