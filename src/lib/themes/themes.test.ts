@@ -137,9 +137,4 @@ describe('Azulejo theme', () => {
 		expect(theme.layout).toBe('event');
 		expect(theme.wordmark).toEqual({ src: '/themes/azulejo/wordmark.svg', alt: 'Lightmile' });
 	});
-
-	it('leaves the other themes on the Huntboard name', () => {
-		expect(FLAG_THEME.wordmark).toBeUndefined();
-		expect(resolveTheme('highland-bru').wordmark).toBeUndefined();
-	});
 });

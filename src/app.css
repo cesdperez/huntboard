@@ -166,6 +166,14 @@
 	color: var(--on-banner);
 }
 
+/* The game name or page title in an event banner. */
+@utility type-banner {
+	font-family: var(--font-banner);
+	font-weight: var(--banner-weight);
+	letter-spacing: var(--banner-tracking);
+	text-transform: var(--banner-transform);
+}
+
 @utility type-heading {
 	font-size: 17px;
 	line-height: 1.3;

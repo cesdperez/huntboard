@@ -266,6 +266,11 @@
 			font-size: min(9dvh, 5vw);
 		}
 
+		/* A theme may put the last word on its own line, which would double the title's height. */
+		.scoreboard :global(.scoreboard-banner .event-banner-title-tail) {
+			display: inline;
+		}
+
 		.scoreboard :global(.scoreboard-banner .event-banner-meta) {
 			align-self: end;
 			font-size: 2.8dvh;

@@ -5,6 +5,7 @@
 	import { GameImageSheet } from '#lib/components/images/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { GameImage } from '#lib/domain/images.js';
+	import { splitLastWord } from '#lib/format/text.js';
 	import { cn } from '#lib/utils.js';
 
 	type Props = {
@@ -24,7 +25,7 @@
 	const LONG_NAME = 16;
 
 	// The last word gets its own span, which a theme may set apart, like an italic second line.
-	const title = $derived(/^(?<head>.*\S)\s+(?<tail>\S+)$/s.exec(name)?.groups);
+	const title = $derived(splitLastWord(name));
 
 	let open = $state(false);
 </script>
@@ -49,7 +50,7 @@
 		{/if}
 		<svelte:element
 			this={heading ? 'h1' : 'p'}
-			class="event-banner-title self-end font-banner leading-[0.85] break-words"
+			class="event-banner-title self-end type-banner leading-[0.85] break-words"
 			data-long={name.length > LONG_NAME || undefined}
 		>
 			{#if title}
@@ -111,9 +112,6 @@
 	.event-banner-title {
 		grid-area: title;
 		font-size: var(--banner-title-size);
-		font-weight: var(--banner-weight);
-		text-transform: var(--banner-transform);
-		letter-spacing: var(--banner-tracking);
 	}
 
 	.event-banner-title-tail {
