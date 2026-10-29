@@ -3,10 +3,10 @@
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
 	import { absoluteLink } from '#lib/client/absolute-link.js';
-	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
+	import type { GameRow, SetupTeam } from '#lib/server/db/types.js';
 	import LinkRow from './link-row.svelte';
 
-	let { game, teams }: { game: GameRow; teams: TeamWithClaimCount[] } = $props();
+	let { game, teams }: { game: GameRow; teams: SetupTeam[] } = $props();
 
 	const result = $derived(resultUnder(page.form, 'links'));
 

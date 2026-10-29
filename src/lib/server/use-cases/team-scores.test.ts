@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { listAdjustments } from '../db/adjustments.js';
 import { createGame } from '../db/games.js';
-import { listTeamsWithClaimCounts } from '../db/teams.js';
+import { listSetupTeams } from '../db/teams.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedAdjustment, seedTeam } from '../db/testing/seed.js';
 import type { GameRow, TeamRow } from '../db/types.js';
@@ -32,7 +32,7 @@ function form(fields: Record<string, string>): FormData {
 }
 
 async function arrivedAt() {
-	return (await listTeamsWithClaimCounts(db, game.id))[0].arrived_at;
+	return (await listSetupTeams(db, game.id))[0].arrived_at;
 }
 
 describe('addTeamAdjustment', () => {

@@ -2,7 +2,7 @@
 	import ArrowDownIcon from '@lucide/svelte/icons/arrow-down';
 	import ArrowUpIcon from '@lucide/svelte/icons/arrow-up';
 	import DicesIcon from '@lucide/svelte/icons/dices';
-	import { onMount, untrack } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
@@ -11,18 +11,35 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/format/plural.js';
-	import type { GameRow, TeamWithClaimCount } from '#lib/server/db/types.js';
+	import type { GameRow, SetupTeam } from '#lib/server/db/types.js';
 	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
 	import { suggestTeamName } from '#lib/domain/team-name-suggestion.js';
+	import { deleteTeamQuestion } from './delete-team-question.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
-	let { game, teams }: { game: GameRow; teams: TeamWithClaimCount[] } = $props();
+	let { game, teams }: { game: GameRow; teams: SetupTeam[] } = $props();
 
 	const result = $derived(resultUnder(page.form, 'teams'));
 	const addError = $derived(result?.error && result.teamId === undefined ? result.error : null);
 
 	let editingId = $state<number | null>(null);
 	let pending = $state(false);
+	let editForm = $state<HTMLElement | null>(null);
+	const editButtons = $state<Record<number, HTMLElement | null>>({});
+
+	// Focus follows the form in and back to its Edit button, so it never falls back to the page top.
+	async function startEditing(teamId: number) {
+		editingId = teamId;
+		await tick();
+		editForm?.focus();
+	}
+
+	async function stopEditing() {
+		const teamId = editingId;
+		editingId = null;
+		await tick();
+		if (teamId !== null) editButtons[teamId]?.focus();
+	}
 
 	const initial = resultUnder(page.form, 'teams');
 	const addFailed = initial?.error !== undefined && initial.teamId === undefined;
@@ -45,7 +62,7 @@
 				await updateOrRetry(settled);
 				pending = false;
 				if (result.type === 'success') {
-					editingId = null;
+					void stopEditing();
 					onSuccess?.();
 				}
 			};
@@ -57,9 +74,9 @@
 		newMembers = '';
 	});
 
-	function confirmDelete(team: TeamWithClaimCount): SubmitFunction {
+	function confirmDelete(team: SetupTeam): SubmitFunction {
 		return (input) => {
-			if (!confirm(`Delete ${team.name}? Its link stops working.`)) {
+			if (!confirm(deleteTeamQuestion(team))) {
 				input.cancel();
 				return;
 			}
@@ -67,7 +84,7 @@
 		};
 	}
 
-	function confirmRemoveAvatar(team: TeamWithClaimCount): SubmitFunction {
+	function confirmRemoveAvatar(team: SetupTeam): SubmitFunction {
 		return (input) => {
 			if (!confirm(`Remove the picture of ${team.name}? The team can add a new one.`)) {
 				input.cancel();
@@ -80,7 +97,7 @@
 	// Initials appear only once some team has a picture, so a game without pictures looks as before.
 	const showAvatars = $derived(teams.some((team) => team.avatar_key));
 
-	function rowError(team: TeamWithClaimCount) {
+	function rowError(team: SetupTeam) {
 		return result?.error && result.teamId === team.id ? result.error : null;
 	}
 </script>
@@ -97,9 +114,12 @@
 				<li class="flex flex-col gap-3 border-b py-2">
 					{#if editingId === team.id}
 						<form
+							bind:this={editForm}
 							method="POST"
 							action="?/teamsRename"
-							class="flex flex-col gap-3 pt-2"
+							tabindex="-1"
+							aria-label="Edit {team.name}"
+							class="flex flex-col gap-3 pt-2 outline-none"
 							use:enhance={submit}
 						>
 							<input type="hidden" name="teamId" value={team.id} />
@@ -127,9 +147,7 @@
 							/>
 							<div class="flex gap-3">
 								<Button type="submit" class="flex-1" disabled={pending}>Save</Button>
-								<Button variant="ghost" class="flex-1" onclick={() => (editingId = null)}>
-									Cancel
-								</Button>
+								<Button variant="ghost" class="flex-1" onclick={stopEditing}>Cancel</Button>
 							</div>
 						</form>
 						{#if team.avatar_key}
@@ -199,9 +217,10 @@
 								</Button>
 							</form>
 							<Button
+								bind:ref={editButtons[team.id]}
 								variant="ghost"
 								aria-label="Edit {team.name}"
-								onclick={() => (editingId = team.id)}
+								onclick={() => startEditing(team.id)}
 							>
 								Edit
 							</Button>

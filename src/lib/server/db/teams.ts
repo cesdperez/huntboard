@@ -1,18 +1,20 @@
 import { teamNameKey } from '#lib/domain/team-name.js';
 import { generateToken } from '#lib/domain/token.js';
-import type { TeamRow, TeamWithClaimCount } from './types.js';
+import type { TeamRow, SetupTeam } from './types.js';
 
-export async function listTeamsWithClaimCounts(
+export async function listSetupTeams(
 	db: D1Database,
 	gameId: number
-): Promise<TeamWithClaimCount[]> {
+): Promise<SetupTeam[]> {
 	const { results } = await db
 		.prepare(
-			`SELECT team.*, (SELECT count(*) FROM claim WHERE claim.team_id = team.id) AS claim_count
+			`SELECT team.*,
+				(SELECT count(*) FROM claim WHERE claim.team_id = team.id) AS claim_count,
+				(SELECT count(*) FROM adjustment WHERE adjustment.team_id = team.id) AS adjustment_count
 			FROM team WHERE game_id = ? ORDER BY position, id`
 		)
 		.bind(gameId)
-		.all<TeamWithClaimCount>();
+		.all<SetupTeam>();
 	return results;
 }
 

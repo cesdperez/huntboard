@@ -8,7 +8,7 @@ import { mediaActions } from '#lib/server/actions/media.js';
 import { teamsActions } from '#lib/server/actions/teams.js';
 import { listChallengesWithClaimCounts } from '#lib/server/db/challenges.js';
 import { countGameMedia } from '#lib/server/db/claim-media.js';
-import { listTeamsWithClaimCounts } from '#lib/server/db/teams.js';
+import { listSetupTeams } from '#lib/server/db/teams.js';
 import { getSignedInUser } from '#lib/server/http/session.js';
 import { getClaimSection } from '#lib/server/pages/claim-section.js';
 import type { Actions, PageServerLoad } from './$types';
@@ -16,7 +16,7 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ parent, cookies }) => {
 	const { game } = await parent();
 	const [teams, challenges, mediaCount, claim] = await Promise.all([
-		listTeamsWithClaimCounts(env.DB, game.id),
+		listSetupTeams(env.DB, game.id),
 		listChallengesWithClaimCounts(env.DB, game.id),
 		countGameMedia(env.DB, game.id),
 		getClaimSection(game, () => getSignedInUser(cookies))

@@ -6,7 +6,7 @@ import {
 	TEAM_NAME_TAKEN_ERROR
 } from '#lib/domain/team-name.js';
 import { createGame } from '../db/games.js';
-import { listTeamsWithClaimCounts } from '../db/teams.js';
+import { listSetupTeams } from '../db/teams.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { GameRow, TeamRow } from '../db/types.js';
@@ -45,14 +45,14 @@ function form(fields: Record<string, string>): FormData {
 }
 
 async function teamNames() {
-	return (await listTeamsWithClaimCounts(db, game.id)).map((team) => team.name);
+	return (await listSetupTeams(db, game.id)).map((team) => team.name);
 }
 
 describe('createTeam', () => {
 	it('adds the team at the end', async () => {
 		const outcome = await createTeam(db, game.id, form({ name: ' Pier  Gulls ', members: 'Sam' }));
 
-		const teams = await listTeamsWithClaimCounts(db, game.id);
+		const teams = await listSetupTeams(db, game.id);
 		expect(outcome).toEqual({ status: 200, result: { teamId: teams[2].id } });
 		expect(teams[2]).toEqual(expect.objectContaining({ name: 'Pier Gulls', members: 'Sam' }));
 	});
@@ -98,7 +98,7 @@ describe('editTeam', () => {
 		);
 
 		expect(outcome).toEqual({ status: 200, result: { teamId: rats.id } });
-		expect((await listTeamsWithClaimCounts(db, game.id))[0]).toEqual(
+		expect((await listSetupTeams(db, game.id))[0]).toEqual(
 			expect.objectContaining({ name: 'Canal Kings', members: 'Sam, Alex' })
 		);
 	});

@@ -4,14 +4,14 @@ import {
 	addTeam,
 	deleteTeam,
 	listTeamNames,
-	listTeamsWithClaimCounts,
+	listSetupTeams,
 	moveTeam,
 	recordFirstArrival,
 	setArrival,
 	updateTeam
 } from './teams.js';
 import { createTestDb } from './testing/test-db.js';
-import { seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
+import { seedAdjustment, seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import type { GameRow } from './types.js';
 
 let db: D1Database;
@@ -22,14 +22,14 @@ beforeEach(async () => {
 	game = await createGame(db, 'Canal hunt');
 });
 
-describe('listTeamsWithClaimCounts', () => {
+describe('listSetupTeams', () => {
 	it('lists only this game teams in position order', async () => {
 		await seedTeam(db, game.id, { name: 'Second', position: 1 });
 		await seedTeam(db, game.id, { name: 'First', position: 0 });
 		const other = await createGame(db, 'Other hunt');
 		await seedTeam(db, other.id, { name: 'Elsewhere' });
 
-		const teams = await listTeamsWithClaimCounts(db, game.id);
+		const teams = await listSetupTeams(db, game.id);
 
 		expect(teams.map((team) => team.name)).toEqual(['First', 'Second']);
 	});
@@ -43,12 +43,23 @@ describe('listTeamsWithClaimCounts', () => {
 		await seedClaim(db, rats.id, swim.id, { status: 'pending' });
 		await seedClaim(db, rats.id, cake.id, { status: 'scored', points: 10 });
 
-		const teams = await listTeamsWithClaimCounts(db, game.id);
+		const teams = await listSetupTeams(db, game.id);
 
 		expect(teams).toEqual([
-			{ ...rats, claim_count: 3 },
-			{ ...owls, claim_count: 0 }
+			{ ...rats, claim_count: 3, adjustment_count: 0 },
+			{ ...owls, claim_count: 0, adjustment_count: 0 }
 		]);
+	});
+
+	it('counts the adjustments of each team, which deleting it takes along', async () => {
+		const rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
+		await seedTeam(db, game.id, { name: 'Night Owls' });
+		await seedAdjustment(db, rats.id);
+		await seedAdjustment(db, rats.id, { points: -5 });
+
+		const teams = await listSetupTeams(db, game.id);
+
+		expect(teams.map((team) => team.adjustment_count)).toEqual([2, 0]);
 	});
 });
 
@@ -66,7 +77,7 @@ describe('listTeamNames', () => {
 });
 
 async function names(gameId = game.id) {
-	const teams = await listTeamsWithClaimCounts(db, gameId);
+	const teams = await listSetupTeams(db, gameId);
 	return teams.map((team) => `${team.position}:${team.name}`);
 }
 
@@ -120,7 +131,7 @@ describe('updateTeam', () => {
 		expect(await updateTeam(db, game.id, rats.id, { name: 'Sewer Rats', members: 'Ana, Bo' })).toBe(
 			'updated'
 		);
-		const [team] = await listTeamsWithClaimCounts(db, game.id);
+		const [team] = await listSetupTeams(db, game.id);
 		expect(team).toMatchObject({ name: 'Sewer Rats', members: 'Ana, Bo' });
 	});
 
@@ -160,14 +171,14 @@ describe('moveTeam', () => {
 	});
 
 	it('swaps a team with the one above it', async () => {
-		const [, , c] = await listTeamsWithClaimCounts(db, game.id);
+		const [, , c] = await listSetupTeams(db, game.id);
 
 		expect(await moveTeam(db, game.id, c.id, -1)).toBe(true);
 		expect(await names()).toEqual(['0:A', '1:C', '2:B']);
 	});
 
 	it('does nothing past either end', async () => {
-		const [a, , c] = await listTeamsWithClaimCounts(db, game.id);
+		const [a, , c] = await listSetupTeams(db, game.id);
 
 		expect(await moveTeam(db, game.id, a.id, -1)).toBe(false);
 		expect(await moveTeam(db, game.id, c.id, 1)).toBe(false);
@@ -190,7 +201,7 @@ describe('moveTeam', () => {
 	});
 
 	it('keeps both moves when two judges reorder at once', async () => {
-		const [a, , c] = await listTeamsWithClaimCounts(db, game.id);
+		const [a, , c] = await listSetupTeams(db, game.id);
 
 		await Promise.all([moveTeam(db, game.id, c.id, -1), moveTeam(db, game.id, a.id, 1)]);
 
@@ -230,7 +241,7 @@ describe('deleteTeam', () => {
 		const elsewhere = await seedTeam(db, other.id);
 
 		expect(await deleteTeam(db, game.id, elsewhere.id)).toEqual({ status: 'not-found' });
-		expect(await listTeamsWithClaimCounts(db, other.id)).toHaveLength(1);
+		expect(await listSetupTeams(db, other.id)).toHaveLength(1);
 	});
 });
 
@@ -239,17 +250,17 @@ describe('setArrival', () => {
 		const rats = await seedTeam(db, game.id);
 
 		expect(await setArrival(db, game.id, rats.id, '2026-06-01T21:03:00.000Z')).toBe(true);
-		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBe(
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe(
 			'2026-06-01T21:03:00.000Z'
 		);
 
 		await setArrival(db, game.id, rats.id, '2026-06-01T20:58:00.000Z');
-		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBe(
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe(
 			'2026-06-01T20:58:00.000Z'
 		);
 
 		await setArrival(db, game.id, rats.id, null);
-		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBeNull();
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBeNull();
 	});
 
 	it('refuses a team of another game', async () => {
@@ -267,7 +278,7 @@ describe('recordFirstArrival', () => {
 		expect(await recordFirstArrival(db, game.id, rats.id, '2026-06-01T21:02:00.000Z')).toBe(
 			'recorded'
 		);
-		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBe(
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe(
 			'2026-06-01T21:02:00.000Z'
 		);
 	});
@@ -279,7 +290,7 @@ describe('recordFirstArrival', () => {
 		expect(await recordFirstArrival(db, game.id, rats.id, '2026-06-01T21:10:00.000Z')).toBe(
 			'already-recorded'
 		);
-		expect((await listTeamsWithClaimCounts(db, game.id))[0].arrived_at).toBe(
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe(
 			'2026-06-01T21:02:00.000Z'
 		);
 	});

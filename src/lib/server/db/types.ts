@@ -76,7 +76,8 @@ export interface WithClaimCount {
 	claim_count: number;
 }
 
-export type TeamWithClaimCount = TeamRow & WithClaimCount;
+/** Deleting a team without claims also deletes its adjustments, so Setup names them first. */
+export type SetupTeam = TeamRow & WithClaimCount & { adjustment_count: number };
 
 export type ChallengeWithClaimCount = ChallengeRow & WithClaimCount;
 
