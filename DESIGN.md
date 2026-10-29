@@ -75,7 +75,7 @@ One family: **Archivo** (variable, Google Fonts), using its width axis as the ac
 Rules:
 
 - Numbers that change (totals, points, countdowns) always use `font-variant-numeric: tabular-nums` so they do not jitter when they update.
-- Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings. A theme may set the game name in its event banner in capitals, as decoration.
+- Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings. A theme may set the game name in its event banner in capitals, or its section headings in small capitals, as decoration.
 - Inputs are at least 16px so iOS does not zoom on focus.
 - One exception to the single family: a pasted line quoted back in a parse error uses the system monospace font, so brackets, dashes and indentation read exactly as typed.
 - Body text lines stay under 70 characters. On wide screens the content column is capped, not stretched.
@@ -120,6 +120,7 @@ Tapping a row opens a bottom sheet with the description, the note field, "Add ph
 - While the media is on its way, "Mark done" stays disabled and reads "Waiting for the upload". Once attached, "Mark done" sends it with the note. A claim needs no media, so the team can still send proof in the group chat or show it in person.
 - "Remove", closing the sheet, or marking done stops any step still running and forgets the file. An error shows in place under the status row, and "Remove" clears it so the team can pick another file. Outside the game window the button is hidden.
 - A claim with media shows its thumbnail on the row, 32px between the title and the points, and in the sheet, 40px beside "Photo sent" or "Video sent". A video shows the play tile, so a list never loads videos. Thumbnails have 8px corners, so they never read as a 3px marker.
+- When a poll shows that a judge scored or rejected a claim, a toast says so: "Scored 8 for Swim in a fountain", or "Rejected Free dessert: no proof received. You can mark it done again." Several judgements show one after another, and the phone vibrates briefly where the browser allows it. Opening the page and the team's own marks and undos stay quiet.
 
 ### Admin
 
@@ -169,6 +170,10 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 
 The game settings end with the theme, one option per registered theme, saved with the rest of the form.
 
+Each row in the Setup links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
+
+QR codes are black on white with a 4-module white margin in every theme and mode, because phone scanners misread inverted or low-contrast codes. They are drawn as SVG in the browser.
+
 Setup has a "Game image" section under the game settings: a preview of the current image, a file field ("Image", or "Replace image" once there is one), an optional label and "Save image". Saving without a file changes only the label. "Remove image" confirms first.
 
 In the Setup team list, a team's edit form shows its picture with "Remove picture", which confirms first. This is moderation: the team can add a new one.
@@ -179,7 +184,9 @@ Setup ends with "Reset game", which returns the game to how `/new` created it: t
 
 ### Scoreboard
 
-A ranked list. Rank and total in display type, the total in `--score`, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and nothing else changes.
+A ranked list. Rank and total in display type, the total in `--score`, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and a QR code of the scoreboard link sits to the right of the list.
+
+- The QR code is `min(26dvh, 18vw)` wide, with "Scan to follow on your phone" under it in `--muted`. It encodes only the scoreboard link, built from the page's own token. Phones already have the link, so they never show it.
 
 - Under the game name, one status line: "Starts in 0:42:10", "Ends in 1:42:10" or "Ended at 21:00". The scoreboard keeps updating after the end, because judging goes on at the meeting point.
 - Tied teams show the same rank and keep their setup order.
@@ -204,9 +211,9 @@ The admin picks a theme for the game in Setup. It changes every page of that gam
 
 A theme is two things:
 
-- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, and its [layout](#layouts).
+- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), and optionally a `wordmark`: an image and its alt text that the event app bar shows in place of "Huntboard".
 - A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
-- Images in `static/themes/<id>/`: `icon.svg` for the browser tab, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. `node scripts/theme-images.ts` renders the two PNGs, the preview from a card in that script.
+- Images in `static/themes/<id>/`: `icon.svg` for the browser tab, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. `node scripts/theme-images.ts` renders the two PNGs, the preview from a card in that script. A theme's wordmark lives here too.
 
 The server writes `data-game-theme` on `<html>`, so the first paint and the sheets portalled to `<body>` already wear the theme. A stored id that is no longer registered shows `DEFAULT_THEME`.
 
@@ -234,7 +241,11 @@ Components use roles, never a theme's own colour names.
 | `--app-bar`, `--on-app-bar` | `--ink`, `--paper` | Event layout: the app bar background (a colour or a gradient) and its text. An event theme also sets `--app-bar-base`, its main colour, which the browser chrome matches |
 | `--banner`, `--on-banner` | `--flag`, `--on-flag` | Event layout: the event banner and its text |
 | `--banner-art` | none | Event layout: an image drawn in the banner's own column, never behind text |
-| `--section-rule`, `--section-ornament` | `--line`, none | Event layout: the rule after a section heading and the image before it |
+| `--banner-title-size`, `--banner-weight`, `--banner-tracking`, `--banner-transform` | `clamp(48px, 17vw, 80px)`, 450, normal, uppercase | Event layout: size, weight, letter spacing and case of the game name in the banner (the admin banner and the page banner take all but the size) |
+| `--banner-title-tail-display`, `--banner-title-tail-style`, `--banner-title-tail-weight` | inline, normal, `--banner-weight` | Event layout: the last word of a game name of two or more words, which a theme may set on its own line or in italic |
+| `--banner-edge`, `--banner-edge-size` | none, 0px | Event layout: a band along the bottom of the banner, in its own padding |
+| `--section-heading-font`, `--section-heading-tracking` | `700 26px/1.25 --font-display`, normal | Event layout: the `font` shorthand and letter spacing of section headings, which take `--on-section` |
+| `--section-rule`, `--section-rule-width`, `--section-ornament`, `--section-ornament-order` | `--line`, 2px, none, 0 | Event layout: the rule after a section heading, the image before it, and its flex order (1 puts it after the rule) |
 | `--font-sans` | Archivo | All text without a display role |
 | `--font-display` | Archivo | Screen titles, ranks, section headings, sheet titles, team names on the admin Teams tab and in the event strip |
 | `--font-score` | `--font-display` | Score totals |
@@ -248,7 +259,7 @@ Inside the strip and the admin tab bar, the strip roles stand in for `--surface`
 A theme's registry entry names its layout. Structure changes only through it; the theme CSS changes only tokens. Components read it with `pageLayout()` from `src/lib/themes/page-layout.ts`. Pages without a game get the layout of `DEFAULT_THEME`.
 
 - `plain`: the layout described above. `flag` uses it.
-- `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The banner shows the game name in `--font-banner`, large enough to fill the banner (17vw up to 80px, 40px past 16 characters so long names wrap into a few lines), the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings are 26px `--font-display` with `--section-ornament` before and a 2px `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
+- `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The banner shows the game name in `--font-banner`, large enough to fill the banner (17vw up to 80px, 40px past 16 characters so long names wrap into a few lines), the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings are 26px `--font-display` with `--section-ornament` before and a 2px `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row, its last word included, with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
   - Admin pages are worked fast on a phone, so they keep their density and touch sizes and skip the big banner. Under the app bar a one-row banner shows the game name in 32px `--font-banner` and the status line. The tab bar marks the current tab with a 4px bar in the strip's text colour along its top, and its focus ring sits inside the bar.
   - The home page and `/new` have no game, so their banner holds the page title in `--font-banner` and one line under it, with `--banner-art` beside. Error pages add only the app bar.
 
@@ -286,6 +297,28 @@ A theme's registry entry names its layout. Structure changes only through it; th
 
 Fonts: Fraunces (bold serif) for `--font-display`, Barlow for `--font-sans`, Barlow Condensed for `--font-score`, and Jersey 10, a pixel face, for `--font-banner`, where the game name is set in capitals as decoration. None has a width axis, so the `--stretch-*` tokens are `normal`.
 
+### Lightmile Azulejo
+
+`azulejo`, light only, `event` layout. Made for the Lightmile club trip to Málaga: ceramic blue and terracotta on warm cream, like a printed travel journal with tile details. The app bar shows the Lightmile wordmark from `static/themes/azulejo/wordmark.svg`, the club's own artwork, in place of "Huntboard".
+
+| Role | Value |
+|---|---|
+| `--paper`, `--surface` | Cream `#FFF7E8`, `#FFFAF0` |
+| `--ink`, `--muted`, `--line` | `#283950` (11:1), `#726451` (5.4:1), `#DED3BE` |
+| `--marker`, `--action`, `--own`, `--section-rule`, `--on-section`, `--waiting` | Terracotta `#B8412D` (5.1:1 on cream), with cream `#FFFAF0` on it (5.3:1) |
+| `--own-row` | `#F5DFCC` |
+| `--strip`, `--on-strip`, `--strip-score` | Ceramic blue `#24468C`, cream (8.5:1) |
+| `--on-strip-muted`, `--strip-own-row`, `--strip-danger` | `#D5DDEF` (6.6:1 at 15px), `#1B3770`, `#FFD2C8` (6.6:1) |
+| `--score`, `--on-banner` | Ceramic blue, 8.5:1 on cream |
+| `--danger` | `#A32020` (7.1:1) |
+| `--app-bar`, `--app-bar-base`, `--on-app-bar` | Cream with a `--line` hairline at the bottom, ink text. The browser chrome is `#FFF7E8`. |
+| `--banner`, `--banner-edge` | Cream, edged with alternating blue and terracotta tiles |
+| `--strip-paper` | `#1B3770` |
+| `--marker-outline` | `#726451` |
+| `--banner-art`, `--section-ornament` | A terracotta 2 × 2 tile in the banner, a small terracotta star after each section rule |
+
+Fonts: Georgia for `--font-display` and `--font-banner`, so the game name, ranks and team names are a bold serif. The banner sets the last word of the game name on its own line in Georgia italic. Section headings are 17px Georgia small capitals. Archivo stays the sans and the score font. Georgia is a system font, so the theme loads only Archivo, and phones without Georgia fall back to their serif.
+
 ### Team pictures and the game image
 
 A team picture is a circle, so it never reads as a marker. Without a picture a team shows its initial in `--muted` on `--paper`, inside a `--line` border.
@@ -321,7 +354,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. When the browser comes back online, polls run again at once, and pages that do not poll check the server.
 - A page that cannot load at all says so plainly. Offline: "You are offline" with "This page loads again once you reconnect." Otherwise: "This page did not load" with "It tries again by itself. If it keeps happening, reload the page or tell your organiser." Both reload by themselves on the polling schedule once the server answers.
 - A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
-- An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast, the one toast that is not a confirmation.
+- An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast. The only other toasts that are not a confirmation tell a team about a judgement.
 - A file the browser cannot open: "This file is not an image this browser can read. Choose a JPEG, PNG or WebP image." A file that stays too large after shrinking: "This image stays too large even when shrunk. Choose another one." Both show in place before anything is sent.
 - Claim media errors show in place in the sheet, under the status row:
   - A file that is neither: "Choose a photo or a video."

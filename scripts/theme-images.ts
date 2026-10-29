@@ -12,6 +12,8 @@ const SHARE_SIZE = { width: 1200, height: 630 };
 
 const THISTLE = `<svg viewBox="0 0 64 112" fill="none" stroke="#151515" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M32 44V14M28 44L22 16M36 44L42 16M25 44L14 22M39 44L50 22M23 44L10 31M41 44L54 31"/><path d="M18 44H46M18 44L14 39M46 44L50 39"/><path d="M21 44C21 54 26 60 32 60S43 54 43 44"/><path d="M24 47L35 59M30 45L41 52M40 47L29 59M34 45L23 52"/><path d="M32 60C33 76 31 94 32 112"/><path d="M32 94C24 92 16 86 9 74L16 77L13 68L20 73L20 64L26 72L27 64L29 76C30 84 31 89 32 94"/><path d="M32 80C40 78 48 72 55 61L48 64L51 55L44 61L44 52L38 60L37 52L35 64C34 70 33 76 32 80"/></svg>`;
 
+const TILE = `<svg viewBox="0 0 104 150" fill="none" stroke="#b8412d" stroke-width="1.8"><path d="M2 2H102V102H2Z M52 2V102M2 52H102"/><path d="M2 27Q27 27 27 2Q27 27 52 27Q27 27 27 52Q27 27 2 27ZM52 27Q77 27 77 2Q77 27 102 27Q77 27 77 52Q77 27 52 27ZM2 77Q27 77 27 52Q27 77 52 77Q27 77 27 102Q27 77 2 77ZM52 77Q77 77 77 52Q77 77 102 77Q77 77 77 102Q77 77 52 77Z"/><path d="M12 126H92M24 134H80"/></svg>`;
+
 interface ThemeArt {
 	/** Fills the touch icon's square, since iOS rounds the corners itself. */
 	touchBackground: string;
@@ -60,6 +62,44 @@ const ART: Record<string, ThemeArt> = {
 				<span class="score">180</span>
 			</div>`
 	},
+	azulejo: {
+		touchBackground: '#24468c',
+		shareCard: `
+			<style>
+				body { background: #fff7e8; color: #24468c; font-family: 'Archivo', sans-serif; }
+				.bar { height: 104px; padding: 0 72px; display: flex; align-items: center; border-bottom: 2px solid #ded3be; }
+				.bar img { height: 40px; }
+				.banner {
+					height: 392px; padding: 36px 72px 12px; display: flex; justify-content: space-between;
+					background: repeating-linear-gradient(90deg, #24468c 0 20px, transparent 20px 36px,
+						#b8412d 36px 56px, transparent 56px 72px) left bottom / 100% 12px no-repeat;
+				}
+				h1 { margin: 0; font: 700 150px/0.88 Georgia, serif; letter-spacing: -0.05em; }
+				h1 i { font-weight: 400; }
+				p { margin: 28px 0 0; font-weight: 600; font-size: 36px; color: #283950; }
+				.tile { width: 200px; flex-shrink: 0; }
+				.strip {
+					height: 134px; padding: 0 72px; display: flex; align-items: center; gap: 28px;
+					background: #24468c; color: #fff7e8;
+				}
+				.rank { font: 700 52px Georgia, serif; padding-right: 28px; border-right: 2px solid #5a74ad; }
+				.team { flex: 1; font: 700 44px Georgia, serif; }
+				.score { font: 800 92px 'Archivo', sans-serif; font-stretch: 125%; }
+			</style>
+			<div class="bar"><img src="data:image/svg+xml;base64,${staticBase64('/themes/azulejo/wordmark.svg')}" alt=""></div>
+			<div class="banner">
+				<div>
+					<h1>Scavenger<br><i>hunt</i></h1>
+					<p>Claim challenges. Climb the leaderboard.</p>
+				</div>
+				<div class="tile">${TILE}</div>
+			</div>
+			<div class="strip">
+				<span class="rank">1st</span>
+				<span class="team">Your team</span>
+				<span class="score">180</span>
+			</div>`
+	},
 	flag: {
 		touchBackground: '#f5f7fa',
 		shareCard: `
@@ -84,8 +124,12 @@ function staticPath(file: string) {
 	return path.join(STATIC_DIR, file);
 }
 
+function staticBase64(file: string) {
+	return readFileSync(staticPath(file)).toString('base64');
+}
+
 function iconBase64(id: string) {
-	return readFileSync(staticPath(`/themes/${id}/icon.svg`)).toString('base64');
+	return staticBase64(`/themes/${id}/icon.svg`);
 }
 
 function page(theme: Theme, body: string) {

@@ -39,8 +39,21 @@
 	--banner: var(--flag);
 	--on-banner: var(--on-flag);
 	--banner-art: none;
+	--banner-transform: uppercase;
+	--banner-tracking: normal;
+	--banner-weight: 450;
+	--banner-title-size: clamp(48px, 17vw, 80px);
+	--banner-title-tail-display: inline;
+	--banner-title-tail-style: normal;
+	--banner-title-tail-weight: var(--banner-weight);
+	--banner-edge: none;
+	--banner-edge-size: 0px;
+	--section-heading-font: 700 26px/1.25 var(--font-display);
+	--section-heading-tracking: normal;
 	--section-rule: var(--line);
+	--section-rule-width: 2px;
 	--section-ornament: none;
+	--section-ornament-order: 0;
 
 	--font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
 	--font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;

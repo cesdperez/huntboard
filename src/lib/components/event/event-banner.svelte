@@ -5,6 +5,7 @@
 	import { GameImageSheet } from '#lib/components/images/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { GameImage } from '#lib/domain/images.js';
+	import { splitLastWord } from '#lib/format/text.js';
 	import { cn } from '#lib/utils.js';
 
 	type Props = {
@@ -22,6 +23,9 @@
 
 	// Longer game names take a smaller title, so they wrap into a few lines, not a column of words.
 	const LONG_NAME = 16;
+
+	// The last word gets its own span, which a theme may set apart, like an italic second line.
+	const title = $derived(splitLastWord(name));
 
 	let open = $state(false);
 </script>
@@ -46,10 +50,14 @@
 		{/if}
 		<svelte:element
 			this={heading ? 'h1' : 'p'}
-			class="event-banner-title self-end font-banner leading-[0.85] break-words uppercase"
+			class="event-banner-title self-end type-banner leading-[0.85] break-words"
 			data-long={name.length > LONG_NAME || undefined}
 		>
-			{name}
+			{#if title}
+				{title.head} <span class="event-banner-title-tail">{title.tail}</span>
+			{:else}
+				{name}
+			{/if}
 		</svelte:element>
 		<div class="event-banner-art" aria-hidden="true"></div>
 		<div class="event-banner-meta flex flex-col text-[17px] leading-snug font-semibold">
@@ -103,7 +111,13 @@
 
 	.event-banner-title {
 		grid-area: title;
-		font-size: clamp(48px, 17vw, 80px);
+		font-size: var(--banner-title-size);
+	}
+
+	.event-banner-title-tail {
+		display: var(--banner-title-tail-display);
+		font-style: var(--banner-title-tail-style);
+		font-weight: var(--banner-title-tail-weight);
 	}
 
 	.event-banner-title[data-long] {

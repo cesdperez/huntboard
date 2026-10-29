@@ -1,10 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { MediaQuery } from 'svelte/reactivity';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { flip } from 'svelte/animate';
 	import { OfflineNotice, refreshGameData } from '#lib/components/connection/index.js';
 	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { GameImageHeader, TeamAvatar } from '#lib/components/images/index.js';
+	import { absoluteLink } from '#lib/client/absolute-link.js';
 	import { CountingPoints } from '#lib/components/points/index.js';
+	import { QrCode } from '#lib/components/qr/index.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
 	import { startPolling } from '#lib/client/live-updates.js';
 	import { ordinal } from '#lib/format/ordinal.js';
@@ -18,6 +23,12 @@
 	// Initials appear only once some team has a picture, so a game without pictures looks as before.
 	const showAvatars = $derived(data.standings.some((row) => row.avatarKey));
 	const layout = $derived(pageLayout());
+	// Phones already hold the link, and the server renders no code, so only a big screen draws one.
+	const bigScreen = new MediaQuery('min-width: 1024px', false);
+	// From the route's own token, never page data, so the code can only open this scoreboard.
+	const scoreboardLink = $derived(
+		absoluteLink(resolve('/s/[token]', { token: page.params.token ?? '' }), page.url.href)
+	);
 
 	onMount(() => {
 		const stopClock = clock.start();
@@ -51,74 +62,90 @@
 		/>
 	{/if}
 	<main class="scoreboard-main mx-auto flex w-full max-w-content flex-1 flex-col px-gutter py-6">
-		{#if layout === 'event'}
-			<OfflineNotice class="pb-3" />
-			<h2
-				class="scoreboard-heading border-b-2 border-score pb-1 font-display text-[32px] leading-tight font-bold"
-			>
-				Leaderboard
-			</h2>
-		{:else}
-			<header class="flex flex-col gap-1">
-				<h1 class="scoreboard-title type-title">{data.game.name}</h1>
-				<p class="scoreboard-status type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
-				<OfflineNotice />
-				{#if data.game.image}
-					<GameImageHeader image={data.game.image} class="scoreboard-image mt-2" />
-				{/if}
-			</header>
-		{/if}
-
-		{#if data.standings.length === 0}
-			<p class="mt-6 type-secondary">
-				No teams yet. They show up here once the organiser adds them.
-			</p>
-		{:else}
-			<ol
-				class={['flex flex-col', layout === 'event' ? 'mt-1' : 'mt-4 border-t']}
-				aria-label="Scoreboard"
-			>
-				{#each data.standings as row, index (row.teamId)}
-					<!-- Higher ranks paint on top, so a climbing team slides over the rows it passes. -->
-					<li
-						class={[
-							'scoreboard-row relative flex min-h-row items-center gap-3 border-b bg-paper',
-							layout === 'event' ? 'py-3' : 'py-2'
-						]}
-						animate:flip={{ duration: motionMs(REORDER_MS) }}
-						style:z-index={data.standings.length - index}
+		<div class="scoreboard-columns flex">
+			<div class="flex min-w-0 flex-1 flex-col">
+				{#if layout === 'event'}
+					<OfflineNotice class="pb-3" />
+					<h2
+						class="scoreboard-heading border-b-2 border-score pb-1 font-display text-[32px] leading-tight font-bold"
 					>
-						<span class="scoreboard-rank w-16 shrink-0 type-rank">{ordinal(row.rank)}</span>
-						{#if showAvatars}
-							<TeamAvatar
-								name={row.name}
-								avatarKey={row.avatarKey}
-								class="scoreboard-avatar {layout === 'event'
-									? 'size-12 text-[19px]'
-									: 'size-10 text-[17px]'}"
-							/>
+						Leaderboard
+					</h2>
+				{:else}
+					<header class="flex flex-col gap-1">
+						<h1 class="scoreboard-title type-title">{data.game.name}</h1>
+						<p class="scoreboard-status type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
+						<OfflineNotice />
+						{#if data.game.image}
+							<GameImageHeader image={data.game.image} class="scoreboard-image mt-2" />
 						{/if}
-						<span class="min-w-0 flex-1">
-							<span
-								class={['scoreboard-name block truncate', layout === 'event' && 'font-semibold']}
-								>{row.name}</span
+					</header>
+				{/if}
+
+				{#if data.standings.length === 0}
+					<p class="mt-6 type-secondary">
+						No teams yet. They show up here once the organiser adds them.
+					</p>
+				{:else}
+					<ol
+						class={['flex flex-col', layout === 'event' ? 'mt-1' : 'mt-4 border-t']}
+						aria-label="Scoreboard"
+					>
+						{#each data.standings as row, index (row.teamId)}
+							<!-- Higher ranks paint on top, so a climbing team slides over the rows it passes. -->
+							<li
+								class={[
+									'scoreboard-row relative flex min-h-row items-center gap-3 border-b bg-paper',
+									layout === 'event' ? 'py-3' : 'py-2'
+								]}
+								animate:flip={{ duration: motionMs(REORDER_MS) }}
+								style:z-index={data.standings.length - index}
 							>
-							{#if row.members}<span class="scoreboard-members block type-secondary"
-									>{row.members}</span
-								>{/if}
-						</span>
-						{#if layout === 'event'}
-							<span class="flex shrink-0 flex-col items-end">
-								<CountingPoints value={row.total} class="scoreboard-total" />
-								<span class="scoreboard-unit text-[15px] leading-none text-muted">points</span>
-							</span>
-						{:else}
-							<CountingPoints value={row.total} class="scoreboard-total" />
-						{/if}
-					</li>
-				{/each}
-			</ol>
-		{/if}
+								<span class="scoreboard-rank w-16 shrink-0 type-rank">{ordinal(row.rank)}</span>
+								{#if showAvatars}
+									<TeamAvatar
+										name={row.name}
+										avatarKey={row.avatarKey}
+										class="scoreboard-avatar {layout === 'event'
+											? 'size-12 text-[19px]'
+											: 'size-10 text-[17px]'}"
+									/>
+								{/if}
+								<span class="min-w-0 flex-1">
+									<span
+										class={[
+											'scoreboard-name block truncate',
+											layout === 'event' && 'font-semibold'
+										]}>{row.name}</span
+									>
+									{#if row.members}<span class="scoreboard-members block type-secondary"
+											>{row.members}</span
+										>{/if}
+								</span>
+								{#if layout === 'event'}
+									<span class="flex shrink-0 flex-col items-end">
+										<CountingPoints value={row.total} class="scoreboard-total" />
+										<span class="scoreboard-unit text-[15px] leading-none text-muted">points</span>
+									</span>
+								{:else}
+									<CountingPoints value={row.total} class="scoreboard-total" />
+								{/if}
+							</li>
+						{/each}
+					</ol>
+				{/if}
+			</div>
+			{#if bigScreen.current}
+				<aside class="scoreboard-join flex shrink-0 flex-col items-center self-center">
+					<QrCode
+						text={scoreboardLink}
+						label="QR code of this scoreboard's link"
+						class="scoreboard-qr"
+					/>
+					<p class="scoreboard-join-caption text-center text-muted">Scan to follow on your phone</p>
+				</aside>
+			{/if}
+		</div>
 	</main>
 </div>
 
@@ -139,6 +166,23 @@
 			max-width: none;
 			justify-content: center;
 			padding-inline: 6vw;
+		}
+
+		.scoreboard-columns {
+			gap: 4vw;
+		}
+
+		.scoreboard-join {
+			gap: 1.5dvh;
+		}
+
+		.scoreboard :global(.scoreboard-qr) {
+			width: min(26dvh, 18vw);
+		}
+
+		.scoreboard-join-caption {
+			max-width: min(26dvh, 18vw);
+			font-size: 2.4dvh;
 		}
 
 		.scoreboard-title {
@@ -220,6 +264,11 @@
 
 		.scoreboard :global(.scoreboard-banner .event-banner-title[data-long]) {
 			font-size: min(9dvh, 5vw);
+		}
+
+		/* A theme may put the last word on its own line, which would double the title's height. */
+		.scoreboard :global(.scoreboard-banner .event-banner-title-tail) {
+			display: inline;
 		}
 
 		.scoreboard :global(.scoreboard-banner .event-banner-meta) {
