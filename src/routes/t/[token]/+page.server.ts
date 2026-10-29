@@ -41,7 +41,10 @@ export const actions = {
 	mediaUpload: async ({ params, request }) => {
 		const link = await requireTeamLink(params.token);
 		const data = await request.formData();
-		return respond('team', await requestMediaUpload(mediaPresigner(), link, data, new Date()));
+		return respond(
+			'team',
+			await requestMediaUpload(env.DB, mediaPresigner(), link, data, new Date())
+		);
 	},
 
 	avatar: async ({ params, request }) => {

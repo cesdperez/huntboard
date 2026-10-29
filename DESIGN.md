@@ -377,6 +377,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
   - Too large: "This video is too large to send from this phone. Send a shorter one." and "This video stays too large even when compressed. Send a shorter one."
   - When the server refuses the file at "Mark done": "This photo or video did not finish uploading. Attach it again." or "This file is not a photo or video the app takes. Choose a JPEG or WebP photo, or an MP4, MOV or WebM video."
   - When the server takes no uploads: "Photos and videos cannot be attached right now. Mark it done without one and send the proof another way."
+  - When the team or the game has reached its upload limit: "Your team has sent all the photos and videos this game allows. Mark it done without one and show a judge in person." or "This game has no room left for photos and videos. Mark it done without one and show a judge in person."
   - A failed upload gets the usual "This did not go through. Check your connection and try again."
 
 ## Accessibility floor

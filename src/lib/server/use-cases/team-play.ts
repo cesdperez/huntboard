@@ -1,4 +1,10 @@
-import { isMediaType, maxMediaBytes } from '#lib/domain/claim-media.js';
+import {
+	GAME_MEDIA_MAX_BYTES,
+	isMediaType,
+	maxMediaBytes,
+	TEAM_MEDIA_MAX_BYTES,
+	TEAM_UPLOADS_PER_CHALLENGE
+} from '#lib/domain/claim-media.js';
 import { CLAIM_NOTE_MAX_LENGTH } from '#lib/domain/claim-note.js';
 import { DEAD_LINK_MESSAGE } from '#lib/domain/dead-link.js';
 import { gamePhase, type GamePhase } from '#lib/domain/game-window.js';
@@ -13,11 +19,12 @@ import {
 import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
 import { markClaim, undoClaim } from '../db/claims.js';
 import { setTeamAvatar } from '../db/images.js';
+import { isTeamUpload, recordMediaUpload } from '../db/media-uploads.js';
 import { updateTeam } from '../db/teams.js';
 import { deleteObjects } from '../storage/bucket-objects.js';
 import { newMediaKey, type MediaBucket } from '../storage/media-store.js';
 import type { MediaPresigner, MediaUploadTarget } from '../storage/media-upload.js';
-import { checkClaimMedia, mediaTooLarge, NOT_MEDIA } from './claim-media.js';
+import { checkClaimMedia, MEDIA_NOT_UPLOADED, mediaTooLarge, NOT_MEDIA } from './claim-media.js';
 import { conflictMessage } from './conflict-message.js';
 import { readId, readString } from './form.js';
 import { replaceImage, type ImageBucket } from '../storage/image-store.js';
@@ -44,8 +51,18 @@ const CHALLENGE_GONE = 'That challenge is not in this game any more.';
 export const MEDIA_TAKEN = 'This photo or video is already on another claim. Attach it again.';
 export const MEDIA_UPLOADS_OFF =
 	'Photos and videos cannot be attached right now. Mark it done without one and send the proof another way.';
+export const TEAM_MEDIA_FULL =
+	'Your team has sent all the photos and videos this game allows. Mark it done without one and show a judge in person.';
+export const GAME_MEDIA_FULL =
+	'This game has no room left for photos and videos. Mark it done without one and show a judge in person.';
 
-/** Media is optional. When sent, it must already be in the bucket and pass checkClaimMedia. */
+const UPLOAD_LIMITS = {
+	uploadsPerChallenge: TEAM_UPLOADS_PER_CHALLENGE,
+	teamMaxBytes: TEAM_MEDIA_MAX_BYTES,
+	gameMaxBytes: GAME_MEDIA_MAX_BYTES
+};
+
+/** Media is optional. When sent, it must be signed for this team, in the bucket, and pass checkClaimMedia. */
 export async function markDone(
 	db: D1Database,
 	media: MediaBucket,
@@ -65,8 +82,11 @@ export async function markDone(
 	const challengeId = readId(data, 'challengeId');
 	if (challengeId === null) return error(404, CHALLENGE_GONE);
 	const mediaKey = readString(data, 'mediaKey') || null;
-	const mediaError = mediaKey === null ? null : await checkClaimMedia(media, game.id, mediaKey);
-	if (mediaError) return error(400, mediaError);
+	if (mediaKey !== null) {
+		if (!(await isTeamUpload(db, team.id, mediaKey))) return error(400, MEDIA_NOT_UPLOADED);
+		const mediaError = await checkClaimMedia(media, game.id, mediaKey);
+		if (mediaError) return error(400, mediaError);
+	}
 
 	const result = await markClaim(db, {
 		gameId: game.id,
@@ -93,8 +113,9 @@ export async function markDone(
  * means this server has no way to take uploads.
  */
 export async function requestMediaUpload(
+	db: D1Database,
 	presign: MediaPresigner | null,
-	{ game }: TeamLink,
+	{ team, game }: TeamLink,
 	data: FormData,
 	now: Date
 ): Promise<TeamOutcome> {
@@ -110,6 +131,14 @@ export async function requestMediaUpload(
 	if (size > maxMediaBytes(type)) return error(400, mediaTooLarge(type));
 
 	const key = newMediaKey(game.id, type);
+	const upload = { gameId: game.id, teamId: team.id, key, size };
+	switch (await recordMediaUpload(db, upload, UPLOAD_LIMITS)) {
+		case 'team-count':
+		case 'team-bytes':
+			return error(400, TEAM_MEDIA_FULL);
+		case 'game-bytes':
+			return error(400, GAME_MEDIA_FULL);
+	}
 	const target = await presign(key, type, size, now);
 	return { status: 200, result: { kind: 'media-upload', key, ...target } };
 }
