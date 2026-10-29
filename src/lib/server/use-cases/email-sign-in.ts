@@ -1,7 +1,7 @@
 import { nextPath, normalizeDisplayName, normalizeEmail } from '#lib/domain/account.js';
 import { generateToken, sha256Base64Url } from '#lib/domain/token.js';
+import { MS_PER_MINUTE } from '#lib/format/duration.js';
 import {
-	countRequestsSince,
 	deleteExpiredRequests,
 	findRequest,
 	findRequestByToken,
@@ -37,7 +37,6 @@ export type FinishResult =
 	| { kind: 'needs-name'; email: string }
 	| { kind: 'error'; message: string };
 
-const MINUTE_MS = 60 * 1000;
 const EXPIRED: FinishResult = {
 	kind: 'error',
 	message: 'This sign-in link or code has expired or was already used. Ask for a new email.'
@@ -57,27 +56,32 @@ export async function requestSignIn(
 	if (!email) return { kind: 'error', status: 400, message: 'Type your email address.' };
 
 	await deleteExpiredRequests(db, now.toISOString());
-	const windowStart = new Date(now.getTime() - SIGN_IN_MINUTES * MINUTE_MS).toISOString();
-	if ((await countRequestsSince(db, email, windowStart)) >= MAX_REQUESTS_PER_WINDOW) {
+	const requestId = generateToken();
+	const token = generateToken();
+	const code = generateCode();
+	const inserted = await insertSignInRequest(
+		db,
+		{
+			id: requestId,
+			token_hash: await sha256Base64Url(token),
+			code_hash: await codeHash(requestId, code),
+			email,
+			next_path: nextPath(input.next),
+			expires_at: new Date(now.getTime() + SIGN_IN_MINUTES * MS_PER_MINUTE).toISOString(),
+			created_at: now.toISOString()
+		},
+		{
+			since: new Date(now.getTime() - SIGN_IN_MINUTES * MS_PER_MINUTE).toISOString(),
+			max: MAX_REQUESTS_PER_WINDOW
+		}
+	);
+	if (!inserted) {
 		return {
 			kind: 'error',
 			status: 429,
 			message: 'We sent several emails to this address already. Wait a few minutes.'
 		};
 	}
-
-	const requestId = generateToken();
-	const token = generateToken();
-	const code = generateCode();
-	await insertSignInRequest(db, {
-		id: requestId,
-		token_hash: await sha256Base64Url(token),
-		code_hash: await codeHash(requestId, code),
-		email,
-		next_path: nextPath(input.next),
-		expires_at: new Date(now.getTime() + SIGN_IN_MINUTES * MINUTE_MS).toISOString(),
-		created_at: now.toISOString()
-	});
 
 	const link = `${input.origin}/login/verify?token=${token}`;
 	if (!(await send(signInEmail(email, link, code)))) {

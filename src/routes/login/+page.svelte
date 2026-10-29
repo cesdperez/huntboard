@@ -89,8 +89,9 @@
 			action={requestAction}
 			class="flex flex-col gap-4"
 			use:enhance={() => {
-				return async ({ update }) => {
-					otherEmail = false;
+				return async ({ result, update }) => {
+					// A refused address stays on this form; only a sent email moves on to the code.
+					if (result.type === 'success') otherEmail = false;
 					await update({ reset: false });
 				};
 			}}

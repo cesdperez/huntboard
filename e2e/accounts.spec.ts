@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { failOnCspViolations, watchCsp } from './csp.js';
 
 // Creator accounts by email, from sign-up to signing in again. The dev server sends no email and
 // shows the link and code on the page instead, so this runs only against the local server.
@@ -8,18 +9,12 @@ test.skip(
 	'Needs the dev server, which shows the sign-in email on the page'
 );
 
-const cspViolations: string[] = [];
-
-test.afterEach(() => {
-	expect(cspViolations).toEqual([]);
-});
+failOnCspViolations();
 
 test('accounts: sign up with a code, create a game, sign out and back in with the link', async ({
 	page
 }) => {
-	page.on('console', (message) => {
-		if (message.text().includes('Content Security Policy')) cspViolations.push(message.text());
-	});
+	watchCsp(page);
 	const stamp = Date.now();
 	const email = `organiser-${stamp}@example.com`;
 	const name = `Organiser ${stamp}`;

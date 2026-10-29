@@ -8,17 +8,16 @@ import { teamsActions } from '#lib/server/actions/teams.js';
 import { listChallengesWithClaimCounts } from '#lib/server/db/challenges.js';
 import { listTeamsWithClaimCounts } from '#lib/server/db/teams.js';
 import { getSignedInUser } from '#lib/server/http/session.js';
+import { getClaimSection } from '#lib/server/pages/claim-section.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ parent, cookies }) => {
 	const { game } = await parent();
-	const [teams, challenges, claimant] = await Promise.all([
+	const [teams, challenges, claim] = await Promise.all([
 		listTeamsWithClaimCounts(env.DB, game.id),
 		listChallengesWithClaimCounts(env.DB, game.id),
-		// Only a game nobody owns needs to know who is looking, so owned games skip the session read.
-		game.owner_user_id === null ? getSignedInUser(cookies) : null
+		getClaimSection(game, () => getSignedInUser(cookies))
 	]);
-	const claim = game.owner_user_id !== null ? null : claimant ? 'claim' : 'sign-in';
 	return { teams, challenges, claim } as const;
 };
 

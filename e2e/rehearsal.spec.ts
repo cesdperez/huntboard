@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
+import { failOnCspViolations, watchCsp } from './csp.js';
 import { POLL_INTERVAL_MS } from '../src/lib/client/live-updates.js';
 import { openNewGameSignedIn } from './sign-in.js';
 
@@ -43,11 +44,7 @@ const FINAL_STANDINGS = [
 	['3rd', 'Tulip Squad', '32']
 ];
 
-const cspViolations: string[] = [];
-
-test.afterEach(() => {
-	expect(cspViolations).toEqual([]);
-});
+failOnCspViolations();
 
 test('rehearsal: a 4-team, 10-challenge game from creation to final scores', async ({
 	browser
@@ -285,9 +282,7 @@ async function openAs(
 		}, nickname);
 	}
 	const page = await context.newPage();
-	page.on('console', (message) => {
-		if (message.text().includes('Content Security Policy')) cspViolations.push(message.text());
-	});
+	watchCsp(page);
 	return page;
 }
 

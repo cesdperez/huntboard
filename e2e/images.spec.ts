@@ -1,14 +1,11 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
+import { failOnCspViolations, watchCsp } from './csp.js';
 import { openNewGameSignedIn } from './sign-in.js';
 
 // The game image and team pictures from upload to removal: resized in the browser, served with a
 // long cache lifetime, and gone from storage once removed or reset.
 
-const cspViolations: string[] = [];
-
-test.afterEach(() => {
-	expect(cspViolations).toEqual([]);
-});
+failOnCspViolations();
 
 test('images: game image and team pictures, from upload to reset', async ({ browser }) => {
 	test.setTimeout(90_000);
@@ -134,9 +131,7 @@ async function open(
 		}, nickname);
 	}
 	const page = await context.newPage();
-	page.on('console', (message) => {
-		if (message.text().includes('Content Security Policy')) cspViolations.push(message.text());
-	});
+	watchCsp(page);
 	return page;
 }
 

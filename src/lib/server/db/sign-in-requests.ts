@@ -1,13 +1,19 @@
 import type { SignInRequestRow } from './types.js';
 
+/**
+ * Inserts the request unless its address already has `max` requests made after `since`.
+ * One statement, so parallel requests cannot all pass the count.
+ */
 export async function insertSignInRequest(
 	db: D1Database,
-	request: Omit<SignInRequestRow, 'code_attempts'>
-): Promise<void> {
-	await db
+	request: Omit<SignInRequestRow, 'code_attempts'>,
+	limit: { since: string; max: number }
+): Promise<boolean> {
+	const result = await db
 		.prepare(
 			`INSERT INTO sign_in_request (id, token_hash, code_hash, email, next_path, expires_at, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`
+			SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7
+			WHERE (SELECT COUNT(*) FROM sign_in_request WHERE email = ?4 AND created_at > ?8) < ?9`
 		)
 		.bind(
 			request.id,
@@ -16,9 +22,12 @@ export async function insertSignInRequest(
 			request.email,
 			request.next_path,
 			request.expires_at,
-			request.created_at
+			request.created_at,
+			limit.since,
+			limit.max
 		)
 		.run();
+	return result.meta.changes > 0;
 }
 
 export function findRequest(
@@ -69,18 +78,6 @@ export function spendCodeAttempt(
 		)
 		.bind(id, maxAttempts, now)
 		.first<SignInRequestRow>();
-}
-
-export async function countRequestsSince(
-	db: D1Database,
-	email: string,
-	since: string
-): Promise<number> {
-	const row = await db
-		.prepare('SELECT COUNT(*) AS count FROM sign_in_request WHERE email = ? AND created_at > ?')
-		.bind(email, since)
-		.first<{ count: number }>();
-	return row?.count ?? 0;
 }
 
 /** Clears requests nobody used. Called on each new request, so the table stays small. */

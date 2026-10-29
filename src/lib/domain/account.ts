@@ -8,11 +8,16 @@ export const normalizeDisplayName = (value: unknown) =>
 
 /** Where to go after signing in: a path on this site, or My games for anything else. */
 export function nextPath(value: string | null | undefined): string {
-	// "//host" and "/\host" are protocol-relative URLs that leave the site.
-	if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) {
+	// "//host" and "/\host" leave the site, and browsers drop tabs and newlines to make them.
+	if (!value || !value.startsWith('/') || value.startsWith('//') || /[\s\\]/.test(value)) {
 		return '/games';
 	}
 	return value;
+}
+
+/** The sign-in page, returning to `path` afterwards. */
+export function signInPath(path: string): string {
+	return `/login?next=${encodeURIComponent(path)}`;
 }
 
 /** The longest address SMTP delivers. */

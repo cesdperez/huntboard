@@ -74,8 +74,8 @@ describe('requestSignIn', () => {
 		);
 
 		expect(result).toMatchObject({ kind: 'error', status: 502 });
-		send.mockResolvedValue(true);
-		for (let i = 0; i < MAX_REQUESTS_PER_WINDOW; i++) await sent();
+		const { results } = await db.prepare('SELECT id FROM sign_in_request').all();
+		expect(results).toEqual([]);
 	});
 });
 

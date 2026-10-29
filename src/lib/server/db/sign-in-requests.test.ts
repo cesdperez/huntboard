@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
-	countRequestsSince,
 	deleteExpiredRequests,
 	findRequest,
 	findRequestByToken,
@@ -24,9 +23,11 @@ const request = {
 	created_at: NOW
 } satisfies Omit<SignInRequestRow, 'code_attempts'>;
 
+const NO_LIMIT = { since: NOW, max: 99 };
+
 beforeEach(async () => {
 	db = createTestDb();
-	await insertSignInRequest(db, request);
+	await insertSignInRequest(db, request, NO_LIMIT);
 });
 
 describe('findRequest and findRequestByToken', () => {
@@ -59,20 +60,37 @@ describe('spendCodeAttempt', () => {
 	});
 });
 
-describe('countRequestsSince and deleteExpiredRequests', () => {
-	it('count an email’s recent requests and clear expired ones', async () => {
-		await insertSignInRequest(db, {
-			...request,
-			id: 'request-0',
-			token_hash: 'token-hash-0',
-			created_at: '2029-12-31T23:00:00.000Z',
-			expires_at: '2029-12-31T23:15:00.000Z'
-		});
+describe('insertSignInRequest', () => {
+	it('refuses a request once the address has the most allowed since a time', async () => {
+		const another = (id: string) => ({ ...request, id, token_hash: `hash-${id}` });
+		const limit = { since: '2029-12-31T23:50:00.000Z', max: 2 };
 
-		expect(await countRequestsSince(db, 'sam@example.com', '2029-12-31T23:50:00.000Z')).toBe(1);
-		expect(await countRequestsSince(db, 'sam@example.com', '2029-12-31T22:00:00.000Z')).toBe(2);
+		expect(await insertSignInRequest(db, another('request-2'), limit)).toBe(true);
+		expect(await insertSignInRequest(db, another('request-3'), limit)).toBe(false);
+		expect(
+			await insertSignInRequest(db, { ...another('other'), email: 'alex@example.com' }, limit)
+		).toBe(true);
+		expect(await findRequest(db, 'request-3', NOW)).toBeNull();
+	});
+});
+
+describe('deleteExpiredRequests', () => {
+	it('clears only expired requests', async () => {
+		await insertSignInRequest(
+			db,
+			{
+				...request,
+				id: 'request-0',
+				token_hash: 'token-hash-0',
+				created_at: '2029-12-31T23:00:00.000Z',
+				expires_at: '2029-12-31T23:15:00.000Z'
+			},
+			NO_LIMIT
+		);
 
 		await deleteExpiredRequests(db, NOW);
-		expect(await countRequestsSince(db, 'sam@example.com', '2029-12-31T22:00:00.000Z')).toBe(1);
+
+		const { results } = await db.prepare('SELECT id FROM sign_in_request').all();
+		expect(results).toEqual([{ id: 'request-1' }]);
 	});
 });

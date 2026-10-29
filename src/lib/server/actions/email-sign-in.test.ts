@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({ signIn: vi.fn() }));
 
 vi.mock('../http/session.js', () => ({ signIn: mocks.signIn }));
 
-import { emailSignInActions, linkSignInAction, pendingEmail } from './email-sign-in.js';
+import { NAME_ERROR, emailSignInActions, linkSignInAction, pendingEmail } from './email-sign-in.js';
 
 let env: { DB: D1Database; RESEND_API_KEY: string; EMAIL_FROM: string };
 
@@ -119,7 +119,7 @@ describe('code', () => {
 			data: { needsName: true, code, error: null }
 		});
 		expect((await run(actions.code, { code, displayName: ' ' }, { jar })).result).toMatchObject({
-			data: { needsName: true, error: 'Type the name to show on your account.' }
+			data: { needsName: true, error: NAME_ERROR }
 		});
 		expect(
 			(await run(actions.code, { code, displayName: 'New Organiser' }, { jar })).thrown

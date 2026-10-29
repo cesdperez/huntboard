@@ -60,7 +60,7 @@ export function emailSignInActions(env: SignInEnv, preview: boolean) {
 			readString(data, 'displayName')
 		);
 		if (result.kind === 'signed-in') cookies.delete(REQUEST_COOKIE, { path: '/login' });
-		return respond(cookies, result, data, { code: typed });
+		return finishSignIn(cookies, result, data, { code: typed });
 	};
 
 	return { request, code };
@@ -75,7 +75,7 @@ export function linkSignInAction(env: Pick<Cloudflare.Env, 'DB'>): Action {
 			readString(data, 'token'),
 			readString(data, 'displayName')
 		);
-		return respond(cookies, result, data, {});
+		return finishSignIn(cookies, result, data, {});
 	};
 }
 
@@ -88,7 +88,7 @@ export async function pendingEmail(
 	return id ? pendingRequestEmail(env.DB, id) : null;
 }
 
-async function respond(
+async function finishSignIn(
 	cookies: Cookies,
 	result: FinishResult,
 	data: FormData,

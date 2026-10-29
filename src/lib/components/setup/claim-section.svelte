@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { AdminAction } from '#lib/components/admin/admin-action.svelte.js';
 	import { toast } from '#lib/components/toast/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
+	import { signInPath } from '#lib/domain/account.js';
 
 	let { claim }: { claim: 'claim' | 'sign-in' } = $props();
 
 	const action = new AdminAction('claim');
-	const signInHref = $derived(`${resolve('/login')}?next=${encodeURIComponent(page.url.pathname)}`);
+	const signInHref = $derived(signInPath(page.url.pathname));
 </script>
 
 <section aria-labelledby="claim-heading" class="flex flex-col gap-3">

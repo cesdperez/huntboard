@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nextPath, normalizeEmail } from './account.js';
+import { nextPath, normalizeEmail, signInPath } from './account.js';
 
 describe('nextPath', () => {
 	it('keeps a path on this site', () => {
@@ -13,6 +13,8 @@ describe('nextPath', () => {
 		['an absolute URL', 'https://evil.example/'],
 		['a protocol-relative URL', '//evil.example/'],
 		['a backslash URL', '/\\evil.example/'],
+		['a tab browsers strip into //', '/\t/evil.example/'],
+		['a newline browsers strip into //', '/\n/evil.example/'],
 		['a relative path', 'games']
 	])('goes to My games for %s', (_, value) => {
 		expect(nextPath(value)).toBe('/games');
@@ -33,5 +35,11 @@ describe('normalizeEmail', () => {
 		['too long', `${'a'.repeat(250)}@example.com`]
 	])('refuses an address %s', (_, value) => {
 		expect(normalizeEmail(value)).toBeNull();
+	});
+});
+
+describe('signInPath', () => {
+	it('sends to sign-in and back to the encoded path', () => {
+		expect(signInPath('/a/abc/setup?x=1')).toBe('/login?next=%2Fa%2Fabc%2Fsetup%3Fx%3D1');
 	});
 });
