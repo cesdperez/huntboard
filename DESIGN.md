@@ -164,6 +164,10 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 
 The game settings end with the theme, one option per registered theme, saved with the rest of the form.
 
+Each row in the Setup links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
+
+QR codes are black on white with a 4-module white margin in every theme and mode, because phone scanners misread inverted or low-contrast codes. They are drawn as SVG in the browser.
+
 Setup has a "Game image" section under the game settings: a preview of the current image, a file field ("Image", or "Replace image" once there is one), an optional label and "Save image". Saving without a file changes only the label. "Remove image" confirms first.
 
 In the Setup team list, a team's edit form shows its picture with "Remove picture", which confirms first. This is moderation: the team can add a new one.
@@ -172,7 +176,9 @@ Setup ends with "Reset game", which returns the game to how `/new` created it: t
 
 ### Scoreboard
 
-A ranked list. Rank and total in display type, the total in `--score`, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and nothing else changes.
+A ranked list. Rank and total in display type, the total in `--score`, team name in body weight. On screens wider than 1024px the same page becomes the big-screen view: totals scale up, the list centres vertically, and a QR code of the scoreboard link sits to the right of the list.
+
+- The QR code is `min(26dvh, 18vw)` wide, with "Scan to follow on your phone" under it in `--muted`. It encodes only the scoreboard link, built from the page's own token. Phones already have the link, so they never show it.
 
 - Under the game name, one status line: "Starts in 0:42:10", "Ends in 1:42:10" or "Ended at 21:00". The scoreboard keeps updating after the end, because judging goes on at the meeting point.
 - Tied teams show the same rank and keep their setup order.
