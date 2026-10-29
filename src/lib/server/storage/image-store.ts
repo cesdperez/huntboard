@@ -17,8 +17,8 @@ export type ImageCommit = (key: string) => Promise<{ previous: string | null } |
 const EXTENSIONS: Record<ImageType, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg' };
 const TYPES_BY_EXTENSION: Record<string, ImageType> = { webp: 'image/webp', jpg: 'image/jpeg' };
 const IMAGE_KEY = /^[1-9]\d*\/[A-Za-z0-9_-]{22}\.(webp|jpg)$/;
-// Safe because a replaced image gets a new key: no URL ever shows different bytes.
-const IMMUTABLE = 'public, max-age=31536000, immutable';
+// Safe because a replaced object gets a new key: no URL ever shows different bytes.
+export const IMMUTABLE = 'public, max-age=31536000, immutable';
 
 /** Keys start with the game id, so resetting a game can sweep its images by prefix. */
 export function newImageKey(gameId: number, type: ImageType): string {
