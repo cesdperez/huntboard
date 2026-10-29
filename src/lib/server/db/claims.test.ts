@@ -61,6 +61,24 @@ describe('markClaim', () => {
 		});
 	});
 
+	it('refuses a media key that another claim already has', async () => {
+		const cake = await seedChallenge(db, game.id);
+		const key = `${game.id}/claims/abcdefghijklmnopqrstuv.jpg`;
+		await seedClaim(db, rats.id, swim.id, { status: 'rejected', media_key: key });
+
+		const result = await markClaim(db, {
+			gameId: game.id,
+			teamId: rats.id,
+			challengeId: cake.id,
+			note: null,
+			markedBy: 'Sam',
+			mediaKey: key
+		});
+
+		expect(result).toEqual({ status: 'media-taken' });
+		expect(await listTeamClaims(db, rats.id)).toHaveLength(1);
+	});
+
 	it('adds a pending claim with the note and who marked it', async () => {
 		const result = await mark(rats.id, swim.id, 'photo at 17:02');
 

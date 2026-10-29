@@ -23,19 +23,36 @@ export type MarkClaimResult =
 	| { status: 'marked'; claim: ClaimRow }
 	/** The team already has a pending or scored claim on the challenge: this one. */
 	| { status: 'conflict'; claim: ClaimRow }
+	/** Another claim, of any team and status, already has this media key. */
+	| { status: 'media-taken' }
 	| { status: 'not-found' };
 
 /** Adds a pending claim, unless the team already has an active one on that challenge. */
 export async function markClaim(db: D1Database, claim: NewClaim): Promise<MarkClaimResult> {
-	// One batch is one transaction: the SELECT must see the claim the INSERT ran into, even if
-	// a teammate undoes it or a judge rejects it a moment later.
-	const [marked, active] = await db.batch<ClaimRow>([
-		// The only conflict possible is the one active claim per team and challenge.
+	let marked: D1Result<ClaimRow>;
+	let active: D1Result<ClaimRow>;
+	try {
+		[marked, active] = await db.batch<ClaimRow>(markStatements(db, claim));
+	} catch (error) {
+		if (isMediaKeyTaken(error)) return { status: 'media-taken' };
+		throw error;
+	}
+	if (marked.results[0]) return { status: 'marked', claim: marked.results[0] };
+	return active.results[0]
+		? { status: 'conflict', claim: active.results[0] }
+		: { status: 'not-found' };
+}
+
+// One batch is one transaction: the SELECT must see the claim the INSERT ran into, even if
+// a teammate undoes it or a judge rejects it a moment later.
+function markStatements(db: D1Database, claim: NewClaim): D1PreparedStatement[] {
+	return [
+		// Targeted, so a taken media key throws instead of reading as an active claim.
 		db
 			.prepare(
 				`INSERT INTO claim (team_id, challenge_id, status, note, marked_by, media_key)
 				SELECT ?, id, 'pending', ?, ?, ? FROM challenge WHERE id = ? AND game_id = ?
-				ON CONFLICT DO NOTHING
+				ON CONFLICT (team_id, challenge_id) WHERE status IN ('pending', 'scored') DO NOTHING
 				RETURNING *`
 			)
 			.bind(
@@ -51,11 +68,13 @@ export async function markClaim(db: D1Database, claim: NewClaim): Promise<MarkCl
 				`SELECT * FROM claim WHERE team_id = ? AND challenge_id = ? AND status IN ('pending', 'scored')`
 			)
 			.bind(claim.teamId, claim.challengeId)
-	]);
-	if (marked.results[0]) return { status: 'marked', claim: marked.results[0] };
-	return active.results[0]
-		? { status: 'conflict', claim: active.results[0] }
-		: { status: 'not-found' };
+	];
+}
+
+function isMediaKeyTaken(error: unknown): boolean {
+	return (
+		error instanceof Error && error.message.includes('UNIQUE constraint failed: claim.media_key')
+	);
 }
 
 export type UndoClaimResult =

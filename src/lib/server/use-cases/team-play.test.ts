@@ -11,6 +11,7 @@ import { ORIGINAL_VIDEO_MAX_BYTES, PHOTO_MAX_BYTES } from '#lib/domain/claim-med
 import { MEDIA_NOT_UPLOADED, NOT_MEDIA, PHOTO_TOO_LARGE, VIDEO_TOO_LARGE } from './claim-media.js';
 import { NOT_AN_IMAGE } from './image-upload.js';
 import {
+	MEDIA_TAKEN,
 	MEDIA_UPLOADS_OFF,
 	markDone,
 	renameOwnTeam,
@@ -220,6 +221,26 @@ describe('markDone with media', () => {
 
 		expect(outcome).toEqual({ status: 400, result: { kind: 'error', message } });
 		expect(await listTeamClaims(db, rats.id)).toEqual([]);
+	});
+
+	it('refuses media another claim already has, and keeps that claim and its media', async () => {
+		const key = await uploaded();
+		const rejected = await seedClaim(db, rats.id, swim.id, {
+			status: 'rejected',
+			media_key: key
+		});
+
+		const outcome = await markDone(
+			db,
+			media.asBucket(),
+			{ team: rats, game },
+			markForm({ mediaKey: key }),
+			DURING
+		);
+
+		expect(outcome).toEqual({ status: 409, result: { kind: 'error', message: MEDIA_TAKEN } });
+		expect(await listTeamClaims(db, rats.id)).toEqual([rejected]);
+		expect(await media.head(key)).not.toBeNull();
 	});
 
 	it('refuses outside the game window before looking at the media', async () => {
