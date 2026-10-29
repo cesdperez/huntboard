@@ -3,6 +3,7 @@
 @import 'shadcn-svelte/tailwind.css';
 @import './lib/themes/flag.css';
 @import './lib/themes/highland-bru.css';
+@import './lib/themes/azulejo.css';
 
 /* Follows the OS colour scheme. data-theme on <html> forces one: a single-mode theme or a preview. */
 @custom-variant dark {

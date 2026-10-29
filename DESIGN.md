@@ -289,6 +289,28 @@ A theme's registry entry names its layout. Structure changes only through it; th
 
 Fonts: Fraunces (bold serif) for `--font-display`, Barlow for `--font-sans`, Barlow Condensed for `--font-score`, and Jersey 10, a pixel face, for `--font-banner`, where the game name is set in capitals as decoration. None has a width axis, so the `--stretch-*` tokens are `normal`.
 
+### Lightmile Azulejo
+
+`azulejo`, light only, `event` layout. Made for the Lightmile club trip to Málaga: ceramic blue and terracotta on warm cream, like a printed travel journal with tile details. The app bar shows the Lightmile wordmark from `static/themes/azulejo/wordmark.svg`, the club's own artwork, in place of "Huntboard".
+
+| Role | Value |
+|---|---|
+| `--paper`, `--surface` | Cream `#FFF7E8`, `#FFFAF0` |
+| `--ink`, `--muted`, `--line` | `#283950` (11:1), `#726451` (5.4:1), `#DED3BE` |
+| `--marker`, `--action`, `--own`, `--section-rule`, `--on-section`, `--waiting` | Terracotta `#B8412D` (5.1:1 on cream), with cream `#FFFAF0` on it (5.3:1) |
+| `--own-row` | `#F5DFCC` |
+| `--strip`, `--on-strip`, `--strip-score` | Ceramic blue `#24468C`, cream (8.5:1) |
+| `--on-strip-muted`, `--strip-own-row`, `--strip-danger` | `#D5DDEF` (6.6:1 at 15px), `#1B3770`, `#FFD2C8` (6.6:1) |
+| `--score`, `--on-banner` | Ceramic blue, 8.5:1 on cream |
+| `--danger` | `#A32020` (7.1:1) |
+| `--app-bar`, `--app-bar-base`, `--on-app-bar` | Cream with a `--line` hairline at the bottom, ink text. The browser chrome is `#FFF7E8`. |
+| `--banner`, `--banner-edge` | Cream, edged with alternating blue and terracotta tiles |
+| `--strip-paper` | `#1B3770` |
+| `--marker-outline` | `#726451` |
+| `--banner-art`, `--section-ornament` | A terracotta 2 × 2 tile in the banner, a small terracotta star after each section rule |
+
+Fonts: Georgia for `--font-display` and `--font-banner`, so the game name, ranks and team names are a bold serif. The banner sets the last word of the game name on its own line in Georgia italic. Section headings are 17px Georgia small capitals. Archivo stays the sans and the score font. Georgia is a system font, so the theme loads only Archivo, and phones without Georgia fall back to their serif.
+
 ### Team pictures and the game image
 
 A team picture is a circle, so it never reads as a marker. Without a picture a team shows its initial in `--muted` on `--paper`, inside a `--line` border.

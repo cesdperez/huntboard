@@ -14,6 +14,8 @@ import {
 	type Theme
 } from './index.js';
 
+const STATIC_DIR = path.join(import.meta.dirname, '../../../static');
+
 const night: Theme = {
 	id: 'night',
 	name: 'Night',
@@ -35,8 +37,8 @@ describe('resolveTheme', () => {
 		expect(resolveTheme(undefined, registry)).toBe(DEFAULT_THEME);
 	});
 
-	it('knows the flag and Highland Bru themes by default', () => {
-		expect(THEMES.map((theme) => theme.id)).toEqual(['flag', 'highland-bru']);
+	it('knows the flag, Highland Bru and Azulejo themes by default', () => {
+		expect(THEMES.map((theme) => theme.id)).toEqual(['flag', 'highland-bru', 'azulejo']);
 		expect(resolveTheme('flag')).toBe(FLAG_THEME);
 	});
 
@@ -108,11 +110,11 @@ describe('registered themes', () => {
 		expect(colours).toEqual(supportedModes(theme).map((mode) => theme.modes[mode]?.themeColor));
 	});
 
-	it.each(THEMES)('$id ships its icons and link preview image', (theme) => {
-		const staticDir = path.join(import.meta.dirname, '../../../static');
+	it.each(THEMES)('$id ships its icons, link preview image and wordmark', (theme) => {
+		const files = [...Object.values(themeImages(theme)), theme.wordmark?.src].filter(Boolean);
 
-		for (const file of Object.values(themeImages(theme))) {
-			expect(existsSync(path.join(staticDir, file)), file).toBe(true);
+		for (const file of files) {
+			expect(existsSync(path.join(STATIC_DIR, file!)), file).toBe(true);
 		}
 	});
 });
@@ -124,5 +126,20 @@ describe('Highland Bru theme', () => {
 		expect(supportedModes(theme)).toEqual(['light']);
 		expect(theme.layout).toBe('event');
 		expect(FLAG_THEME.layout).toBe('plain');
+	});
+});
+
+describe('Azulejo theme', () => {
+	it('is a light-only event theme that shows the Lightmile wordmark in the app bar', () => {
+		const theme = resolveTheme('azulejo');
+
+		expect(supportedModes(theme)).toEqual(['light']);
+		expect(theme.layout).toBe('event');
+		expect(theme.wordmark).toEqual({ src: '/themes/azulejo/wordmark.svg', alt: 'Lightmile' });
+	});
+
+	it('leaves the other themes on the Huntboard name', () => {
+		expect(FLAG_THEME.wordmark).toBeUndefined();
+		expect(resolveTheme('highland-bru').wordmark).toBeUndefined();
 	});
 });
