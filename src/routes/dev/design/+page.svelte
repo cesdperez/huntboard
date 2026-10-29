@@ -117,7 +117,8 @@
 				markedAt: '2026-10-23T11:50:00.000Z',
 				points: null,
 				judgedBy: null,
-				judgeNote: null
+				judgeNote: null,
+				media: null
 			}
 		},
 		{
@@ -135,7 +136,8 @@
 				markedAt: '2026-10-23T11:10:00.000Z',
 				points: 25,
 				judgedBy: 'Sam',
-				judgeNote: null
+				judgeNote: null,
+				media: null
 			}
 		},
 		{
@@ -153,7 +155,8 @@
 				markedAt: '2026-10-23T11:20:00.000Z',
 				points: null,
 				judgedBy: 'Sam',
-				judgeNote: 'No proof received'
+				judgeNote: 'No proof received',
+				media: null
 			}
 		}
 	];
