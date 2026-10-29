@@ -161,6 +161,8 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
 - Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
 
+A game made before accounts opens Setup with a "My games" section: "Add to My games" for a signed-in visitor, or "Sign in to add it to your games", which returns to Setup after sign-in. A game with an owner has no such section.
+
 The game settings end with the theme, one option per registered theme, saved with the rest of the form.
 
 Setup has a "Game image" section under the game settings: a preview of the current image, a file field ("Image", or "Replace image" once there is one), an optional label and "Save image". Saving without a file changes only the label. "Remove image" confirms first.
@@ -168,6 +170,15 @@ Setup has a "Game image" section under the game settings: a preview of the curre
 In the Setup team list, a team's edit form shows its picture with "Remove picture", which confirms first. This is moderation: the team can add a new one.
 
 Setup ends with "Reset game", which returns the game to how `/new` created it: the name, the theme and the admin and scoreboard links stay, everything else goes, the game image included. The theme stays because, like the name, it belongs to the event, and a reset clears a rehearsal before that same event. It confirms first, naming what gets deleted.
+
+### Sign-in and My games
+
+These pages belong to no game, so they wear the default theme.
+
+- Sign-in puts "Sign in with a passkey" first, as the one primary button, with "Sign in with Google" under it. Under a divider, "New here?" asks only for "Your name", then "Create account with a passkey" or "Create account with Google". The Google buttons are hidden when Google is not configured.
+- A passkey button stays disabled until the page hydrates, because the ceremony runs in the browser.
+- My games: "New game" as the primary button, then the games, newest first, each opening its admin link. Under them, "Ways to sign in" lists each method, then "Add a passkey" and, while the account has no Google sign-in, "Add Google". "Sign out" comes last, as a ghost button.
+- Sign-in errors show in place, above the buttons they are about. A cancelled passkey prompt reads "No passkey was used. Try again when you are ready."
 
 ### Scoreboard
 
