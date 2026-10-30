@@ -33,6 +33,7 @@
 	);
 
 	// One per challenge, so a finished upload stays with that challenge's draft note.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- filled inside $derived, where state must not change; each upload holds its own state
 	const uploads = new Map<number, ClaimMediaUpload>();
 	function uploadFor(challengeId: number): ClaimMediaUpload {
 		let upload = uploads.get(challengeId);

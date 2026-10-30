@@ -114,7 +114,8 @@
 							<ChallengeRow
 								{challenge}
 								claimsOpen={clock.closedMessage === null}
-								onselect={() => select(challenge.id)} />
+								onselect={() => select(challenge.id)}
+							/>
 						{/each}
 					</ul>
 				</section>

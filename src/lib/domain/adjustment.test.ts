@@ -15,12 +15,12 @@ describe('validateAdjustment', () => {
 	});
 
 	it('takes points off for a penalty', () => {
-		expect(validateAdjustment({ sign: 'penalty', points: '25', reason: 'Never showed up' })).toEqual(
-			{
-				ok: true,
-				adjustment: { points: -25, reason: 'Never showed up' }
-			}
-		);
+		expect(
+			validateAdjustment({ sign: 'penalty', points: '25', reason: 'Never showed up' })
+		).toEqual({
+			ok: true,
+			adjustment: { points: -25, reason: 'Never showed up' }
+		});
 	});
 
 	it.each(['-5', ' -5', '−5'])('accepts a penalty typed with a minus, %j', (points) => {

@@ -54,10 +54,7 @@ describe('judgedClaimMessages', () => {
 
 	it('names the challenge of a rejection without a reason', () => {
 		expect(
-			whileOpen(
-				[challenge(1, { status: 'pending' })],
-				[challenge(1, { status: 'rejected' })]
-			)
+			whileOpen([challenge(1, { status: 'pending' })], [challenge(1, { status: 'rejected' })])
 		).toEqual(['Rejected Challenge 1. You can mark it done again.']);
 	});
 
@@ -114,9 +111,9 @@ describe('judgedClaimMessages', () => {
 				[challenge(1, { id: 7, status: 'rejected', judgeNote: 'blurry' })]
 			)
 		).toEqual(['Rejected Challenge 1: blurry. You can mark it done again.']);
-		expect(
-			whileOpen([challenge(1)], [challenge(1, { status: 'scored', points: 6 })])
-		).toEqual(['Scored 6 for Challenge 1']);
+		expect(whileOpen([challenge(1)], [challenge(1, { status: 'scored', points: 6 })])).toEqual([
+			'Scored 6 for Challenge 1'
+		]);
 	});
 
 	it('tells a judge correcting the points of a scored claim', () => {
