@@ -9,6 +9,8 @@
 
 	type Props = {
 		claim: QueueClaim;
+		/** Takes focus when a judged item leaves its place. */
+		id: string;
 		/** False once a refresh shows the claim is no longer pending, kept in view for its notice. */
 		live: boolean;
 		notice: string | null;
@@ -19,12 +21,12 @@
 		ondismiss: () => void;
 	};
 
-	let { claim, live, notice, now, onfailure, ondone, ondismiss }: Props = $props();
+	let { claim, id, live, notice, now, onfailure, ondone, ondismiss }: Props = $props();
 
 	const label = $derived(`${claim.team_name}, ${claim.challenge_title}`);
 </script>
 
-<li class="flex flex-col gap-3 border-b py-4" aria-label={label}>
+<li {id} tabindex="-1" class="flex flex-col gap-3 border-b py-4" aria-label={label}>
 	<div class="flex flex-col gap-1">
 		<p class="type-secondary">
 			<span class="font-semibold text-ink">{claim.team_name}</span>{now

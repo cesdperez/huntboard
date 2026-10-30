@@ -56,7 +56,7 @@
 		tabindex="-1"
 		onchange={picked}
 	/>
-	<Button class="flex-1" disabled={action.busy} onclick={() => input?.click()}>
+	<Button class="flex-1" busy={action.busy} onclick={() => input?.click()}>
 		{#if action.busy}
 			Saving picture
 		{:else}

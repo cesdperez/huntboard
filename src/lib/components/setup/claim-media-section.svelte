@@ -46,7 +46,7 @@
 	{/if}
 	{#if downloaded || mediaCount === 0}
 		<form method="POST" action="?/mediaDeleteAll" use:enhance={remove}>
-			<Button type="submit" variant="destructive" class="w-full" disabled={pending}>
+			<Button type="submit" variant="destructive" class="w-full" busy={pending}>
 				Delete all media
 			</Button>
 		</form>

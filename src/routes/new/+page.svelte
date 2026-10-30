@@ -63,6 +63,6 @@
 			<p id="new-game-error" class="text-[15px] text-danger" role="alert">{form.error}</p>
 		{/if}
 
-		<Button type="submit" variant="primary" size="lg" disabled={submitting}>Create game</Button>
+		<Button type="submit" variant="primary" size="lg" busy={submitting}>Create game</Button>
 	</form>
 </main>

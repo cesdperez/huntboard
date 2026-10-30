@@ -396,6 +396,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - Points read with their unit: a range as "5 to 20 points", a single value as "25 points".
 - A button repeated in every item ("Score", "Reject", "Record arrival", "Add adjustment") carries the team and challenge in a visually hidden label, so a screen reader list of buttons tells them apart.
 - A form that opens in place of its button (Reject, Correct, Enter time, Add adjustment) takes focus itself, not its first field, so the phone keyboard stays closed. Closing it returns focus to that button.
+- A button keeps focus while its request runs and ignores presses until it answers. When a control leaves the page after its action, focus moves to what took its place: the next claim in the queue, the Edit or Rotate button, the import result, or the section heading.
 - Closing the nickname prompt moves focus to the nickname button, the first prompt included.
 - Moving focus scrolls controls clear of the admin tab bar, the sticky team strip and the grid's sticky header and challenge column.
 - Test each milestone at 390 × 844 first, then 1280 × 800.

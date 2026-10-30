@@ -32,6 +32,8 @@
 		WithElementRef<HTMLAnchorAttributes> & {
 			variant?: ButtonVariant;
 			size?: ButtonSize;
+			/** Refuses activation while a request runs but keeps focus, which `disabled` drops to the page. */
+			busy?: boolean;
 		};
 </script>
 
@@ -44,9 +46,20 @@
 		href = undefined,
 		type = 'button',
 		disabled,
+		busy = false,
+		onclick,
 		children,
 		...restProps
 	}: ButtonProps = $props();
+
+	// Enter in a field submits through a click on the form's button, so this also stops that.
+	function guardedClick(event: MouseEvent & { currentTarget: HTMLButtonElement }) {
+		if (busy) {
+			event.preventDefault();
+			return;
+		}
+		onclick?.(event);
+	}
 </script>
 
 {#if href}
@@ -60,6 +73,7 @@
 		aria-disabled={disabled}
 		role={disabled ? 'link' : undefined}
 		tabindex={disabled ? -1 : undefined}
+		{onclick}
 		{...restProps}
 	>
 		{@render children?.()}
@@ -72,6 +86,8 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
 		{disabled}
+		aria-disabled={busy || undefined}
+		onclick={guardedClick}
 		{...restProps}
 	>
 		{@render children?.()}

@@ -110,7 +110,7 @@
 			{/if}
 			<div class="flex gap-3">
 				<Button variant="ghost" class="flex-1" onclick={rejecting.hide}>Cancel</Button>
-				<Button type="submit" variant="destructive" class="flex-1" disabled={action.busy}>
+				<Button type="submit" variant="destructive" class="flex-1" busy={action.busy}>
 					Reject claim<span class="sr-only">{` ${label}`}</span>
 				</Button>
 			</div>
@@ -131,7 +131,7 @@
 						value={String(points)}
 						size="lg"
 						class="flex-1 px-2 tabular-nums"
-						disabled={action.busy}
+						busy={action.busy}
 						aria-label="Score {points} for {label}"
 					>
 						{points}
@@ -163,7 +163,7 @@
 					bind:ref={rejecting.opener}
 					variant="destructive"
 					class="flex-1"
-					disabled={action.busy}
+					busy={action.busy}
 					onclick={rejecting.show}
 				>
 					Reject<span class="sr-only">{` ${label}`}</span>
@@ -173,7 +173,7 @@
 				type="submit"
 				variant={primary ? 'primary' : 'secondary'}
 				class="flex-1"
-				disabled={action.busy}
+				busy={action.busy}
 			>
 				Score<span class="sr-only">{` ${label}`}</span>
 			</Button>

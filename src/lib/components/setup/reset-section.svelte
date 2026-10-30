@@ -36,7 +36,7 @@
 			type="submit"
 			variant="destructive"
 			class="w-full"
-			disabled={pending}
+			busy={pending}
 			aria-describedby="reset-hint"
 		>
 			Reset game

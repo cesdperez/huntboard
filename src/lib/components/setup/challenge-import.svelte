@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
@@ -30,6 +30,8 @@
 		unchanged: 'Unchanged'
 	};
 
+	const IMPORTED_ID = 'challenges-imported';
+
 	let { hasChallenges }: { hasChallenges: boolean } = $props();
 
 	const result = $derived(resultUnder(page.form, 'challenges'));
@@ -59,7 +61,12 @@
 			await updateOrRetry(settled, { reset: false });
 			pending = false;
 			const challenges = result.type === 'success' ? resultUnder(result.data, 'challenges') : null;
-			if (challenges?.kind === 'imported') text = '';
+			if (challenges?.kind === 'imported') {
+				text = '';
+				// The Import button left with the preview. A first import also remounts this component.
+				await tick();
+				document.getElementById(IMPORTED_ID)?.focus();
+			}
 		};
 	};
 
@@ -75,6 +82,15 @@
 		const parts = counts.filter(([count]) => count > 0).map(([count, noun]) => plural(count, noun));
 		if (preview.reordered) parts.push('a new order');
 		return parts.length > 0 ? `${parts.join(', ')}.` : 'No changes.';
+	});
+
+	const announcement = $derived.by(() => {
+		// Empty while a request runs, so the same summary twice is still read out.
+		if (!preview || pending) return '';
+		if (preview.errors.length > 0) {
+			return `Preview: ${plural(preview.errors.length, 'line')} could not be read.`;
+		}
+		return `Preview: ${summary ?? 'No challenges in the list.'}`;
 	});
 </script>
 
@@ -97,11 +113,15 @@
 			class="min-h-48 w-full rounded-control border-2 border-input-line bg-surface px-3 py-2 text-ink placeholder:text-muted focus-visible:border-ink aria-invalid:border-danger"
 			placeholder={EXAMPLE}></textarea>
 	</div>
-	<Button type="submit" disabled={pending || text.trim() === ''}>Preview</Button>
+	<Button type="submit" disabled={text.trim() === ''} busy={pending}>Preview</Button>
 </form>
 
+<p class="sr-only" aria-live="polite">{announcement}</p>
+
 {#if imported !== null}
-	<p class="type-secondary" role="status">Imported {plural(imported, 'challenge')}.</p>
+	<p id={IMPORTED_ID} tabindex="-1" class="type-secondary" role="status">
+		Imported {plural(imported, 'challenge')}.
+	</p>
 {/if}
 
 {#if previewResult?.error}
@@ -231,7 +251,7 @@
 			{#each preview.deletedWithClaims as deleted (deleted.id)}
 				<input type="hidden" name="acknowledged" value="{deleted.id}:{deleted.claimCount}" />
 			{/each}
-			<Button type="submit" variant="primary" size="lg" disabled={pending || !canImport}>
+			<Button type="submit" variant="primary" size="lg" disabled={!canImport} busy={pending}>
 				{#if deletedClaimCount > 0}
 					Import and delete {plural(deletedClaimCount, 'claim')}
 				{:else}

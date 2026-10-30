@@ -109,14 +109,14 @@
 		{/if}
 
 		<div class="flex items-center gap-4">
-			<Button type="submit" size="lg" disabled={submitting}>Save image</Button>
+			<Button type="submit" size="lg" busy={submitting}>Save image</Button>
 			<p class="type-secondary" role="status">{result?.saved ? 'Saved.' : ''}</p>
 		</div>
 	</form>
 
 	{#if game.image_key}
 		<form method="POST" action="?/gameImageRemove" use:enhance={remove}>
-			<Button type="submit" variant="destructive" class="w-full" disabled={submitting}>
+			<Button type="submit" variant="destructive" class="w-full" busy={submitting}>
 				Remove image
 			</Button>
 		</form>

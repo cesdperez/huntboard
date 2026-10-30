@@ -157,7 +157,12 @@
 				>
 					<input type="hidden" name="claimId" value={claim.id} />
 					{@render message()}
-					<Button type="submit" size="lg" disabled={action.busy || clock.closedMessage !== null}>
+					<Button
+						type="submit"
+						size="lg"
+						disabled={clock.closedMessage !== null}
+						busy={action.busy}
+					>
 						Undo claim
 					</Button>
 				</form>
@@ -214,7 +219,8 @@
 						type="submit"
 						variant="primary"
 						size="lg"
-						disabled={action.busy || media.busy || clock.closedMessage !== null}
+						disabled={clock.closedMessage !== null}
+						busy={action.busy || media.busy}
 					>
 						{media.busy ? 'Waiting for the upload' : 'Mark done'}
 					</Button>

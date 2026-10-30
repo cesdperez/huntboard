@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import QueueItem from '#lib/components/admin/queue-item.svelte';
 	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { emptyQueueMessage } from '#lib/domain/claim-messages.js';
 	import { getGameClock } from '#lib/client/game-clock.svelte.js';
 	import { startPolling } from '#lib/client/live-updates.js';
+	import { focusIfLost } from '#lib/client/focus.js';
+	import { byQueueOrder, takesPlaceOf } from '#lib/components/admin/queue-order.js';
 	import type { QueueClaim } from '#lib/server/pages/judging-pages.js';
 	import type { PageProps } from './$types';
 
@@ -21,18 +23,25 @@
 			...Object.values(notices)
 				.map((notice) => notice.claim)
 				.filter((claim) => !liveIds.has(claim.id))
-		].sort((a, b) => a.marked_at.localeCompare(b.marked_at) || a.id - b.id)
+		].sort(byQueueOrder)
 	);
+
+	let heading = $state<HTMLElement | null>(null);
 
 	onMount(() => startPolling(refreshGameData));
 
-	function dismiss(id: number) {
-		delete notices[id];
+	async function dismiss(claim: QueueClaim) {
+		delete notices[claim.id];
+		await tick();
+		const next = takesPlaceOf(items, claim);
+		focusIfLost(next ? document.getElementById(itemId(next)) : heading);
 	}
+
+	const itemId = (claim: QueueClaim) => `queue-item-${claim.id}`;
 </script>
 
 <div class="flex items-baseline justify-between gap-3">
-	<h1 class="type-title">Queue</h1>
+	<h1 bind:this={heading} tabindex="-1" class="type-title">Queue</h1>
 	{#if data.claims.length > 0}
 		<p class="type-score text-[28px]" aria-label="{data.claims.length} to judge">
 			{data.claims.length}
@@ -47,12 +56,13 @@
 		{#each items as claim (claim.id)}
 			<QueueItem
 				{claim}
+				id={itemId(claim)}
 				live={liveIds.has(claim.id)}
 				notice={notices[claim.id]?.message ?? null}
 				now={clock.now}
 				onfailure={(message) => (notices[claim.id] = { claim, message })}
-				ondone={() => dismiss(claim.id)}
-				ondismiss={() => dismiss(claim.id)}
+				ondone={() => dismiss(claim)}
+				ondismiss={() => dismiss(claim)}
 			/>
 		{/each}
 	</ol>
