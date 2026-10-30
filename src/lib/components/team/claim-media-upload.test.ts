@@ -202,6 +202,35 @@ describe('ClaimMediaUpload', () => {
 		expect(upload.phase).toBe('ready');
 	});
 
+	it('keeps a finished upload when unfinished work stops', async () => {
+		await upload.start(PHOTO);
+		upload.stopUnfinished();
+		expect(upload.phase).toBe('ready');
+		expect(upload.key).toBe('media/k1');
+		expect(upload.preview).toBe('blob:preview-1');
+		expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+	});
+
+	it('stops an upload still on its way when unfinished work stops', async () => {
+		mocks.putFile.mockImplementation((_url, _headers, _file, _progress, signal: AbortSignal) =>
+			untilAborted(signal, new Promise(() => {}))
+		);
+		const done = upload.start(PHOTO);
+		await vi.waitFor(() => expect(upload.phase).toBe('uploading'));
+		upload.stopUnfinished();
+		await done;
+		expect(upload.phase).toBe('idle');
+		expect(upload.key).toBeNull();
+	});
+
+	it('forgets a failed file when unfinished work stops', async () => {
+		mocks.putFile.mockResolvedValue(false);
+		await upload.start(PHOTO);
+		upload.stopUnfinished();
+		expect(upload.phase).toBe('idle');
+		expect(upload.error).toBeNull();
+	});
+
 	it('treats a video with no type as a video', async () => {
 		const untyped = new File(['video'], 'clip.MOV');
 		const preparing = deferred<PreparedMedia>();
