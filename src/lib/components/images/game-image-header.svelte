@@ -23,7 +23,7 @@
 		class="game-image-thumb size-12 shrink-0 rounded-sm border object-cover"
 	/>
 	<span class="game-image-label min-w-0 flex-1 truncate"
-		><span class="sr-only">View </span>{image.label}</span
+		><span class="sr-only">View </span><bdi>{image.label}</bdi></span
 	>
 	<span class="game-image-view flex shrink-0 items-center gap-1 type-secondary" aria-hidden="true">
 		View

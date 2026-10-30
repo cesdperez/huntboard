@@ -1,4 +1,4 @@
-import { collapseSpaces } from '../format/text.js';
+import { collapseSpaces, isolate } from '../format/text.js';
 import { CHALLENGE_MAX_POINTS } from './points.js';
 
 export interface ParsedChallenge {
@@ -183,7 +183,9 @@ function rejectItem(state: State, message: string, indent: number, lineNumber: n
 
 function duplicateError(state: State, title: string): string | null {
 	const firstLine = state.firstLineByTitle.get(titleKey(title));
-	return firstLine === undefined ? null : `Duplicate title "${title}" (first on line ${firstLine})`;
+	return firstLine === undefined
+		? null
+		: `Duplicate title "${isolate(title)}" (first on line ${firstLine})`;
 }
 
 interface ParsedItem {

@@ -2,6 +2,7 @@
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { toast } from '#lib/components/toast/index.js';
+	import { isolate } from '#lib/format/text.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { GameRow } from '#lib/server/db/types.js';
 	import { updateOrRetry } from './update-or-retry.js';
@@ -13,7 +14,7 @@
 	let downloaded = $state(false);
 
 	const remove: SubmitFunction = ({ cancel }) => {
-		const warning = `Delete all media of ${game.name}? This deletes every photo and video teams sent. Claims and scores stay. It cannot be undone. Wait until the download has finished.`;
+		const warning = `Delete all media of ${isolate(game.name)}? This deletes every photo and video teams sent. Claims and scores stay. It cannot be undone. Wait until the download has finished.`;
 		if (!confirm(warning)) return cancel();
 		pending = true;
 		return async (settled) => {

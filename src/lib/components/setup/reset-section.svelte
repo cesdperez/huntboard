@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { toast } from '#lib/components/toast/index.js';
+	import { isolate } from '#lib/format/text.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { GameRow } from '#lib/server/db/types.js';
 	import { updateOrRetry } from './update-or-retry.js';
@@ -10,7 +11,7 @@
 	let pending = $state(false);
 
 	const submit: SubmitFunction = ({ cancel }) => {
-		const warning = `Reset ${game.name}? This deletes every team, challenge, claim, score, claim photo and video, and the game image, and team links stop working. It cannot be undone.`;
+		const warning = `Reset ${isolate(game.name)}? This deletes every team, challenge, claim, score, claim photo and video, and the game image, and team links stop working. It cannot be undone.`;
 		if (!confirm(warning)) {
 			cancel();
 			return;

@@ -29,7 +29,7 @@
 <li {id} tabindex="-1" class="flex flex-col gap-3 border-b py-4" aria-label={label}>
 	<div class="flex flex-col gap-1">
 		<p class="type-secondary">
-			<span class="font-semibold text-ink">{claim.team_name}</span>{now
+			<bdi class="font-semibold text-ink">{claim.team_name}</bdi>{now
 				? `, ${timeAgo(claim.marked_at, now)}`
 				: ''}
 		</p>
@@ -38,7 +38,9 @@
 			<Points min={claim.min_points} max={claim.max_points} />
 		</p>
 		<p class="type-secondary break-words">
-			{#if claim.note}“{claim.note}” marked by {claim.marked_by}{:else}Marked by {claim.marked_by}{/if}
+			{#if claim.note}“<bdi>{claim.note}</bdi>” marked by <bdi>{claim.marked_by}</bdi>{:else}Marked
+				by
+				<bdi>{claim.marked_by}</bdi>{/if}
 		</p>
 		{#if claim.rejected_count > 0}
 			<p class="type-secondary text-danger!">

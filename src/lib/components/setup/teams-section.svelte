@@ -12,6 +12,7 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/format/plural.js';
+	import { isolate } from '#lib/format/text.js';
 	import type { GameRow, SetupTeam } from '#lib/server/db/types.js';
 	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
 	import { suggestTeamName } from '#lib/domain/team-name-suggestion.js';
@@ -99,7 +100,7 @@
 
 	function confirmRemoveAvatar(team: SetupTeam): SubmitFunction {
 		return (input) => {
-			if (!confirm(`Remove the picture of ${team.name}? The team can add a new one.`)) {
+			if (!confirm(`Remove the picture of ${isolate(team.name)}? The team can add a new one.`)) {
 				input.cancel();
 				return;
 			}
@@ -188,7 +189,8 @@
 							</form>
 						{:else}
 							<p class="type-secondary">
-								{team.name} has {plural(team.claim_count, 'claim')}, so it cannot be deleted.
+								<bdi>{team.name}</bdi> has {plural(team.claim_count, 'claim')}, so it cannot be
+								deleted.
 							</p>
 						{/if}
 					{:else}

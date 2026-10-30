@@ -79,7 +79,7 @@
 							<p class="text-danger">{claim.judgeNote}</p>
 						{/if}
 						{#if claim.note}
-							<p class="type-secondary break-words">Note: {claim.note}</p>
+							<p class="type-secondary break-words">Note: <bdi>{claim.note}</bdi></p>
 						{/if}
 						{#if cell?.earlierRejections}
 							<p class="type-secondary break-words text-danger!">
@@ -87,10 +87,10 @@
 							</p>
 						{/if}
 						<p class="type-secondary">
-							Marked done by {claim.markedBy} at {formatTime(claim.markedAt)}.
+							Marked done by <bdi>{claim.markedBy}</bdi> at {formatTime(claim.markedAt)}.
 						</p>
 						{#if claim.judgedBy && claim.status !== 'pending'}
-							<p class="type-secondary">Judged by {claim.judgedBy}.</p>
+							<p class="type-secondary">Judged by <bdi>{claim.judgedBy}</bdi>.</p>
 						{/if}
 					</div>
 				</div>

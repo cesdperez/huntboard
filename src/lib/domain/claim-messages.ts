@@ -1,4 +1,5 @@
 import { plural } from '../format/plural.js';
+import { isolate } from '../format/text.js';
 import type { GamePhase, GameWindow } from './game-window.js';
 import type { ClaimStatus } from './scoring.js';
 import type { TeamClaim } from './team-board.js';
@@ -17,7 +18,7 @@ export function claimConflictMessage(claim: ConflictingClaim): string {
 	const judge = judgeName(claim.judgedBy);
 	switch (claim.status) {
 		case 'pending':
-			return `${claim.markedBy} already marked this done.`;
+			return `${isolate(claim.markedBy)} already marked this done.`;
 		case 'scored':
 			return `${judge} already scored this: ${plural(claim.points ?? 0, 'point')}.`;
 		case 'rejected':
@@ -52,9 +53,9 @@ export function claimLine(
 ): string | null {
 	switch (claim.status) {
 		case 'pending':
-			return `Marked done by ${claim.markedBy} at ${formatTime(claim.markedAt)}.`;
+			return `Marked done by ${isolate(claim.markedBy)} at ${formatTime(claim.markedAt)}.`;
 		case 'scored':
-			return claim.judgedBy ? `Judged by ${claim.judgedBy}.` : null;
+			return claim.judgedBy ? `Judged by ${isolate(claim.judgedBy)}.` : null;
 		case 'rejected':
 			return withClaimAgain(`${judgeName(claim.judgedBy)} rejected this.`, claimsOpen);
 	}
@@ -66,14 +67,14 @@ export function judgedClaimMessage(
 	claim: Pick<TeamClaim, 'status' | 'points' | 'judgeNote'>,
 	claimsOpen: boolean
 ): string {
-	if (claim.status === 'scored') return `Scored ${claim.points ?? 0} for ${title}`;
-	const reason = claim.judgeNote ? `: ${claim.judgeNote}` : '';
-	return withClaimAgain(`Rejected ${title}${reason}.`, claimsOpen);
+	if (claim.status === 'scored') return `Scored ${claim.points ?? 0} for ${isolate(title)}`;
+	const reason = claim.judgeNote ? `: ${isolate(claim.judgeNote)}` : '';
+	return withClaimAgain(`Rejected ${isolate(title)}${reason}.`, claimsOpen);
 }
 
 /** The line under a rejected row in the team's list. */
 export function rejectedRowLine(judgeNote: string | null, claimsOpen: boolean): string {
-	return judgeNote ? `Rejected: ${judgeNote}` : withClaimAgain('Rejected.', claimsOpen);
+	return judgeNote ? `Rejected: ${isolate(judgeNote)}` : withClaimAgain('Rejected.', claimsOpen);
 }
 
 function withClaimAgain(message: string, claimsOpen: boolean): string {
@@ -93,5 +94,5 @@ export function emptyQueueMessage(phase: GamePhase | null): string {
 }
 
 function judgeName(judgedBy: string | null): string {
-	return judgedBy ?? 'A judge';
+	return judgedBy === null ? 'A judge' : isolate(judgedBy);
 }

@@ -13,6 +13,7 @@
 	import { formatClockTime } from '#lib/format/clock-time.js';
 	import { localInputToUtc, utcToLocalInput } from '#lib/format/local-time.js';
 	import { ordinal } from '#lib/format/ordinal.js';
+	import { isolate } from '#lib/format/text.js';
 	import { REASON_MAX_LENGTH } from '#lib/domain/reason.js';
 	import type { TeamScoresRow } from '#lib/server/pages/judging-pages.js';
 	import { AdminAction } from './admin-action.svelte.js';
@@ -151,7 +152,7 @@
 						action="?/arrivalClear"
 						class="flex flex-1"
 						use:enhance={confirmFirst(
-							`Clear the arrival of ${team.name}? Its late penalty goes too.`,
+							`Clear the arrival of ${isolate(team.name)}? Its late penalty goes too.`,
 							arrival.submit(() => {
 								toast.show('Arrival cleared');
 								void refocus(() => correcting.opener);
@@ -195,14 +196,14 @@
 							{signed(adjustment.points)}
 						</span>
 						<span class="min-w-0 flex-1 break-words">
-							{adjustment.reason}
-							<span class="type-secondary">by {adjustment.createdBy}</span>
+							<bdi>{adjustment.reason}</bdi>
+							<span class="type-secondary">by <bdi>{adjustment.createdBy}</bdi></span>
 						</span>
 						<form
 							method="POST"
 							action="?/adjustmentRemove"
 							use:enhance={confirmFirst(
-								`Remove ${signed(adjustment.points)} for “${adjustment.reason}”?`,
+								`Remove ${signed(adjustment.points)} for “${isolate(adjustment.reason)}”?`,
 								adjusting.submit(() => {
 									toast.show('Adjustment removed');
 									void refocus(() => adding.opener);

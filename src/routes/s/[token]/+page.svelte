@@ -15,6 +15,7 @@
 	import { ordinal } from '#lib/format/ordinal.js';
 	import { REORDER_MS, motionMs } from '#lib/client/score-motion.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
+	import { isolate } from '#lib/format/text.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -41,7 +42,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.game.name} scoreboard · Huntboard</title>
+	<title>{isolate(data.game.name)} scoreboard · Huntboard</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 

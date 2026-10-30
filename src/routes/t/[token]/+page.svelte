@@ -17,6 +17,7 @@
 	import { groupBySection } from '#lib/format/group-by-section.js';
 	import { startPolling } from '#lib/client/live-updates.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
+	import { isolate } from '#lib/format/text.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -64,7 +65,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.team.name} · Huntboard</title>
+	<title>{isolate(data.team.name)} · Huntboard</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 

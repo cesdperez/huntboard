@@ -127,7 +127,7 @@
 							<p class="text-danger">{claim.judgeNote}</p>
 						{/if}
 						{#if claim.note}
-							<p class="type-secondary break-words">Note: {claim.note}</p>
+							<p class="type-secondary break-words">Note: <bdi>{claim.note}</bdi></p>
 						{/if}
 						{#if line}<p class="type-secondary">{line}</p>{/if}
 						{#if claim.media}

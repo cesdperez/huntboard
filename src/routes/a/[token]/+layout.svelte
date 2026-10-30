@@ -10,6 +10,7 @@
 	import { GameClock, setGameClock } from '#lib/client/game-clock.svelte.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
+	import { isolate } from '#lib/format/text.js';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -35,7 +36,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.game.name} · Huntboard</title>
+	<title>{isolate(data.game.name)} · Huntboard</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 

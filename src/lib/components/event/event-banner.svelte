@@ -74,7 +74,7 @@
 		</div>
 		{#if image}
 			<Button class="event-banner-view min-w-0 justify-between" onclick={() => (open = true)}>
-				<span class="truncate">View {image.label}</span>
+				<span class="truncate">View <bdi>{image.label}</bdi></span>
 				<ChevronRightIcon aria-hidden="true" />
 			</Button>
 		{/if}

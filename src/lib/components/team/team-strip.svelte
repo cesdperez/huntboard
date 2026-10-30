@@ -115,7 +115,7 @@
 								<TeamAvatar name={row.name} avatarKey={row.avatarKey} class="size-8 text-[15px]" />
 							{/if}
 							<span class="min-w-0 flex-1 truncate">
-								{row.name}{#if row.own}<span class="sr-only">, your team</span>{/if}
+								<bdi>{row.name}</bdi>{#if row.own}<span class="sr-only">, your team</span>{/if}
 								{#if row.members}<span class="block truncate type-secondary font-normal"
 										>{row.members}</span
 									>{/if}
