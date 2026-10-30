@@ -33,6 +33,13 @@ test('accounts: sign up with a code, create a game, sign out and back in with th
 		await expect(page.getByRole('alert')).toHaveText(
 			'That code is not right. Check the email and try again.'
 		);
+		await expect(page.getByLabel('Code')).toBeFocused();
+		await expect(page).toHaveURL(/\/login\?next=%2Fnew$/);
+	});
+
+	await test.step('"Use a different email" still leads to /new', async () => {
+		await page.getByRole('button', { name: 'Use a different email' }).click();
+		code = await askForEmail(page, email);
 	});
 
 	await test.step('the right code asks a new address for a name, then lands on /new', async () => {
