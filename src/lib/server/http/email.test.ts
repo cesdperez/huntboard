@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { resendSender } from './email.js';
 
 const env = { RESEND_API_KEY: 're_test', EMAIL_FROM: 'Huntboard <sign-in@example.com>' };
-const email = { to: 'sam@example.com', subject: 'Sign in', text: 'Hello' };
+const email = { to: 'sam@example.com', subject: 'Sign in', text: 'Hello', html: '<p>Hello</p>' };
 
 describe('resendSender', () => {
 	it('is null without an API key', () => {
@@ -20,7 +20,8 @@ describe('resendSender', () => {
 			from: 'Huntboard <sign-in@example.com>',
 			to: ['sam@example.com'],
 			subject: 'Sign in',
-			text: 'Hello'
+			text: 'Hello',
+			html: '<p>Hello</p>'
 		});
 	});
 

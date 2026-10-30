@@ -15,12 +15,12 @@ export function resendSender(
 ): SendEmail | null {
 	const key = env.RESEND_API_KEY;
 	if (!key) return null;
-	return async ({ to, subject, text }) => {
+	return async ({ to, subject, text, html }) => {
 		try {
 			const response = await fetcher(RESEND_URL, {
 				method: 'POST',
 				headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-				body: JSON.stringify({ from: env.EMAIL_FROM, to: [to], subject, text })
+				body: JSON.stringify({ from: env.EMAIL_FROM, to: [to], subject, text, html })
 			});
 			if (response.ok) return 'sent';
 			const body = await response.text();
