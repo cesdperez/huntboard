@@ -365,7 +365,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 
 ### Offline and errors
 
-- When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. When the browser comes back online, polls run again at once, and pages that do not poll check the server.
+- When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. When the server answers a poll with an error, the page also keeps what it showed, open sheets and typed notes included, and the notice reads "This page did not update. It tries again by itself." A dead link still shows the dead link page. When the browser comes back online, polls run again at once, and pages that do not poll check the server.
 - A page that cannot load at all says so plainly. Offline: "You are offline" with "This page loads again once you reconnect." Otherwise: "This page did not load" with "It tries again by itself. If it keeps happening, reload the page or tell your organiser." Both reload by themselves on the polling schedule once the server answers.
 - A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
 - An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast. The only other toasts that are not a confirmation tell a team about a judgement.

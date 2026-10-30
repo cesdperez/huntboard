@@ -33,3 +33,60 @@ export async function refreshIfReachable(
 	report(online);
 	if (online) await refresh();
 }
+
+export interface PageWindow {
+	fetch: typeof fetch;
+	location: Pick<Location, 'pathname'>;
+}
+
+/**
+ * Runs a background refresh of this page's data and resolves whether it updated. SvelteKit swaps
+ * the page for the error page when its data request fails, which would lose open sheets and typed
+ * notes over a passing server error or rate limit. So a failed data request for this page never
+ * answers, the refresh is dropped, and the next poll tries again. A dead link still gets through.
+ */
+export async function refreshKeepingPage(
+	refresh: () => Promise<unknown>,
+	page: PageWindow = window
+): Promise<boolean> {
+	const original = page.fetch;
+	const dataPath = `${page.location.pathname.replace(/\/$/, '')}/__data.json`;
+	let failed!: () => void;
+	const failure = new Promise<boolean>((resolve) => (failed = () => resolve(false)));
+
+	page.fetch = async (input, init) => {
+		if (new URL(requestUrl(input), 'http://page').pathname !== dataPath) {
+			return original.call(page, input, init);
+		}
+		const response = await original.call(page, input, init).catch(() => undefined);
+		if (response && !(await isPassingFailure(response))) return response;
+		failed();
+		return new Promise<Response>(() => {});
+	};
+	try {
+		return await Promise.race([refresh().then(() => true), failure]);
+	} finally {
+		page.fetch = original;
+	}
+}
+
+function requestUrl(input: RequestInfo | URL): string {
+	return input instanceof Request ? input.url : input.toString();
+}
+
+async function isPassingFailure(response: Response): Promise<boolean> {
+	if (response.status === 404) return false;
+	if (!response.ok) return true;
+	if (!response.headers.get('content-type')?.includes('application/json')) return false;
+	const body = (await response
+		.clone()
+		.json()
+		.catch(() => undefined)) as { nodes?: DataNode[] } | undefined;
+	if (!body) return true;
+	return (body.nodes ?? []).some((node) => node?.type === 'error' && node.error?.status !== 404);
+}
+
+interface DataNode {
+	type: string;
+	error?: { status?: number };
+}
