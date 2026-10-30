@@ -7,6 +7,7 @@ const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 // Secret links, and pages that show who is signed in.
 const PRIVATE_PATH = /^\/(?:[ats]\/[^/]+|login|games|new)(?:\/|$)/;
 const BODYLESS_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const DEV_PATH = /^\/dev(?:\/|$)/;
 
 /** A response that ends the request before routing, or null to continue. */
 export function rejection(request: Request, { dev } = { dev: false }): Response | null {
@@ -15,6 +16,8 @@ export function rejection(request: Request, { dev } = { dev: false }): Response 
 		url.protocol = 'https:';
 		return new Response(null, { status: 308, headers: { Location: url.href } });
 	}
+	// Every method, so a 405 listing the allowed ones never shows that a dev route exists.
+	if (!dev && DEV_PATH.test(url.pathname)) return new Response('Not found', { status: 404 });
 	if (BODYLESS_METHODS.has(request.method)) return null;
 
 	const length = request.headers.get('Content-Length');
