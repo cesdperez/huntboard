@@ -64,7 +64,10 @@
 			{/if}
 			<span class="min-w-0 flex-1">
 				{#if event}
-					<span class="line-clamp-2 font-display text-[20px] leading-tight font-bold break-words"
+					<!-- Each span that clips is relative, so it also clips the absolute sr-only punctuation
+					     after its text, which would otherwise widen the page. -->
+					<span
+						class="relative line-clamp-2 font-display text-[20px] leading-tight font-bold break-words"
 						>{teamName}<span class="sr-only">,</span></span
 					>
 					<!-- Kept out of the button's name, which would otherwise change every second. -->
@@ -72,10 +75,10 @@
 						>{countdown ?? ' '}</span
 					>
 				{:else}
-					<span class="line-clamp-2 type-heading break-words"
+					<span class="relative line-clamp-2 type-heading break-words"
 						>{teamName}<span class="sr-only">,</span></span
 					>
-					{#if members}<span class="block truncate type-secondary"
+					{#if members}<span class="relative block truncate type-secondary"
 							>{members}<span class="sr-only">,</span></span
 						>{/if}
 				{/if}
@@ -114,7 +117,7 @@
 							{#if showAvatars}
 								<TeamAvatar name={row.name} avatarKey={row.avatarKey} class="size-8 text-[15px]" />
 							{/if}
-							<span class="min-w-0 flex-1 truncate">
+							<span class="relative min-w-0 flex-1 truncate">
 								<bdi>{row.name}</bdi>{#if row.own}<span class="sr-only">, your team</span>{/if}
 								{#if row.members}<span class="block truncate type-secondary font-normal"
 										>{row.members}</span
