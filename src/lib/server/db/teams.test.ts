@@ -116,6 +116,16 @@ describe('addTeam', () => {
 		expect(await names()).toEqual(['0:Équipe Rats']);
 	});
 
+	it.each([
+		['with a combining accent', 'bb Cafe\u0301'],
+		['with a zero-width space', 'bb Caf\u200b\u00e9'],
+		['with a word joiner', 'bb\u2060 Caf\u00e9']
+	])('refuses a look-alike of a name another team has, %s', async (_, lookAlike) => {
+		await seedTeam(db, game.id, { name: 'bb Caf\u00e9' });
+
+		expect(await addTeam(db, game.id, lookAlike, '')).toEqual({ status: 'name-taken' });
+	});
+
 	it('takes a name a team in another game has', async () => {
 		const other = await createGame(db, 'Other hunt');
 		await seedTeam(db, other.id, { name: 'Canal Rats' });
@@ -162,6 +172,18 @@ describe('updateTeam', () => {
 			'name-taken'
 		);
 		expect(await names()).toEqual(['0:Canal Rats', '1:Night Owls']);
+	});
+
+	it('refuses a look-alike of the name of another team in this game', async () => {
+		await seedTeam(db, game.id, { name: 'Caf\u00e9' });
+		const owls = await seedTeam(db, game.id, { name: 'Night Owls' });
+
+		expect(await updateTeam(db, game.id, owls.id, { name: 'Cafe\u0301', members: '' })).toBe(
+			'name-taken'
+		);
+		expect(await updateTeam(db, game.id, owls.id, { name: 'Caf\u200b\u00e9', members: '' })).toBe(
+			'name-taken'
+		);
 	});
 
 	it('changes only the case of its own name', async () => {
