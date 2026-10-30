@@ -83,7 +83,7 @@
 			{/if}
 
 			{#if claim}
-				{@const line = claimLine(claim, clock.formatTime)}
+				{@const line = claimLine(claim, clock.formatTime, clock.closedMessage === null)}
 				<div class="flex items-start gap-3 border-y py-3">
 					<Marker state={claim.status} points={claim.points ?? undefined} />
 					<div class="flex min-w-0 flex-col gap-1">

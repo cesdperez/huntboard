@@ -120,7 +120,7 @@ Tapping a row opens a bottom sheet with the description, the note field, "Add ph
 - While the media is on its way, "Mark done" stays disabled and reads "Waiting for the upload". Once attached, "Mark done" sends it with the note. A claim needs no media, so the team can still send proof in the group chat or show it in person.
 - "Remove", closing the sheet, or marking done stops any step still running and forgets the file. An error shows in place under the status row, and "Remove" clears it so the team can pick another file. Outside the game window the button is hidden.
 - A claim with media shows its thumbnail on the row, 32px between the title and the points, and in the sheet, 40px beside "Photo sent" or "Video sent". A video shows the play tile, so a list never loads videos. Thumbnails have 8px corners, so they never read as a 3px marker.
-- When a poll shows that a judge scored or rejected a claim, a toast says so: "Scored 8 for Swim in a fountain", or "Rejected Free dessert: no proof received. You can mark it done again." Several judgements show one after another, and the phone vibrates briefly where the browser allows it. Opening the page and the team's own marks and undos stay quiet.
+- When a poll shows that a judge scored or rejected a claim, a toast says so: "Scored 8 for Swim in a fountain", or "Rejected Free dessert: no proof received. You can mark it done again." Once claims are closed, a rejection no longer offers to mark it done again, in the toast, the row or the sheet. Several judgements show one after another, and the phone vibrates briefly where the browser allows it. Opening the page and the team's own marks and undos stay quiet.
 
 ### Admin
 

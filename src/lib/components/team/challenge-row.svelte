@@ -3,11 +3,13 @@
 	import { Marker } from '#lib/components/marker/index.js';
 	import { MediaThumb } from '#lib/components/media/index.js';
 	import { Points } from '#lib/components/points/index.js';
-	import { CLAIM_AGAIN } from '#lib/domain/claim-messages.js';
+	import { rejectedRowLine } from '#lib/domain/claim-messages.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 
-	let { challenge, onselect }: { challenge: TeamChallenge; onselect: () => void } = $props();
+	type Props = { challenge: TeamChallenge; claimsOpen: boolean; onselect: () => void };
+
+	let { challenge, claimsOpen, onselect }: Props = $props();
 
 	const claim = $derived(challenge.claim);
 	const event = $derived(pageLayout() === 'event');
@@ -29,7 +31,7 @@
 				<span class="type-secondary text-waiting!">Waiting for a judge</span>
 			{:else if claim?.status === 'rejected'}
 				<span class="type-secondary text-danger!">
-					{claim.judgeNote ? `Rejected: ${claim.judgeNote}` : `Rejected. ${CLAIM_AGAIN}`}
+					{rejectedRowLine(claim.judgeNote, claimsOpen)}
 				</span>
 			{/if}
 		</span>

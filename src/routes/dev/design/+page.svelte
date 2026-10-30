@@ -302,7 +302,7 @@
 			<SectionHeading section="Around town" />
 			<ul class={['flex flex-col', theme.layout === 'plain' && 'border-t']}>
 				{#each sampleChallenges as challenge (challenge.id)}
-					<ChallengeRow {challenge} onselect={() => {}} />
+					<ChallengeRow {challenge} claimsOpen onselect={() => {}} />
 				{/each}
 			</ul>
 		</div>

@@ -5,12 +5,16 @@ import type { TeamChallenge, TeamClaim } from './team-board.js';
  * One message per claim a judge scored or rejected between two loads of a team's board, in board
  * order. The team's own actions only open and undo claims, so they never produce a message.
  */
-export function judgedClaimMessages(before: TeamChallenge[], after: TeamChallenge[]): string[] {
+export function judgedClaimMessages(
+	before: TeamChallenge[],
+	after: TeamChallenge[],
+	claimsOpen: boolean
+): string[] {
 	const claimsBefore = new Map(before.map((c) => [c.id, c.claim]));
 	return after.flatMap((challenge) => {
 		const claim = challenge.claim;
 		if (!claim || !wasJudged(claimsBefore.get(challenge.id) ?? null, claim)) return [];
-		return [judgedClaimMessage(challenge.title, claim)];
+		return [judgedClaimMessage(challenge.title, claim, claimsOpen)];
 	});
 }
 

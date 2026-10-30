@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { GameImageHeader } from '#lib/components/images/index.js';
@@ -34,7 +34,11 @@
 	let shownChallenges: TeamChallenge[] | null = null;
 	$effect(() => {
 		const challenges = data.challenges;
-		if (shownChallenges) announceJudged(judgedClaimMessages(shownChallenges, challenges));
+		// Untracked, or the clock's tick would rerun this every second.
+		const claimsOpen = untrack(() => clock.closedMessage === null);
+		if (shownChallenges) {
+			announceJudged(judgedClaimMessages(shownChallenges, challenges, claimsOpen));
+		}
 		shownChallenges = challenges;
 	});
 
@@ -107,7 +111,10 @@
 					{/if}
 					<ul class={['flex flex-col', !event && 'border-t']}>
 						{#each group.items as challenge (challenge.id)}
-							<ChallengeRow {challenge} onselect={() => select(challenge.id)} />
+							<ChallengeRow
+								{challenge}
+								claimsOpen={clock.closedMessage === null}
+								onselect={() => select(challenge.id)} />
 						{/each}
 					</ul>
 				</section>
