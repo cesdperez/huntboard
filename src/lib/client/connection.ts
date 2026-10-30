@@ -39,35 +39,74 @@ export interface PageWindow {
 	location: Pick<Location, 'pathname'>;
 }
 
+// Like REACHABLE_TIMEOUT_MS: a stalled data request would otherwise skip every later poll.
+export const DATA_TIMEOUT_MS = 10_000;
+
 /**
  * Runs a background refresh of this page's data and resolves whether it updated. SvelteKit swaps
  * the page for the error page when its data request fails, which would lose open sheets and typed
  * notes over a passing server error or rate limit. So a failed data request for this page never
  * answers, the refresh is dropped, and the next poll tries again. A dead link still gets through.
+ * A refresh that takes longer than DATA_TIMEOUT_MS also counts as not updated.
  */
 export async function refreshKeepingPage(
 	refresh: () => Promise<unknown>,
 	page: PageWindow = window
 ): Promise<boolean> {
-	const original = page.fetch;
-	const dataPath = `${page.location.pathname.replace(/\/$/, '')}/__data.json`;
 	let failed!: () => void;
 	const failure = new Promise<boolean>((resolve) => (failed = () => resolve(false)));
-
-	page.fetch = async (input, init) => {
-		if (new URL(requestUrl(input), 'http://page').pathname !== dataPath) {
-			return original.call(page, input, init);
-		}
-		const response = await original.call(page, input, init).catch(() => undefined);
-		if (response && !(await isPassingFailure(response))) return response;
-		failed();
-		return new Promise<Response>(() => {});
-	};
+	const timer = setTimeout(failed, DATA_TIMEOUT_MS);
+	const release = guardDataRequests(page, failed);
 	try {
 		return await Promise.race([refresh().then(() => true), failure]);
 	} finally {
-		page.fetch = original;
+		clearTimeout(timer);
+		release();
 	}
+}
+
+interface DataGuard {
+	original: typeof fetch;
+	wrapper: typeof fetch;
+	refreshes: Set<() => void>;
+}
+
+const guards = new WeakMap<PageWindow, DataGuard>();
+
+// One wrapper per page, shared by overlapping refreshes, so fetch goes back only when the last one
+// ends, in whatever order they end.
+function guardDataRequests(page: PageWindow, failed: () => void): () => void {
+	const guard = guards.get(page) ?? installGuard(page);
+	guard.refreshes.add(failed);
+	return () => {
+		guard.refreshes.delete(failed);
+		if (guard.refreshes.size > 0 || page.fetch !== guard.wrapper) return;
+		page.fetch = guard.original;
+		guards.delete(page);
+	};
+}
+
+function installGuard(page: PageWindow): DataGuard {
+	const original = page.fetch;
+	const refreshes = new Set<() => void>();
+	const wrapper: typeof fetch = async (input, init) => {
+		if (!isDataRequest(page, input)) return original.call(page, input, init);
+		const waiting = [...refreshes];
+		const response = await original.call(page, input, init).catch(() => undefined);
+		if (response && !(await isPassingFailure(response))) return response;
+		for (const failed of waiting) failed();
+		// Left pending so SvelteKit drops this load; refreshes settle through failed() instead.
+		return new Promise<Response>(() => {});
+	};
+	const guard = { original, wrapper, refreshes };
+	page.fetch = wrapper;
+	guards.set(page, guard);
+	return guard;
+}
+
+function isDataRequest(page: PageWindow, input: RequestInfo | URL): boolean {
+	const dataPath = `${page.location.pathname.replace(/\/$/, '')}/__data.json`;
+	return new URL(requestUrl(input), 'http://page').pathname === dataPath;
 }
 
 function requestUrl(input: RequestInfo | URL): string {

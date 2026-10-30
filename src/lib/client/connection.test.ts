@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+	DATA_TIMEOUT_MS,
 	isReachable,
 	REACHABLE_TIMEOUT_MS,
 	refreshIfReachable,
@@ -141,5 +142,84 @@ describe('refreshKeepingPage', () => {
 
 		expect(await refreshKeepingPage(refresh, page)).toBe(true);
 		expect(loaded).toHaveBeenCalledWith(expect.objectContaining({ status: 503 }));
+	});
+
+	function deferred() {
+		let answer!: (response: Response) => void;
+		const response = new Promise<Response>((resolve) => (answer = resolve));
+		return { response, answer };
+	}
+
+	it.each([
+		['the first ends first', [0, 1]],
+		['the second ends first', [1, 0]]
+	])('leaves fetch as it found it after two refreshes overlap and %s', async (_case, order) => {
+		const answers = [deferred(), deferred()];
+		const page = fakePage(() => answers.shift()!.response);
+		const pending = [answers[0], answers[1]];
+		const refreshes = [
+			refreshKeepingPage(loadData(page).refresh, page),
+			refreshKeepingPage(loadData(page).refresh, page)
+		];
+
+		for (const index of order) {
+			pending[index].answer(Response.json({ type: 'data', nodes: [] }));
+			expect(await refreshes[index]).toBe(true);
+		}
+
+		expect(page.fetch).toBe(page.original);
+	});
+
+	it('reports no update when a data request fails after two refreshes overlapped', async () => {
+		const answers = [deferred(), deferred()];
+		const page = fakePage(
+			() => answers.shift()?.response ?? Promise.resolve(new Response('', { status: 503 }))
+		);
+		const pending = [answers[0], answers[1]];
+		const first = refreshKeepingPage(loadData(page).refresh, page);
+		const second = refreshKeepingPage(loadData(page).refresh, page);
+		pending[0].answer(Response.json({ type: 'data', nodes: [] }));
+		await first;
+		pending[1].answer(Response.json({ type: 'data', nodes: [] }));
+		await second;
+
+		const { loaded, refresh } = loadData(page);
+		expect(await refreshKeepingPage(refresh, page)).toBe(false);
+		expect(loaded).not.toHaveBeenCalled();
+		expect(page.fetch).toBe(page.original);
+	});
+
+	it('reports no update once a stalled data request times out', async () => {
+		vi.useFakeTimers();
+		try {
+			const page = fakePage(() => new Promise<Response>(() => {}));
+
+			const refreshed = refreshKeepingPage(loadData(page).refresh, page);
+			await vi.advanceTimersByTimeAsync(DATA_TIMEOUT_MS);
+
+			expect(await refreshed).toBe(false);
+			expect(page.fetch).toBe(page.original);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('keeps the page when a data request fails after its refresh timed out', async () => {
+		vi.useFakeTimers();
+		try {
+			const stalled = deferred();
+			const page = fakePage(() => stalled.response);
+			const { loaded, refresh } = loadData(page);
+
+			const refreshed = refreshKeepingPage(refresh, page);
+			await vi.advanceTimersByTimeAsync(DATA_TIMEOUT_MS);
+			expect(await refreshed).toBe(false);
+			stalled.answer(new Response('', { status: 503 }));
+			await vi.advanceTimersByTimeAsync(0);
+
+			expect(loaded).not.toHaveBeenCalled();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });
