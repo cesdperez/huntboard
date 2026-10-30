@@ -8,7 +8,7 @@
 		base: 'inline-flex shrink-0 items-center justify-center gap-2 rounded-control border-2 border-transparent text-[17px] leading-tight font-semibold whitespace-nowrap transition-colors duration-150 select-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-5',
 		variants: {
 			variant: {
-				primary: 'bg-action text-on-action hover:bg-action/90',
+				primary: 'bg-action text-on-action hover:bg-action-hover',
 				secondary: 'border-ink bg-transparent text-ink hover:bg-ink/5',
 				destructive: 'border-danger bg-transparent text-danger hover:bg-danger/5',
 				ghost: 'bg-transparent text-ink hover:bg-ink/5'

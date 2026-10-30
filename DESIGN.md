@@ -246,6 +246,7 @@ Components use roles, never a theme's own colour names.
 | `--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--input-line`, `--danger`, `--scrim` | See [Color](#color) | The base palette |
 | `--marker`, `--on-marker` | `--flag`, `--on-flag` | Pending triangle and scored fill, the points on it, the Queue badge |
 | `--action`, `--on-action` | `--flag`, `--on-flag` | The primary button and its label |
+| `--action-hover` | `#F26C1D`, dark `#E7702E` | The primary button under the pointer, keeping 4.5:1 with `--on-action` |
 | `--own` | `--flag` | Bar on the team's own row |
 | `--own-row` | `--strip` | Background of the team's own row |
 | `--strip`, `--on-strip` | `--surface`, `--ink` | The sticky team strip and the admin tab bar, and their text |
@@ -292,7 +293,7 @@ A theme's registry entry names its layout. Structure changes only through it; th
 - Marker shapes: the outline, the lower-right triangle, the full square and the diagonal cross. Only their colours change.
 - Spacing, radii and touch sizes. Layout changes only through the registered [layouts](#layouts).
 - WCAG AA for every text pair, checked in each mode the theme supports. That includes each `--on-` pair, `--waiting` on `--paper` and `--on-strip-muted` on `--strip` at 15px.
-- 3:1 for `--input-line` against `--surface` and `--paper` in each mode. `src/lib/themes/input-line.test.ts` checks it.
+- 3:1 for `--input-line` against `--surface` and `--paper` in each mode. `src/lib/themes/theme-contrast.test.ts` checks it.
 - State told by shape and words, not colour alone. The own row keeps its bar and its semibold name.
 
 ### Highland Bru
@@ -326,7 +327,7 @@ Fonts: Fraunces (bold serif) for `--font-display`, Barlow for `--font-sans`, Bar
 | `--paper`, `--surface` | Cream `#FFF7E8`, `#FFFAF0` |
 | `--ink`, `--muted`, `--line` | `#283950` (11:1), `#726451` (5.4:1), `#DED3BE` |
 | `--input-line` | `#968770` (3.4:1 on surface, 3.3:1 on paper) |
-| `--marker`, `--action`, `--own`, `--section-rule`, `--on-section`, `--waiting` | Terracotta `#B8412D` (5.1:1 on cream), with cream `#FFFAF0` on it (5.3:1) |
+| `--marker`, `--action`, `--own`, `--section-rule`, `--on-section`, `--waiting` | Terracotta `#B8412D` (5.1:1 on cream), with cream `#FFFAF0` on it (5.3:1). Hover darkens it to `#A63A28` (6.2:1) |
 | `--own-row` | `#F5DFCC` |
 | `--strip`, `--on-strip`, `--strip-score` | Ceramic blue `#24468C`, cream (8.5:1) |
 | `--on-strip-muted`, `--strip-own-row`, `--strip-danger` | `#D5DDEF` (6.6:1 at 15px), `#1B3770`, `#FFD2C8` (6.6:1) |
