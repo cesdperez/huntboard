@@ -6,7 +6,12 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import type { GameClock } from '#lib/client/game-clock.svelte.js';
-	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
+	import {
+		normalizeTeamMembers,
+		normalizeTeamName,
+		TEAM_MEMBERS_MAX_LENGTH,
+		TEAM_NAME_MAX_LENGTH
+	} from '#lib/domain/team-name.js';
 	import { TeamAction } from './team-action.svelte.js';
 
 	type Props = {
@@ -19,7 +24,14 @@
 
 	let { open, name, members, clock, onclose }: Props = $props();
 
-	const action = new TeamAction(() => clock);
+	const action = new TeamAction(
+		() => clock,
+		() => `${name}\n${members}`
+	);
+
+	const savedAsSent = (formData: FormData) => () =>
+		name === normalizeTeamName(formData.get('name')) &&
+		members === normalizeTeamMembers(formData.get('members'));
 
 	function close() {
 		action.clearError();
@@ -40,7 +52,7 @@
 				method="POST"
 				action="?/rename"
 				class="flex flex-col gap-4"
-				use:enhance={action.submit('Saved', close)}
+				use:enhance={action.submit('Saved', close, savedAsSent)}
 			>
 				<div class="flex flex-col gap-2">
 					<Label for="team-name">Team name</Label>

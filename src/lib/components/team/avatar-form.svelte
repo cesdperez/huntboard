@@ -5,11 +5,14 @@
 	import { AVATAR_SPEC, resizeImage } from '#lib/client/image-resize.js';
 	import { TeamAction } from './team-action.svelte.js';
 
-	type Props = { hasAvatar: boolean; clock: GameClock };
+	type Props = { avatarKey: string | null; clock: GameClock };
 
-	let { hasAvatar, clock }: Props = $props();
+	let { avatarKey, clock }: Props = $props();
 
-	const action = new TeamAction(() => clock);
+	const action = new TeamAction(
+		() => clock,
+		() => avatarKey
+	);
 	let form = $state<HTMLFormElement | null>(null);
 	let input = $state<HTMLInputElement | null>(null);
 
@@ -34,7 +37,14 @@
 			return submission.cancel();
 		}
 		submission.formData.set('avatar', resized.image);
-		return action.submit('Picture saved', () => {})(submission);
+		return action.submit(
+			'Picture saved',
+			() => {},
+			() => {
+				const before = avatarKey;
+				return () => avatarKey !== before;
+			}
+		)(submission);
 	};
 </script>
 
@@ -60,7 +70,7 @@
 		{#if action.busy}
 			Saving picture
 		{:else}
-			{hasAvatar ? 'Change picture' : 'Add picture'}
+			{avatarKey ? 'Change picture' : 'Add picture'}
 		{/if}
 	</Button>
 </form>
