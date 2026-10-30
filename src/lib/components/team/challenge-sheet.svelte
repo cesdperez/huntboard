@@ -77,7 +77,7 @@
 			</Sheet.Header>
 
 			{#if challenge.description}
-				<Sheet.Description class="type-body whitespace-pre-line text-ink">
+				<Sheet.Description class="type-body break-words whitespace-pre-line text-ink">
 					{challenge.description}
 				</Sheet.Description>
 			{/if}
@@ -95,10 +95,10 @@
 						{#if claim.status === 'rejected' && claim.judgeNote}
 							<p class="text-danger">{claim.judgeNote}</p>
 						{/if}
-						{#if line}<p class="type-secondary">{line}</p>{/if}
 						{#if claim.note}
 							<p class="type-secondary break-words">Note: {claim.note}</p>
 						{/if}
+						{#if line}<p class="type-secondary">{line}</p>{/if}
 						{#if claim.media}
 							<p class="flex items-center gap-2 type-secondary">
 								<MediaThumb kind={claim.media.kind} src={claim.media.src} class="size-10" />
@@ -149,6 +149,7 @@
 							maxlength={CLAIM_NOTE_MAX_LENGTH}
 							autocomplete="off"
 							placeholder="Which photo, or what you did"
+							disabled={clock.closedMessage !== null}
 							bind:value={drafts[challenge.id]}
 						/>
 					</div>

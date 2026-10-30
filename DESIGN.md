@@ -113,7 +113,7 @@ Tapping a row opens a bottom sheet with the description, the note field, "Add ph
 - With a game image, the event header sits between the game name and the strip: a 48px thumbnail, the label and "View". It is not sticky, so the strip and the list keep their room at 390 × 844. Tapping it opens the image whole in a sheet, titled with the label.
 - A pending row reads "Waiting for a judge" under its title, in `--waiting`. A rejected row shows the reason in `--danger`.
 - The sheet moves focus to itself, not to the note field, so the phone keyboard opens only when the player taps the field.
-- Outside the game window the sheet keeps "Mark done" visible but disabled, with the closed message above it.
+- Outside the game window the sheet keeps "Mark done" and the note field visible but disabled, with the closed message above it.
 - An error in the sheet stays only while the claim it is about is unchanged. Once a poll shows a new state, the error goes, so it never contradicts the button under it.
 - A confirmation shows as a toast: a `--ink` pill above the bottom edge for three seconds.
 - "Add photo or video" is an optional secondary button under the note. It opens the phone's picker for photos and videos, and the work starts at once: no second tap. The button gives way to a status row: a 56px thumbnail (the photo itself, a photo tile until it is shrunk or when it fails, or a play tile for a video), a label, a progress bar and "Remove". The labels are "Shrinking photo", "Compressing video" and "Uploading" with a percentage, then "Photo attached" or "Video attached". The bar is indeterminate until the step reports progress: shrinking a photo never does, compressing a video and uploading do.
