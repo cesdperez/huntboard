@@ -10,6 +10,7 @@
 	--flag: #ff741f;
 	/* White on this orange is 2.7:1. Ink is 6.8:1. */
 	--on-flag: #151515;
+	--action-hover: #ff8134;
 	--danger: #b3261e;
 	--scrim: rgb(21 21 21 / 0.45);
 

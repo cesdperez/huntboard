@@ -17,6 +17,8 @@
 	--on-marker: var(--on-flag);
 	--action: var(--flag);
 	--on-action: var(--on-flag);
+	/* A hex per theme and mode, so the label's contrast on it can be checked. */
+	--action-hover: #f26c1d;
 	--own: var(--flag);
 	--own-row: var(--strip);
 	--strip: var(--surface);
@@ -76,6 +78,7 @@
 		--input-line: #66738f;
 		--flag: #ff7a2e;
 		--on-flag: #14213d;
+		--action-hover: #e7702e;
 		--danger: #ff6b85;
 		--scrim: rgb(5 10 20 / 0.6);
 	}

@@ -184,7 +184,7 @@ Sign-in needs a sending domain in Resend first (see [Sign-in email](#sign-in-ema
 
 ### Sign-in email
 
-Sign-in emails go through [Resend](https://resend.com). Its free plan sends 3,000 emails a month and 100 a day.
+Sign-in emails go through [Resend](https://resend.com). Its free plan sends 3,000 emails a month and 100 a day. Once a quota is spent, Resend refuses the email and the sign-in form says to try again after 00:00 UTC, or later for the monthly one.
 
 1. Create a Resend account and an API key with sending access.
 2. Add a sending domain on a zone you own, for example `send.example.com`, and add the DNS records Resend lists. Wait until Resend shows it as verified.
@@ -234,7 +234,7 @@ Without the two secrets, attaching media fails with a message, and claims withou
 
 A re-import that deletes a challenge deletes the media of its claims too. A team with claims cannot be deleted, so deleting a team leaves no media behind. Uploads that never reached a claim stay in the bucket until "Delete all media", a reset or the lifecycle rule removes them.
 
-"Download all media" on the Setup tab zips every claim's media in the Worker. That takes seconds of CPU for about 1 GB, past the free plan's 10 ms, so it needs Workers Paid ($5 a month). Everything else stays on the free plan.
+"Download all media" on the Setup tab zips every claim's media in the Worker, so it needs Workers Paid ($5 a month) for two reasons. Zipping about 1 GB takes seconds of CPU, past the free plan's 10 ms. And it reads each file from R2 with its own call, while the free plan allows 50 subrequests per request, R2 calls and D1 queries included, so there the download breaks off after about 48 files. Everything else stays on the free plan.
 
 A game of about 180 claims stores about 1 GB of media. It is deleted after the game, so R2 stays near its 10 GB of free storage.
 

@@ -184,6 +184,12 @@ describe('moveTeamUp and moveTeamDown', () => {
 
 		expect(outcome).toEqual({ status: 400, result: { error: MISSING } });
 	});
+
+	it('answers 404 for a team no longer in the game, as from a page open before a delete', async () => {
+		const outcome = await moveTeamUp(db, game.id, form({ teamId: '9999' }));
+
+		expect(outcome).toEqual({ status: 404, result: { error: MISSING, teamId: 9999 } });
+	});
 });
 
 describe('removeTeam', () => {

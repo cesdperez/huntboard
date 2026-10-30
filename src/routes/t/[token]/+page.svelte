@@ -17,6 +17,7 @@
 	import { groupBySection } from '#lib/format/group-by-section.js';
 	import { startPolling } from '#lib/client/live-updates.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
+	import { isolate } from '#lib/format/text.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -64,30 +65,32 @@
 </script>
 
 <svelte:head>
-	<title>{data.team.name} · Huntboard</title>
+	<title>{isolate(data.team.name)} · Huntboard</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <div class="min-h-dvh">
-	{#if event}
-		<AppBar><NicknameButton /></AppBar>
-		<EventBanner
-			name={data.game.name}
-			day={clock.startDay}
-			countdown={clock.countdown}
-			image={data.game.image}
-		/>
-	{:else}
-		<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
-			<p class="truncate type-secondary">{data.game.name}</p>
-			<NicknameButton />
-		</div>
-		{#if data.game.image}
-			<div class="mx-auto max-w-content px-gutter pb-2">
-				<GameImageHeader image={data.game.image} />
+	<header>
+		{#if event}
+			<AppBar><NicknameButton /></AppBar>
+			<EventBanner
+				name={data.game.name}
+				day={clock.startDay}
+				countdown={clock.countdown}
+				image={data.game.image}
+			/>
+		{:else}
+			<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
+				<p class="truncate type-secondary">{data.game.name}</p>
+				<NicknameButton />
 			</div>
+			{#if data.game.image}
+				<div class="mx-auto max-w-content px-gutter pb-2">
+					<GameImageHeader image={data.game.image} />
+				</div>
+			{/if}
 		{/if}
-	{/if}
+	</header>
 
 	<TeamStrip
 		teamName={data.team.name}

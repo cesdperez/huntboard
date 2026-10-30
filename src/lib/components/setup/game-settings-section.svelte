@@ -169,7 +169,7 @@
 		</fieldset>
 
 		<div class="flex items-center gap-4">
-			<Button type="submit" size="lg" disabled={submitting}>Save game</Button>
+			<Button type="submit" size="lg" busy={submitting}>Save game</Button>
 			<p class="type-secondary" role="status">{result?.saved ? 'Saved.' : ''}</p>
 		</div>
 	</form>

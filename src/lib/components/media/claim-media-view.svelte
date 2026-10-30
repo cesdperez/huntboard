@@ -10,9 +10,13 @@
 	};
 
 	let { media, label, preload }: Props = $props();
+
+	let loaded = $state(false);
 </script>
 
-<!-- Bounded height, so the judging buttons stay within reach under a tall photo. -->
+<!-- Bounded height, so the judging buttons stay within reach under a tall photo. A photo not
+	loaded yet takes that height too: at no height, a long queue would fit inside the browser's
+	lazy-loading distance and load every photo at once. -->
 {#if media.kind === 'photo'}
 	<!-- A file, not a page: media.src comes from mediaSrc(). -->
 	<!-- eslint-disable svelte/no-navigation-without-resolve -->
@@ -27,7 +31,9 @@
 			src={media.src}
 			alt="Photo from {label}"
 			decoding="async"
-			class="mx-auto max-h-64 w-full rounded-sm object-contain"
+			loading="lazy"
+			class={['mx-auto w-full rounded-sm object-contain', loaded ? 'max-h-64' : 'h-64']}
+			onload={() => (loaded = true)}
 		/>
 	</a>
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->

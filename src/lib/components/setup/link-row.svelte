@@ -89,8 +89,9 @@
 					submitting = true;
 					return async (settled) => {
 						const { result } = settled;
-						void setConfirming(false);
 						submitting = false;
+						// Before the update, so it keeps focus on the Rotate button that replaced this form.
+						await setConfirming(false);
 						// Only the admin rotate redirects: the new page needs to say its own link changed.
 						if (result.type === 'redirect') {
 							// Replace, so Back does not land on the old link, which is now a 404.
@@ -115,7 +116,7 @@
 					<Button bind:ref={cancelButton} variant="ghost" onclick={() => setConfirming(false)}>
 						Cancel
 					</Button>
-					<Button type="submit" variant="destructive" disabled={submitting}>
+					<Button type="submit" variant="destructive" busy={submitting}>
 						Rotate link<span class="sr-only"> for {label}</span>
 					</Button>
 				</div>

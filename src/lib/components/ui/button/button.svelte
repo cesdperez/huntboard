@@ -8,7 +8,7 @@
 		base: 'inline-flex shrink-0 items-center justify-center gap-2 rounded-control border-2 border-transparent text-[17px] leading-tight font-semibold whitespace-nowrap transition-colors duration-150 select-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-5',
 		variants: {
 			variant: {
-				primary: 'bg-action text-on-action hover:bg-action/90',
+				primary: 'bg-action text-on-action hover:bg-action-hover',
 				secondary: 'border-ink bg-transparent text-ink hover:bg-ink/5',
 				destructive: 'border-danger bg-transparent text-danger hover:bg-danger/5',
 				ghost: 'bg-transparent text-ink hover:bg-ink/5'
@@ -32,6 +32,8 @@
 		WithElementRef<HTMLAnchorAttributes> & {
 			variant?: ButtonVariant;
 			size?: ButtonSize;
+			/** Refuses activation while a request runs but keeps focus, which `disabled` drops to the page. */
+			busy?: boolean;
 		};
 </script>
 
@@ -44,9 +46,20 @@
 		href = undefined,
 		type = 'button',
 		disabled,
+		busy = false,
+		onclick,
 		children,
 		...restProps
 	}: ButtonProps = $props();
+
+	// Enter in a field submits through a click on the form's button, so this also stops that.
+	function guardedClick(event: MouseEvent & { currentTarget: HTMLButtonElement }) {
+		if (busy) {
+			event.preventDefault();
+			return;
+		}
+		onclick?.(event);
+	}
 </script>
 
 {#if href}
@@ -60,6 +73,7 @@
 		aria-disabled={disabled}
 		role={disabled ? 'link' : undefined}
 		tabindex={disabled ? -1 : undefined}
+		{onclick}
 		{...restProps}
 	>
 		{@render children?.()}
@@ -72,6 +86,8 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
 		{disabled}
+		aria-disabled={busy || undefined}
+		onclick={guardedClick}
 		{...restProps}
 	>
 		{@render children?.()}

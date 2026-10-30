@@ -1,8 +1,9 @@
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { browser } from '$app/env';
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import { focusIfLost } from '#lib/client/focus.js';
 	import { InPlaceForm } from '#lib/components/in-place-form.svelte.js';
 	import { Points } from '#lib/components/points/index.js';
 	import { toast } from '#lib/components/toast/index.js';
@@ -12,6 +13,7 @@
 	import { formatClockTime } from '#lib/format/clock-time.js';
 	import { localInputToUtc, utcToLocalInput } from '#lib/format/local-time.js';
 	import { ordinal } from '#lib/format/ordinal.js';
+	import { isolate } from '#lib/format/text.js';
 	import { REASON_MAX_LENGTH } from '#lib/domain/reason.js';
 	import type { TeamScoresRow } from '#lib/server/pages/judging-pages.js';
 	import { AdminAction } from './admin-action.svelte.js';
@@ -61,7 +63,16 @@
 		};
 	}
 
-	const record = arrival.submit(() => toast.show('Arrival recorded'));
+	// Recording, clearing or removing swaps out the button that had focus.
+	async function refocus(target: () => HTMLElement | null) {
+		await tick();
+		focusIfLost(target());
+	}
+
+	const record = arrival.submit(() => {
+		toast.show('Arrival recorded');
+		void refocus(() => correcting.opener);
+	});
 
 	const correct: SubmitFunction = (input) => {
 		const local = input.formData.get('arrivedAtLocal');
@@ -127,7 +138,7 @@
 				/>
 				<div class="flex gap-3">
 					<Button variant="ghost" class="flex-1" onclick={correcting.hide}>Cancel</Button>
-					<Button type="submit" class="flex-1" disabled={arrival.busy}>Save time</Button>
+					<Button type="submit" class="flex-1" busy={arrival.busy}>Save time</Button>
 				</div>
 			</form>
 		{:else}
@@ -141,19 +152,22 @@
 						action="?/arrivalClear"
 						class="flex flex-1"
 						use:enhance={confirmFirst(
-							`Clear the arrival of ${team.name}? Its late penalty goes too.`,
-							arrival.submit(() => toast.show('Arrival cleared'))
+							`Clear the arrival of ${isolate(team.name)}? Its late penalty goes too.`,
+							arrival.submit(() => {
+								toast.show('Arrival cleared');
+								void refocus(() => correcting.opener);
+							})
 						)}
 					>
 						<input type="hidden" name="teamId" value={team.id} />
-						<Button type="submit" variant="destructive" class="flex-1" disabled={arrival.busy}>
+						<Button type="submit" variant="destructive" class="flex-1" busy={arrival.busy}>
 							Clear<span class="sr-only"> the arrival of {team.name}</span>
 						</Button>
 					</form>
 				{:else}
 					<form method="POST" action="?/arrivalRecord" class="flex flex-1" use:enhance={record}>
 						<input type="hidden" name="teamId" value={team.id} />
-						<Button type="submit" size="lg" class="flex-1" disabled={arrival.busy}>
+						<Button type="submit" size="lg" class="flex-1" busy={arrival.busy}>
 							Record arrival<span class="sr-only"> of {team.name}</span>
 						</Button>
 					</form>
@@ -182,15 +196,18 @@
 							{signed(adjustment.points)}
 						</span>
 						<span class="min-w-0 flex-1 break-words">
-							{adjustment.reason}
-							<span class="type-secondary">by {adjustment.createdBy}</span>
+							<bdi>{adjustment.reason}</bdi>
+							<span class="type-secondary">by <bdi>{adjustment.createdBy}</bdi></span>
 						</span>
 						<form
 							method="POST"
 							action="?/adjustmentRemove"
 							use:enhance={confirmFirst(
-								`Remove ${signed(adjustment.points)} for “${adjustment.reason}”?`,
-								adjusting.submit(() => toast.show('Adjustment removed'))
+								`Remove ${signed(adjustment.points)} for “${isolate(adjustment.reason)}”?`,
+								adjusting.submit(() => {
+									toast.show('Adjustment removed');
+									void refocus(() => adding.opener);
+								})
 							)}
 						>
 							<input type="hidden" name="adjustmentId" value={adjustment.id} />
@@ -198,7 +215,7 @@
 								type="submit"
 								variant="ghost"
 								size="icon"
-								disabled={adjusting.busy}
+								busy={adjusting.busy}
 								aria-label="Remove {signed(adjustment.points)} for {adjustment.reason}"
 							>
 								<XIcon aria-hidden="true" />
@@ -278,7 +295,7 @@
 					>
 						Cancel
 					</Button>
-					<Button type="submit" class="flex-1" disabled={adjusting.busy}>Add</Button>
+					<Button type="submit" class="flex-1" busy={adjusting.busy}>Add</Button>
 				</div>
 			</form>
 		{:else}

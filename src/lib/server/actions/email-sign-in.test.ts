@@ -117,10 +117,10 @@ describe('code', () => {
 
 		expect((await run(actions.code, { code }, { jar })).result).toMatchObject({
 			status: 400,
-			data: { needsName: true, code, error: null }
+			data: { needsName: true, code, error: null, nameError: null }
 		});
 		expect((await run(actions.code, { code, displayName: ' ' }, { jar })).result).toMatchObject({
-			data: { needsName: true, error: NAME_ERROR }
+			data: { needsName: true, error: null, nameError: NAME_ERROR }
 		});
 		expect(
 			(await run(actions.code, { code, displayName: 'New Organiser' }, { jar })).thrown
@@ -182,7 +182,7 @@ describe('linkSignInAction', () => {
 
 		const { result } = await run(linkSignInAction(env), { token, displayName: '' });
 
-		expect(result).toMatchObject({ status: 400, data: { error: expect.any(String) } });
+		expect(result).toMatchObject({ status: 400, data: { error: null, nameError: NAME_ERROR } });
 	});
 });
 

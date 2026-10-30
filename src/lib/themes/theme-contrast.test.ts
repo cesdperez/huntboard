@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 // WCAG 1.4.11: the border is what shows where an input is, so it needs 3:1 against what is
 // inside it and what is around it.
 const NON_TEXT_CONTRAST = 3;
+// WCAG 1.4.3 for the 17px semibold button label.
+const TEXT_CONTRAST = 4.5;
 
 function css(theme: string): string {
 	return readFileSync(path.join(import.meta.dirname, `${theme}.css`), 'utf8');
@@ -46,4 +48,12 @@ describe('--input-line', () => {
 			expect(contrast(border, token(block, 'paper'))).toBeGreaterThanOrEqual(NON_TEXT_CONTRAST);
 		}
 	);
+});
+
+describe('--action-hover', () => {
+	it.each(Object.entries(palettes))('keeps the button label at 4.5:1 in %s', (_, block) => {
+		expect(contrast(token(block, 'action-hover'), token(block, 'on-flag'))).toBeGreaterThanOrEqual(
+			TEXT_CONTRAST
+		);
+	});
 });

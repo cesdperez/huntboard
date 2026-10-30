@@ -4,8 +4,30 @@ import {
 	claimLine,
 	rejectedRowLine,
 	claimsClosedMessage,
-	emptyQueueMessage
+	emptyQueueMessage,
+	judgedClaimMessage
 } from './claim-messages.js';
+
+const RLO = 'bb \u202egpj.exe';
+const ISOLATED = '\u2068bb \u202egpj.exe\u2069';
+
+describe('names and notes from players and judges', () => {
+	it('are isolated, so an override in one cannot reverse the message', () => {
+		expect(
+			claimConflictMessage({ status: 'pending', markedBy: RLO, judgedBy: null, points: null })
+		).toBe(`${ISOLATED} already marked this done.`);
+		expect(
+			claimConflictMessage({ status: 'scored', markedBy: 'Sam', judgedBy: RLO, points: 5 })
+		).toBe(`${ISOLATED} already scored this: 5 points.`);
+		expect(
+			claimLine({ status: 'scored', markedBy: 'Sam', markedAt: '', judgedBy: RLO }, String, true)
+		).toBe(`Judged by ${ISOLATED}.`);
+		expect(
+			judgedClaimMessage(RLO, { status: 'rejected', points: null, judgeNote: RLO }, false)
+		).toBe(`Rejected ${ISOLATED}: ${ISOLATED}.`);
+		expect(rejectedRowLine(RLO, false)).toBe(`Rejected: ${ISOLATED}`);
+	});
+});
 
 describe('claimConflictMessage', () => {
 	it('names the teammate who already marked it', () => {

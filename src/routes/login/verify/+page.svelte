@@ -18,8 +18,10 @@
 </svelte:head>
 
 {#if event}
-	<AppBar />
-	<PageBanner title="Sign in" />
+	<header>
+		<AppBar />
+		<PageBanner title="Sign in" />
+	</header>
 {/if}
 
 <main class="mx-auto flex max-w-content flex-col gap-6 px-gutter {event ? 'py-6' : 'py-10'}">
@@ -32,7 +34,7 @@
 		<form method="POST" class="flex flex-col gap-4" use:enhance>
 			<input type="hidden" name="token" value={data.token} />
 			{#if data.link.isNew}
-				<DisplayNameField {error} />
+				<DisplayNameField error={form?.nameError ?? null} />
 			{/if}
 			{#if error}
 				<p class="text-[15px] text-danger" role="alert">{error}</p>

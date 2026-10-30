@@ -15,6 +15,7 @@
 	import { ordinal } from '#lib/format/ordinal.js';
 	import { REORDER_MS, motionMs } from '#lib/client/score-motion.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
+	import { isolate } from '#lib/format/text.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -41,7 +42,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.game.name} scoreboard · Huntboard</title>
+	<title>{isolate(data.game.name)} scoreboard · Huntboard</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
@@ -51,15 +52,17 @@
 	style:--teams={Math.max(data.standings.length, 3)}
 >
 	{#if layout === 'event'}
-		<AppBar class="scoreboard-app-bar" />
-		<EventBanner
-			heading
-			name={data.game.name}
-			day={clock.startDay}
-			countdown={clock.countdown}
-			image={data.game.image}
-			class="scoreboard-banner"
-		/>
+		<header>
+			<AppBar class="scoreboard-app-bar" />
+			<EventBanner
+				heading
+				name={data.game.name}
+				day={clock.startDay}
+				countdown={clock.countdown}
+				image={data.game.image}
+				class="scoreboard-banner"
+			/>
+		</header>
 	{/if}
 	<main class="scoreboard-main mx-auto flex w-full max-w-content flex-1 flex-col px-gutter py-6">
 		<div class="scoreboard-columns flex">

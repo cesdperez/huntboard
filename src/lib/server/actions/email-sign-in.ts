@@ -29,7 +29,7 @@ export function emailSignInActions(env: SignInEnv, preview: boolean) {
 		if (!resend && !preview) {
 			return fail(503, { email, error: 'Email sign-in is not set up here.' });
 		}
-		const send: SendEmail = resend ?? (async () => true);
+		const send: SendEmail = resend ?? (async () => 'sent');
 
 		const result = await requestSignIn(env.DB, send, {
 			email,
@@ -109,7 +109,8 @@ async function finishSignIn(
 			...kept,
 			needsName: false,
 			needsNewEmail: result.needsNewEmail,
-			error: result.message
+			error: result.message,
+			nameError: null
 		});
 	}
 	// Asking for the name is not an error until the form has sent one.
@@ -117,6 +118,7 @@ async function finishSignIn(
 		...kept,
 		needsName: true,
 		needsNewEmail: false,
-		error: data.has('displayName') ? NAME_ERROR : null
+		error: null,
+		nameError: data.has('displayName') ? NAME_ERROR : null
 	});
 }

@@ -26,4 +26,10 @@ describe('deleteTeamQuestion', () => {
 			'Delete Canal Rats? Its 1 adjustment and its arrival time are deleted too, and its link stops working.'
 		);
 	});
+
+	it('isolates the team name, so an override in it cannot reverse the question', () => {
+		expect(deleteTeamQuestion({ ...team, name: 'bb \u202egpj.exe' })).toBe(
+			'Delete \u2068bb \u202egpj.exe\u2069? Its link stops working.'
+		);
+	});
 });

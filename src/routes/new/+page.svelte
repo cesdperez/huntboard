@@ -19,8 +19,10 @@
 </svelte:head>
 
 {#if event}
-	<AppBar />
-	<PageBanner title="New game">Name it and start setting it up.</PageBanner>
+	<header>
+		<AppBar />
+		<PageBanner title="New game">Name it and start setting it up.</PageBanner>
+	</header>
 {/if}
 
 <main class="mx-auto flex max-w-content flex-col gap-6 px-gutter {event ? 'py-6' : 'py-10'}">
@@ -63,6 +65,6 @@
 			<p id="new-game-error" class="text-[15px] text-danger" role="alert">{form.error}</p>
 		{/if}
 
-		<Button type="submit" variant="primary" size="lg" disabled={submitting}>Create game</Button>
+		<Button type="submit" variant="primary" size="lg" busy={submitting}>Create game</Button>
 	</form>
 </main>

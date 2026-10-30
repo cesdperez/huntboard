@@ -5,10 +5,7 @@ import type { Sample } from './http.ts';
 const FREE_PLAN = { requests: 100_000, rowsRead: 5_000_000, rowsWritten: 100_000 };
 /** The budget keeps about half the rows read limit spare. */
 const ROWS_READ_BUDGET = FREE_PLAN.rowsRead / 2;
-/**
- * D1 queries per Worker invocation on the free plan. Cloudflare's docs do not say whether a batch
- * counts once or per statement, so the report checks calls and warns on statements.
- */
+/** D1 queries per Worker invocation on the free plan. A db.batch() counts as one, whatever its statements. */
 const MAX_QUERIES = 50;
 const SLOW_P95_MS = 1_000;
 
@@ -77,7 +74,6 @@ export function report(samples: Sample[], result: HuntResult): string[] {
 	const unmeasured = samples.filter((sample) => sample.unmeasured).length;
 	const serverErrors = samples.filter((sample) => sample.status >= 500).length;
 	const maxCalls = Math.max(...samples.map((sample) => sample.calls));
-	const maxStatements = Math.max(...samples.map((sample) => sample.queries));
 	const slowest = [...byKind].map(([kind, group]) => ({
 		kind,
 		p95: percentile(
@@ -117,11 +113,6 @@ export function report(samples: Sample[], result: HuntResult): string[] {
 		`scoreboard matches the points the judges gave${mismatches.length ? `: ${mismatches.join('; ')}` : ''}`
 	);
 	for (const failure of [...new Set(result.failures)].slice(0, 10)) console.log(`      ${failure}`);
-	if (maxStatements > MAX_QUERIES) {
-		console.log(
-			`WARN  ${maxStatements} statements in one request: over ${MAX_QUERIES} if a batch counts per statement`
-		);
-	}
 	return failed;
 }
 

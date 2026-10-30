@@ -182,15 +182,15 @@ describe('moveTeam', () => {
 	it('swaps a team with the one above it', async () => {
 		const [, , c] = await listSetupTeams(db, game.id);
 
-		expect(await moveTeam(db, game.id, c.id, -1)).toBe(true);
+		expect(await moveTeam(db, game.id, c.id, -1)).toBe('moved');
 		expect(await names()).toEqual(['0:A', '1:C', '2:B']);
 	});
 
 	it('does nothing past either end', async () => {
 		const [a, , c] = await listSetupTeams(db, game.id);
 
-		expect(await moveTeam(db, game.id, a.id, -1)).toBe(false);
-		expect(await moveTeam(db, game.id, c.id, 1)).toBe(false);
+		expect(await moveTeam(db, game.id, a.id, -1)).toBe('at-end');
+		expect(await moveTeam(db, game.id, c.id, 1)).toBe('at-end');
 		expect(await names()).toEqual(['0:A', '1:B', '2:C']);
 	});
 
@@ -206,7 +206,7 @@ describe('moveTeam', () => {
 		const other = await createGame(db, 'Other hunt');
 		const elsewhere = await seedTeam(db, other.id);
 
-		expect(await moveTeam(db, game.id, elsewhere.id, -1)).toBe(false);
+		expect(await moveTeam(db, game.id, elsewhere.id, -1)).toBe('not-found');
 	});
 
 	it('keeps both moves when two judges reorder at once', async () => {

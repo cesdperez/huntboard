@@ -33,7 +33,12 @@
 	const event = $derived(pageLayout() === 'event');
 </script>
 
-<header data-sticky-strip class="sticky top-0 z-30 border-b surface-strip shadow-strip">
+<!-- Not in the page's header, where sticky would let go once the header scrolls away. -->
+<section
+	data-sticky-strip
+	aria-label="Your team"
+	class="sticky top-0 z-30 border-b surface-strip shadow-strip"
+>
 	<div class="mx-auto max-w-content">
 		<button
 			type="button"
@@ -47,7 +52,7 @@
 			onclick={() => (expanded = !expanded)}
 		>
 			{#if own}
-				<span class="type-rank">{ordinal(own.rank)}</span>
+				<span class="type-rank">{ordinal(own.rank)}<span class="sr-only"> place,</span></span>
 				{#if event}<span aria-hidden="true" class="h-10 w-px shrink-0 bg-line"></span>{/if}
 			{/if}
 			{#if showAvatars}
@@ -60,19 +65,24 @@
 			<span class="min-w-0 flex-1">
 				{#if event}
 					<span class="line-clamp-2 font-display text-[20px] leading-tight font-bold break-words"
-						>{teamName}</span
+						>{teamName}<span class="sr-only">,</span></span
 					>
 					<!-- Kept out of the button's name, which would otherwise change every second. -->
 					<span aria-hidden="true" class="block truncate type-secondary tabular-nums"
 						>{countdown ?? ' '}</span
 					>
 				{:else}
-					<span class="line-clamp-2 type-heading break-words">{teamName}</span>
-					{#if members}<span class="block truncate type-secondary">{members}</span>{/if}
+					<span class="line-clamp-2 type-heading break-words"
+						>{teamName}<span class="sr-only">,</span></span
+					>
+					{#if members}<span class="block truncate type-secondary"
+							>{members}<span class="sr-only">,</span></span
+						>{/if}
 				{/if}
 			</span>
 			<!-- At full size a picture and a four digit total leave a phone too little room for the name. -->
 			<CountingPoints value={own?.total ?? 0} class="max-[400px]:text-[32px]" />
+			<span class="sr-only">{own?.total === 1 ? ' point.' : ' points.'}</span>
 			<ChevronDownIcon
 				aria-hidden="true"
 				class={cn('size-5 shrink-0 transition-transform duration-150', expanded && 'rotate-180')}
@@ -105,7 +115,7 @@
 								<TeamAvatar name={row.name} avatarKey={row.avatarKey} class="size-8 text-[15px]" />
 							{/if}
 							<span class="min-w-0 flex-1 truncate">
-								{row.name}{#if row.own}<span class="sr-only">, your team</span>{/if}
+								<bdi>{row.name}</bdi>{#if row.own}<span class="sr-only">, your team</span>{/if}
 								{#if row.members}<span class="block truncate type-secondary font-normal"
 										>{row.members}</span
 									>{/if}
@@ -125,4 +135,4 @@
 	<p class="sr-only" aria-live="polite">
 		{own ? `${ordinal(own.rank)} place, ${plural(own.total, 'point')}` : ''}
 	</p>
-</header>
+</section>

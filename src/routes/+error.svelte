@@ -32,7 +32,7 @@
 </svelte:head>
 
 {#if event}
-	<AppBar />
+	<header><AppBar /></header>
 {/if}
 
 <main class="mx-auto flex max-w-content flex-col gap-3 px-gutter py-10">

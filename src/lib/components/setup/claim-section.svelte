@@ -27,7 +27,7 @@
 			action="?/claimGame"
 			use:enhance={action.submit(() => toast.show('Added to My games'))}
 		>
-			<Button type="submit" class="w-full" disabled={action.busy}>Add to My games</Button>
+			<Button type="submit" class="w-full" busy={action.busy}>Add to My games</Button>
 		</form>
 	{:else}
 		<!-- The sign-in page sends people back here only when next is a path on this site. -->

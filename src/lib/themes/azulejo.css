@@ -9,6 +9,8 @@
 	--input-line: #968770;
 	--flag: #b8412d;
 	--on-flag: #fffaf0;
+	/* Darker, since lightening the terracotta drops cream text under 4.5:1. */
+	--action-hover: #a63a28;
 	--danger: #a32020;
 	--scrim: rgb(40 57 80 / 0.45);
 

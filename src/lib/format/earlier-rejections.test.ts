@@ -11,4 +11,10 @@ describe('earlierRejectionsText', () => {
 	it('counts several rejections and ends with a full stop without a reason', () => {
 		expect(earlierRejectionsText({ count: 3, lastNote: null })).toBe('Rejected 3 times before.');
 	});
+
+	it('isolates the judge note', () => {
+		expect(earlierRejectionsText({ count: 1, lastNote: 'no \u202efoorp' })).toBe(
+			'Rejected once before: \u2068no \u202efoorp\u2069'
+		);
+	});
 });

@@ -10,7 +10,9 @@
 	<h2 id="challenges-heading" class="font-display type-heading">Challenges</h2>
 
 	{#if challenges.length === 0}
-		<p class="type-secondary">No challenges in {game.name} yet. Paste your list below.</p>
+		<p class="type-secondary">
+			No challenges in <bdi>{game.name}</bdi> yet. Paste your list below.
+		</p>
 	{:else}
 		<ChallengeList {challenges} />
 	{/if}

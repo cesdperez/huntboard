@@ -8,7 +8,7 @@
 <Sheet.Root bind:open>
 	<Sheet.Content>
 		<Sheet.Header>
-			<Sheet.Title class="break-words">{label} link</Sheet.Title>
+			<Sheet.Title class="break-words"><bdi>{label}</bdi> link</Sheet.Title>
 			<Sheet.Description class="type-secondary">
 				Scan it with a phone camera to open the link.
 			</Sheet.Description>

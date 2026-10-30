@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
@@ -26,9 +26,16 @@
 			const { result } = settled;
 			await updateOrRetry(settled);
 			pending = false;
-			if (result.type === 'success') editingId = null;
+			if (result.type === 'success') void stopEditing();
 		};
 	};
+
+	async function stopEditing() {
+		const id = editingId;
+		editingId = null;
+		await tick();
+		document.getElementById(`challenge-edit-${id}`)?.focus();
+	}
 
 	function failure(id: number) {
 		return result?.kind === 'edit-failed' && result.id === id ? result : null;
@@ -147,10 +154,8 @@
 								></textarea>
 							</div>
 							<div class="flex gap-3">
-								<Button type="submit" class="flex-1" disabled={pending}>Save</Button>
-								<Button variant="ghost" class="flex-1" onclick={() => (editingId = null)}>
-									Cancel
-								</Button>
+								<Button type="submit" class="flex-1" busy={pending}>Save</Button>
+								<Button variant="ghost" class="flex-1" onclick={stopEditing}>Cancel</Button>
 							</div>
 						</form>
 					{:else}
@@ -168,6 +173,7 @@
 							</div>
 							<Points class="pt-3" min={challenge.min_points} max={challenge.max_points} />
 							<Button
+								id="challenge-edit-{challenge.id}"
 								variant="ghost"
 								aria-label="Edit {challenge.title}"
 								onclick={() => (editingId = challenge.id)}

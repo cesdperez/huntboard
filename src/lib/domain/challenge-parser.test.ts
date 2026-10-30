@@ -338,6 +338,12 @@ describe('parseChallenges', () => {
 			});
 		});
 
+		it('isolates a repeated title, so an override in it cannot reverse the message', () => {
+			expect(parseChallenges('- a \u202eb [5]\n- a \u202eb [5]').errors).toEqual([
+				{ line: 2, message: 'Duplicate title "\u2068a \u202eb\u2069" (first on line 1)' }
+			]);
+		});
+
 		it('treats titles that differ in more than case and spacing as different', () => {
 			expect(parseChallenges('- Swim [25]\n- Swim twice [25]').errors).toEqual([]);
 		});

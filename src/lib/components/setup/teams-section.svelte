@@ -6,11 +6,13 @@
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
+	import { focusIfLost } from '#lib/client/focus.js';
 	import { TeamAvatar } from '#lib/components/images/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/format/plural.js';
+	import { isolate } from '#lib/format/text.js';
 	import type { GameRow, SetupTeam } from '#lib/server/db/types.js';
 	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
 	import { suggestTeamName } from '#lib/domain/team-name-suggestion.js';
@@ -25,6 +27,7 @@
 	let editingId = $state<number | null>(null);
 	let pending = $state(false);
 	let editForm = $state<HTMLElement | null>(null);
+	let heading = $state<HTMLElement | null>(null);
 
 	// Focus follows the form in and back to its Edit button, so it never falls back to the page top.
 	async function startEditing(teamId: number) {
@@ -37,7 +40,17 @@
 		const teamId = editingId;
 		editingId = null;
 		await tick();
-		if (teamId !== null) document.getElementById(`team-edit-${teamId}`)?.focus();
+		// A deleted team takes its Edit button with it.
+		if (teamId !== null) (document.getElementById(`team-edit-${teamId}`) ?? heading)?.focus();
+	}
+
+	// A move can take the focused button out of the page, or disable it at the end of the list.
+	async function refocusMoved(teamId: number, direction: 'up' | 'down') {
+		await tick();
+		const moved = document.getElementById(`team-${direction}-${teamId}`);
+		const other = document.getElementById(`team-${direction === 'up' ? 'down' : 'up'}-${teamId}`);
+		if (moved instanceof HTMLButtonElement && moved.disabled) other?.focus();
+		else focusIfLost(moved);
 	}
 
 	const initial = resultUnder(page.form, 'teams');
@@ -68,6 +81,8 @@
 		};
 
 	const submit = submitThen();
+	const submitMove = (teamId: number, direction: 'up' | 'down') =>
+		submitThen(() => void refocusMoved(teamId, direction));
 	const submitAdd = submitThen(() => {
 		suggestNewName();
 		newMembers = '';
@@ -85,7 +100,7 @@
 
 	function confirmRemoveAvatar(team: SetupTeam): SubmitFunction {
 		return (input) => {
-			if (!confirm(`Remove the picture of ${team.name}? The team can add a new one.`)) {
+			if (!confirm(`Remove the picture of ${isolate(team.name)}? The team can add a new one.`)) {
 				input.cancel();
 				return;
 			}
@@ -102,7 +117,9 @@
 </script>
 
 <section aria-labelledby="teams-heading" class="flex flex-col gap-4">
-	<h2 id="teams-heading" class="font-display type-heading">Teams</h2>
+	<h2 bind:this={heading} id="teams-heading" tabindex="-1" class="font-display type-heading">
+		Teams
+	</h2>
 
 	{#if teams.length === 0}
 		<p class="type-secondary">No teams yet. Add one for each group that gets its own link.</p>
@@ -145,7 +162,7 @@
 								)}
 							/>
 							<div class="flex gap-3">
-								<Button type="submit" class="flex-1" disabled={pending}>Save</Button>
+								<Button type="submit" class="flex-1" busy={pending}>Save</Button>
 								<Button variant="ghost" class="flex-1" onclick={stopEditing}>Cancel</Button>
 							</div>
 						</form>
@@ -158,7 +175,7 @@
 							>
 								<input type="hidden" name="teamId" value={team.id} />
 								<TeamAvatar name={team.name} avatarKey={team.avatar_key} class="size-12" />
-								<Button type="submit" variant="destructive" class="flex-1" disabled={pending}>
+								<Button type="submit" variant="destructive" class="flex-1" busy={pending}>
 									Remove picture
 								</Button>
 							</form>
@@ -166,13 +183,14 @@
 						{#if team.claim_count === 0}
 							<form method="POST" action="?/teamsDelete" use:enhance={confirmDelete(team)}>
 								<input type="hidden" name="teamId" value={team.id} />
-								<Button type="submit" variant="destructive" class="w-full" disabled={pending}>
+								<Button type="submit" variant="destructive" class="w-full" busy={pending}>
 									Delete team
 								</Button>
 							</form>
 						{:else}
 							<p class="type-secondary">
-								{team.name} has {plural(team.claim_count, 'claim')}, so it cannot be deleted.
+								<bdi>{team.name}</bdi> has {plural(team.claim_count, 'claim')}, so it cannot be
+								deleted.
 							</p>
 						{/if}
 					{:else}
@@ -191,25 +209,33 @@
 									<p class="type-secondary tabular-nums">{plural(team.claim_count, 'claim')}</p>
 								{/if}
 							</div>
-							<form method="POST" action="?/teamsMoveUp" use:enhance={submit}>
+							<form method="POST" action="?/teamsMoveUp" use:enhance={submitMove(team.id, 'up')}>
 								<input type="hidden" name="teamId" value={team.id} />
 								<Button
+									id="team-up-{team.id}"
 									type="submit"
 									variant="ghost"
 									size="icon"
-									disabled={pending || index === 0}
+									disabled={index === 0}
+									busy={pending}
 									aria-label="Move {team.name} up"
 								>
 									<ArrowUpIcon aria-hidden="true" />
 								</Button>
 							</form>
-							<form method="POST" action="?/teamsMoveDown" use:enhance={submit}>
+							<form
+								method="POST"
+								action="?/teamsMoveDown"
+								use:enhance={submitMove(team.id, 'down')}
+							>
 								<input type="hidden" name="teamId" value={team.id} />
 								<Button
+									id="team-down-{team.id}"
 									type="submit"
 									variant="ghost"
 									size="icon"
-									disabled={pending || index === teams.length - 1}
+									disabled={index === teams.length - 1}
+									busy={pending}
 									aria-label="Move {team.name} down"
 								>
 									<ArrowDownIcon aria-hidden="true" />
@@ -255,7 +281,7 @@
 			>
 				<DicesIcon aria-hidden="true" />
 			</Button>
-			<Button type="submit" class="ml-2" disabled={pending}>Add team</Button>
+			<Button type="submit" class="ml-2" busy={pending}>Add team</Button>
 		</div>
 		<Input
 			name="members"

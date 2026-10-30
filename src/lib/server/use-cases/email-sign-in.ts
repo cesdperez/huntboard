@@ -18,8 +18,11 @@ export interface SignInEmail {
 	text: string;
 }
 
-/** Sends one email. False when the provider refused it. */
-export type SendEmail = (email: SignInEmail) => Promise<boolean>;
+/** How a send went. A spent quota comes back only when the provider resets it, not on a retry. */
+export type SendOutcome = 'sent' | 'failed' | 'daily-quota' | 'monthly-quota';
+
+/** Sends one email. */
+export type SendEmail = (email: SignInEmail) => Promise<SendOutcome>;
 
 export const SIGN_IN_MINUTES = 15;
 /** Unused requests per address and per SIGN_IN_MINUTES, so the form cannot flood an inbox. */
@@ -37,7 +40,7 @@ export type RequestResult =
 			link: string;
 			code: string;
 	  }
-	| { kind: 'error'; status: 400 | 429 | 502; message: string };
+	| { kind: 'error'; status: 400 | 429 | 502 | 503; message: string };
 
 /** A user to sign in, a new address that still needs a name, or why the sign-in failed. */
 export type FinishResult =
@@ -55,6 +58,22 @@ const TOO_MANY_WRONG_CODES: FinishResult = {
 	kind: 'error',
 	message: 'Too many wrong codes were tried, so the code no longer works. Ask for a new email.',
 	needsNewEmail: true
+};
+
+const SEND_FAILURES: Record<
+	Exclude<SendOutcome, 'sent'>,
+	{ status: 502 | 503; message: string }
+> = {
+	failed: { status: 502, message: 'We could not send the email. Try again.' },
+	// Resend's daily quota resets at 00:00 UTC.
+	'daily-quota': {
+		status: 503,
+		message: 'We have sent all the sign-in emails we can for today. Try again after 00:00 UTC.'
+	},
+	'monthly-quota': {
+		status: 503,
+		message: 'We have sent all the sign-in emails we can for this month. Try again later.'
+	}
 };
 
 const NOT_RIGHT: FinishResult = {
@@ -116,9 +135,10 @@ export async function requestSignIn(
 	}
 
 	const link = `${input.origin}/login/verify?token=${token}`;
-	if (!(await send(signInEmail(email, link, code)))) {
+	const outcome = await send(signInEmail(email, link, code));
+	if (outcome !== 'sent') {
 		await takeRequest(db, requestId);
-		return { kind: 'error', status: 502, message: 'We could not send the email. Try again.' };
+		return { kind: 'error', ...SEND_FAILURES[outcome] };
 	}
 	const earlier = await codeRequests(db, input.earlierRequestIds, now);
 	const requestIds = [

@@ -69,7 +69,7 @@
 						</p>
 					{/if}
 				</div>
-				<Button type="submit" variant="primary" size="lg" disabled={action.busy}>Save</Button>
+				<Button type="submit" variant="primary" size="lg" busy={action.busy}>Save</Button>
 			</form>
 		{/key}
 	</Sheet.Content>

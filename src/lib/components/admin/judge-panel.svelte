@@ -13,9 +13,10 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
-	import { clampPoints, parsePoints, quickPointValues } from '#lib/domain/points.js';
+	import { quickPointValues } from '#lib/domain/points.js';
 	import { REASON_MAX_LENGTH } from '#lib/domain/reason.js';
 	import { AdminAction } from './admin-action.svelte.js';
+	import { clampTypedPoints } from './clamped-points.js';
 
 	type Props = {
 		/** The claim as the last refresh shows it. An error shows only while it stays the same. */
@@ -65,10 +66,13 @@
 		};
 	}
 
+	let clampNote = $state<string | null>(null);
+
 	function clampTyped(event: Event) {
 		const input = event.currentTarget as HTMLInputElement;
-		const points = parsePoints(input.value);
-		if (points !== null) input.value = String(clampPoints(points, range));
+		const clamped = clampTypedPoints(input.value, range);
+		if (clamped) input.value = clamped.value;
+		clampNote = clamped?.note ?? null;
 	}
 </script>
 
@@ -110,7 +114,7 @@
 			{/if}
 			<div class="flex gap-3">
 				<Button variant="ghost" class="flex-1" onclick={rejecting.hide}>Cancel</Button>
-				<Button type="submit" variant="destructive" class="flex-1" disabled={action.busy}>
+				<Button type="submit" variant="destructive" class="flex-1" busy={action.busy}>
 					Reject claim<span class="sr-only">{` ${label}`}</span>
 				</Button>
 			</div>
@@ -131,7 +135,7 @@
 						value={String(points)}
 						size="lg"
 						class="flex-1 px-2 tabular-nums"
-						disabled={action.busy}
+						busy={action.busy}
 						aria-label="Score {points} for {label}"
 					>
 						{points}
@@ -147,7 +151,9 @@
 				class="min-h-row w-24 shrink-0 px-2 text-center tabular-nums"
 				placeholder={min === max ? String(min) : `${min}–${max}`}
 				aria-label="Other points for {label}, {min} to {max}"
+				aria-describedby={clampNote ? `${id}-clamped` : undefined}
 				onchange={clampTyped}
+				oninput={() => (clampNote = null)}
 			/>
 		</div>
 		<form
@@ -163,7 +169,7 @@
 					bind:ref={rejecting.opener}
 					variant="destructive"
 					class="flex-1"
-					disabled={action.busy}
+					busy={action.busy}
 					onclick={rejecting.show}
 				>
 					Reject<span class="sr-only">{` ${label}`}</span>
@@ -173,11 +179,14 @@
 				type="submit"
 				variant={primary ? 'primary' : 'secondary'}
 				class="flex-1"
-				disabled={action.busy}
+				busy={action.busy}
 			>
 				Score<span class="sr-only">{` ${label}`}</span>
 			</Button>
 		</form>
+		{#if clampNote}
+			<p id="{id}-clamped" class="type-secondary" role="status">{clampNote}</p>
+		{/if}
 		{#if !onfailure && action.error}
 			<p class="text-[15px] text-danger" role="alert">{action.error}</p>
 		{/if}

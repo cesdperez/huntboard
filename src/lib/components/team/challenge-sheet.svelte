@@ -127,7 +127,7 @@
 							<p class="text-danger">{claim.judgeNote}</p>
 						{/if}
 						{#if claim.note}
-							<p class="type-secondary break-words">Note: {claim.note}</p>
+							<p class="type-secondary break-words">Note: <bdi>{claim.note}</bdi></p>
 						{/if}
 						{#if line}<p class="type-secondary">{line}</p>{/if}
 						{#if claim.media}
@@ -157,7 +157,12 @@
 				>
 					<input type="hidden" name="claimId" value={claim.id} />
 					{@render message()}
-					<Button type="submit" size="lg" disabled={action.busy || clock.closedMessage !== null}>
+					<Button
+						type="submit"
+						size="lg"
+						disabled={clock.closedMessage !== null}
+						busy={action.busy}
+					>
 						Undo claim
 					</Button>
 				</form>
@@ -214,7 +219,8 @@
 						type="submit"
 						variant="primary"
 						size="lg"
-						disabled={action.busy || media.busy || clock.closedMessage !== null}
+						disabled={clock.closedMessage !== null}
+						busy={action.busy || media.busy}
 					>
 						{media.busy ? 'Waiting for the upload' : 'Mark done'}
 					</Button>
