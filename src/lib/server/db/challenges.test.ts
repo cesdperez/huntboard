@@ -67,7 +67,13 @@ describe('getImportSource', () => {
 	it('lists this game challenges with their claims and the claiming team names', async () => {
 		const rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
 		const owls = await seedTeam(db, game.id, { name: 'Night Owls' });
-		const swim = await seedChallenge(db, game.id, { title: 'Swim' });
+		const swim = await seedChallenge(db, game.id, {
+			title: 'Swim',
+			description: 'Any fountain',
+			section: 'Wet',
+			min_points: 5,
+			max_points: 20
+		});
 		const cake = await seedChallenge(db, game.id, { title: 'Cake' });
 		const scored = await seedClaim(db, rats.id, swim.id, { status: 'scored', points: 7 });
 		const rejected = await seedClaim(db, owls.id, swim.id, { status: 'rejected' });
@@ -80,12 +86,24 @@ describe('getImportSource', () => {
 			{
 				id: swim.id,
 				title: 'Swim',
+				description: 'Any fountain',
+				section: 'Wet',
+				min_points: 5,
+				max_points: 20,
 				claims: [
 					{ id: scored.id, team_id: rats.id, status: 'scored', points: 7 },
 					{ id: rejected.id, team_id: owls.id, status: 'rejected', points: null }
 				]
 			},
-			{ id: cake.id, title: 'Cake', claims: [] }
+			{
+				id: cake.id,
+				title: 'Cake',
+				description: null,
+				section: null,
+				min_points: 5,
+				max_points: 10,
+				claims: []
+			}
 		]);
 		expect(source.teamNames).toEqual(
 			new Map([

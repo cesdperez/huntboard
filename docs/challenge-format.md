@@ -35,7 +35,7 @@ Before saving, the admin sees a table of what was parsed: section, title, points
 
 Pasting again replaces the challenge list. Challenges are matched by title, ignoring case, surrounding spaces and repeated spaces.
 
-- **Matched**: section, description, range and position are updated. Scored claims are clamped to the new range.
+- **Matched**: title, section, description, range and position are updated, so a title pasted in other case or spacing replaces the stored one. Scored claims are clamped to the new range. The preview marks a matched challenge "Updated" only when its title, section, description or points change, and says when the order changes.
 - **New**: added.
 - **Missing, without claims**: deleted.
 - **Missing, with claims**: the preview lists them with their claim count. Confirming deletes them and their claims.

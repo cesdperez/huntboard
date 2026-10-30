@@ -32,7 +32,7 @@ export interface ImportPreviewRow {
 	section: string | null;
 	min_points: number;
 	max_points: number;
-	change: 'new' | 'updated';
+	change: 'new' | 'updated' | 'unchanged';
 }
 
 export interface ImportPreviewError {
@@ -48,6 +48,7 @@ export interface ImportPreview {
 	deleted: string[];
 	deletedWithClaims: DeletedChallengeWithClaims[];
 	clampedScores: { title: string; teamName: string; from: number; to: number }[];
+	reordered: boolean;
 }
 
 export function buildImportPlan(diff: ReimportDiff): ImportPlan {
@@ -77,7 +78,11 @@ export function buildImportPreview(
 ): ImportPreview {
 	const { challenges, errors } = parseChallenges(text);
 	const diff = diffReimport(existing, challenges);
-	const matched = new Set(diff.matched.map(({ challenge }) => challenge));
+	const changes = new Map(
+		diff.matched.map(
+			({ challenge, changed }) => [challenge, changed ? 'updated' : 'unchanged'] as const
+		)
+	);
 	const lines = text.split(/\r\n|\r|\n/);
 
 	return {
@@ -87,7 +92,7 @@ export function buildImportPreview(
 			section: challenge.section,
 			min_points: challenge.min_points,
 			max_points: challenge.max_points,
-			change: matched.has(challenge) ? 'updated' : 'new'
+			change: changes.get(challenge) ?? 'new'
 		})),
 		errors: errors.map(({ line, message }) => ({
 			line,
@@ -101,7 +106,8 @@ export function buildImportPreview(
 			teamName: teamNames.get(teamId) ?? 'A team',
 			from,
 			to
-		}))
+		})),
+		reordered: diff.reordered
 	};
 }
 

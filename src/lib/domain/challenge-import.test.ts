@@ -7,7 +7,11 @@ import {
 } from './challenge-import.js';
 import { diffReimport, type ExistingChallenge } from './reimport-diff.js';
 
-const swimOnly: ExistingChallenge[] = [{ id: 7, title: 'swim in a FOUNTAIN', claims: [] }];
+const CONTENT = { description: null, section: null, min_points: 5, max_points: 10 };
+
+const swimOnly: ExistingChallenge[] = [
+	{ id: 7, title: 'swim in a FOUNTAIN', ...CONTENT, claims: [] }
+];
 
 describe('buildImportPlan', () => {
 	it('inserts new challenges with their title key and pasted position', () => {
@@ -55,8 +59,13 @@ describe('buildImportPlan', () => {
 
 	it('keeps missing challenges with claims apart from those without', () => {
 		const existing: ExistingChallenge[] = [
-			{ id: 1, title: 'Gone', claims: [] },
-			{ id: 2, title: 'Claimed', claims: [{ id: 9, team_id: 1, status: 'rejected', points: null }] }
+			{ id: 1, title: 'Gone', ...CONTENT, claims: [] },
+			{
+				id: 2,
+				title: 'Claimed',
+				...CONTENT,
+				claims: [{ id: 9, team_id: 1, status: 'rejected', points: null }]
+			}
 		];
 
 		const plan = buildImportPlan(diffReimport(existing, []));
@@ -71,11 +80,13 @@ describe('unacknowledgedDeletions', () => {
 		{
 			id: 1,
 			title: 'Claimed once',
+			...CONTENT,
 			claims: [{ id: 9, team_id: 1, status: 'pending', points: null }]
 		},
 		{
 			id: 2,
 			title: 'Claimed twice',
+			...CONTENT,
 			claims: [{ id: 8, team_id: 1, status: 'pending', points: null }]
 		}
 	];
@@ -140,6 +151,33 @@ describe('buildImportPreview', () => {
 		]);
 	});
 
+	it('marks a pasted challenge that matches the stored one exactly as unchanged', () => {
+		const stored: ExistingChallenge[] = [
+			{ id: 7, title: 'Swim in a fountain', ...CONTENT, claims: [] },
+			{ id: 8, title: 'Bake a cake', ...CONTENT, claims: [] }
+		];
+
+		const preview = buildImportPreview(
+			'- Swim in a fountain [5-10]\n- bake a cake [5-10]',
+			stored,
+			new Map()
+		);
+
+		expect(preview.rows.map((row) => row.change)).toEqual(['unchanged', 'updated']);
+		expect(preview.reordered).toBe(false);
+	});
+
+	it('says when the pasted list puts stored challenges in another order', () => {
+		const stored: ExistingChallenge[] = [
+			{ id: 7, title: 'Swim', ...CONTENT, claims: [] },
+			{ id: 8, title: 'Bake', ...CONTENT, claims: [] }
+		];
+
+		const preview = buildImportPreview('- Bake [5-10]\n- Swim [5-10]', stored, new Map());
+
+		expect(preview.reordered).toBe(true);
+	});
+
 	it('shows parse errors with the text of the offending line', () => {
 		const preview = buildImportPreview('- Fine [1]\r\n- Broken line\n- Bad [9-2]', [], new Map());
 
@@ -154,13 +192,19 @@ describe('buildImportPreview', () => {
 			{
 				id: 1,
 				title: 'Swim',
+				...CONTENT,
 				claims: [
 					{ id: 10, team_id: 3, status: 'scored', points: 40 },
 					{ id: 11, team_id: 4, status: 'scored', points: 15 }
 				]
 			},
-			{ id: 2, title: 'Gone', claims: [] },
-			{ id: 3, title: 'Claimed', claims: [{ id: 12, team_id: 3, status: 'pending', points: null }] }
+			{ id: 2, title: 'Gone', ...CONTENT, claims: [] },
+			{
+				id: 3,
+				title: 'Claimed',
+				...CONTENT,
+				claims: [{ id: 12, team_id: 3, status: 'pending', points: null }]
+			}
 		];
 		const teamNames = new Map([[3, 'Canal Rats']]);
 

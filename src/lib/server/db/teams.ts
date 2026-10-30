@@ -2,10 +2,7 @@ import { teamNameKey } from '#lib/domain/team-name.js';
 import { generateToken } from '#lib/domain/token.js';
 import type { TeamRow, SetupTeam } from './types.js';
 
-export async function listSetupTeams(
-	db: D1Database,
-	gameId: number
-): Promise<SetupTeam[]> {
+export async function listSetupTeams(db: D1Database, gameId: number): Promise<SetupTeam[]> {
 	const { results } = await db
 		.prepare(
 			`SELECT team.*,

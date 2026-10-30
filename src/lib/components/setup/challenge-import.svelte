@@ -8,6 +8,7 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/format/plural.js';
 	import { groupBySection } from '#lib/format/group-by-section.js';
+	import type { ImportPreviewRow } from '#lib/domain/challenge-import.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	const EXAMPLE = `# Around town
@@ -22,6 +23,12 @@
 
 - Get a free dessert from a restaurant [10-15]
 - Eat something you have never tried [5-10]`;
+
+	const CHANGE_LABELS: Record<ImportPreviewRow['change'], string> = {
+		new: 'New',
+		updated: 'Updated',
+		unchanged: 'Unchanged'
+	};
 
 	let { hasChallenges }: { hasChallenges: boolean } = $props();
 
@@ -58,14 +65,16 @@
 
 	const summary = $derived.by(() => {
 		if (!preview || preview.rows.length === 0) return null;
-		const added = preview.rows.filter((row) => row.change === 'new').length;
+		const count = (change: ImportPreviewRow['change']) =>
+			preview.rows.filter((row) => row.change === change).length;
 		const counts: [number, string][] = [
-			[added, 'new challenge'],
-			[preview.rows.length - added, 'update'],
+			[count('new'), 'new challenge'],
+			[count('updated'), 'update'],
 			[preview.deleted.length + preview.deletedWithClaims.length, 'delete']
 		];
 		const parts = counts.filter(([count]) => count > 0).map(([count, noun]) => plural(count, noun));
-		return `${parts.join(', ')}.`;
+		if (preview.reordered) parts.push('a new order');
+		return parts.length > 0 ? `${parts.join(', ')}.` : 'No changes.';
 	});
 </script>
 
@@ -191,7 +200,7 @@
 								<td class="py-3 pr-3 align-top">
 									<span class="block">{row.title}</span>
 									<span class="block type-secondary">
-										{row.change === 'new' ? 'New' : 'Updated'}
+										{CHANGE_LABELS[row.change]}
 									</span>
 									{#if row.description}
 										<span class="block type-secondary whitespace-pre-line">{row.description}</span>

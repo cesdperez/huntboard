@@ -250,14 +250,10 @@ describe('setArrival', () => {
 		const rats = await seedTeam(db, game.id);
 
 		expect(await setArrival(db, game.id, rats.id, '2026-06-01T21:03:00.000Z')).toBe(true);
-		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe(
-			'2026-06-01T21:03:00.000Z'
-		);
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe('2026-06-01T21:03:00.000Z');
 
 		await setArrival(db, game.id, rats.id, '2026-06-01T20:58:00.000Z');
-		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe(
-			'2026-06-01T20:58:00.000Z'
-		);
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe('2026-06-01T20:58:00.000Z');
 
 		await setArrival(db, game.id, rats.id, null);
 		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBeNull();
@@ -278,9 +274,7 @@ describe('recordFirstArrival', () => {
 		expect(await recordFirstArrival(db, game.id, rats.id, '2026-06-01T21:02:00.000Z')).toBe(
 			'recorded'
 		);
-		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe(
-			'2026-06-01T21:02:00.000Z'
-		);
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe('2026-06-01T21:02:00.000Z');
 	});
 
 	it('keeps the arrival another judge recorded first', async () => {
@@ -290,9 +284,7 @@ describe('recordFirstArrival', () => {
 		expect(await recordFirstArrival(db, game.id, rats.id, '2026-06-01T21:10:00.000Z')).toBe(
 			'already-recorded'
 		);
-		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe(
-			'2026-06-01T21:02:00.000Z'
-		);
+		expect((await listSetupTeams(db, game.id))[0].arrived_at).toBe('2026-06-01T21:02:00.000Z');
 	});
 
 	it('refuses a team of another game', async () => {
