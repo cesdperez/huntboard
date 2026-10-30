@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestDb } from '../db/testing/test-db.js';
 import { findOrCreateUser } from '../db/users.js';
 import { memoryCookies } from '../testing/memory-cookies.js';
+import { MAX_CODE_ATTEMPTS } from '../use-cases/email-sign-in.js';
 
 const mocks = vi.hoisted(() => ({ signIn: vi.fn() }));
 
@@ -42,11 +43,11 @@ async function run(
 }
 
 /** Asks for an email in preview mode and returns the cookie jar holding the request. */
-async function requested(email: string) {
+async function requested(email: string, earlier = new Map<string, string>()) {
 	const { result, cookies } = await run(
 		emailSignInActions(env, true).request,
 		{ email },
-		{ query: '?/request&next=%2Fnew' }
+		{ jar: earlier, query: '?/request&next=%2Fnew' }
 	);
 	const jar = new Map([['sign_in_request', cookies.get('sign_in_request') ?? '']]);
 	const { link, code } = (result as unknown as { preview: { link: string; code: string } }).preview;
@@ -124,6 +125,33 @@ describe('code', () => {
 		expect(
 			(await run(actions.code, { code, displayName: 'New Organiser' }, { jar })).thrown
 		).toMatchObject({ status: 303, location: '/new' });
+	});
+
+	it('takes the code from an earlier email after this browser asked for another', async () => {
+		await findOrCreateUser(env.DB, 'sam@example.com', 'Sam');
+		const first = await requested('sam@example.com');
+		const { jar } = await requested('sam@example.com', first.jar);
+
+		const { thrown } = await run(emailSignInActions(env, true).code, { code: first.code }, { jar });
+
+		expect(thrown).toMatchObject({ status: 303, location: '/new' });
+	});
+
+	it('asks for a new email once too many wrong codes were tried', async () => {
+		const { jar, code } = await requested('sam@example.com');
+		const wrong = code === '000000' ? '111111' : '000000';
+		const actions = emailSignInActions(env, true);
+
+		expect((await run(actions.code, { code: wrong }, { jar })).result).toMatchObject({
+			data: { needsNewEmail: false }
+		});
+		for (let i = 1; i < MAX_CODE_ATTEMPTS - 1; i++)
+			await run(actions.code, { code: wrong }, { jar });
+
+		expect((await run(actions.code, { code: wrong }, { jar })).result).toMatchObject({
+			status: 400,
+			data: { needsNewEmail: true, error: expect.stringContaining('Too many wrong codes') }
+		});
 	});
 
 	it('refuses a code without the request cookie', async () => {

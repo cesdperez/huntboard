@@ -34,11 +34,12 @@ export function emailSignInActions(env: SignInEnv, preview: boolean) {
 		const result = await requestSignIn(env.DB, send, {
 			email,
 			next: url.searchParams.get('next'),
-			origin: url.origin
+			origin: url.origin,
+			earlierRequestIds: requestIds(cookies)
 		});
 		if (result.kind === 'error') return fail(result.status, { email, error: result.message });
 
-		cookies.set(REQUEST_COOKIE, result.requestId, {
+		cookies.set(REQUEST_COOKIE, result.requestIds.join('.'), {
 			path: '/login',
 			httpOnly: true,
 			sameSite: 'lax',
@@ -55,7 +56,7 @@ export function emailSignInActions(env: SignInEnv, preview: boolean) {
 		const typed = readString(data, 'code');
 		const result = await finishWithCode(
 			env.DB,
-			cookies.get(REQUEST_COOKIE) ?? '',
+			requestIds(cookies),
 			typed,
 			readString(data, 'displayName')
 		);
@@ -84,8 +85,13 @@ export async function pendingEmail(
 	env: Pick<Cloudflare.Env, 'DB'>,
 	cookies: Cookies
 ): Promise<string | null> {
-	const id = cookies.get(REQUEST_COOKIE);
-	return id ? pendingRequestEmail(env.DB, id) : null;
+	const ids = requestIds(cookies);
+	return ids.length > 0 ? pendingRequestEmail(env.DB, ids) : null;
+}
+
+/** Request ids are base64url, so a dot separates them. */
+function requestIds(cookies: Cookies): string[] {
+	return (cookies.get(REQUEST_COOKIE) ?? '').split('.').filter(Boolean);
 }
 
 async function finishSignIn(
@@ -98,12 +104,19 @@ async function finishSignIn(
 		await signIn(cookies, result.userId);
 		redirect(303, result.next);
 	}
-	if (result.kind === 'error')
-		return fail(400, { ...kept, needsName: false, error: result.message });
+	if (result.kind === 'error') {
+		return fail(400, {
+			...kept,
+			needsName: false,
+			needsNewEmail: result.needsNewEmail,
+			error: result.message
+		});
+	}
 	// Asking for the name is not an error until the form has sent one.
 	return fail(400, {
 		...kept,
 		needsName: true,
+		needsNewEmail: false,
 		error: data.has('displayName') ? NAME_ERROR : null
 	});
 }

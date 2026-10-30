@@ -1,5 +1,5 @@
 import type { ActionOutcome } from './action-outcome.js';
-import { countGamesCreatedToday, createGame } from '../db/games.js';
+import { createOwnedGameWithinLimit } from '../db/games.js';
 import { readString } from './form.js';
 import { gameNameError } from './game-settings-form.js';
 
@@ -26,13 +26,12 @@ export async function createNewGame(
 	const nameError = gameNameError(name);
 	if (nameError) return { status: 400, result: { name, error: nameError } };
 
-	if ((await countGamesCreatedToday(db, ownerUserId)) >= GAMES_PER_DAY) {
+	const game = await createOwnedGameWithinLimit(db, name, ownerUserId, GAMES_PER_DAY);
+	if (!game) {
 		return {
 			status: 429,
-			result: { name, error: `You can create ${GAMES_PER_DAY} games a day. Try again tomorrow.` }
+			result: { name, error: `You can create ${GAMES_PER_DAY} games in 24 hours. Try again later.` }
 		};
 	}
-
-	const game = await createGame(db, name, ownerUserId);
 	return { adminToken: game.admin_token };
 }

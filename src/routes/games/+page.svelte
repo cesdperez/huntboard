@@ -30,7 +30,7 @@
 		{:else}
 			<div>
 				<h1 id="games-heading" class="type-title">My games</h1>
-				<p class="mt-1 type-secondary">{@render signedInAs()}</p>
+				<p class="mt-1 type-secondary break-words">{@render signedInAs()}</p>
 			</div>
 		{/if}
 

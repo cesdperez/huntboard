@@ -30,15 +30,21 @@ export async function insertSignInRequest(
 	return result.meta.changes > 0;
 }
 
-export function findRequest(
+/** The unexpired requests among `ids`, newest first. */
+export async function findRequests(
 	db: D1Database,
-	id: string,
+	ids: readonly string[],
 	now: string
-): Promise<SignInRequestRow | null> {
-	return db
-		.prepare('SELECT * FROM sign_in_request WHERE id = ? AND expires_at > ?')
-		.bind(id, now)
-		.first<SignInRequestRow>();
+): Promise<SignInRequestRow[]> {
+	const { results } = await db
+		.prepare(
+			`SELECT * FROM sign_in_request
+			WHERE id IN (SELECT value FROM json_each(?)) AND expires_at > ?
+			ORDER BY created_at DESC`
+		)
+		.bind(JSON.stringify(ids), now)
+		.all<SignInRequestRow>();
+	return results;
 }
 
 export function findRequestByToken(
@@ -62,21 +68,22 @@ export async function takeRequest(db: D1Database, id: string): Promise<boolean> 
 }
 
 /**
- * Counts one code attempt before the code is checked, so parallel guesses each spend one.
- * Null when the request is gone, expired, or out of attempts.
+ * Compares the code and counts a wrong one in the same statement, so parallel guesses each spend
+ * an attempt. The right code spends none. Null when the request is gone, expired, or out of attempts.
  */
-export function spendCodeAttempt(
+export function checkCode(
 	db: D1Database,
 	id: string,
+	codeHash: string,
 	maxAttempts: number,
 	now: string
 ): Promise<SignInRequestRow | null> {
 	return db
 		.prepare(
-			`UPDATE sign_in_request SET code_attempts = code_attempts + 1
-			WHERE id = ? AND code_attempts < ? AND expires_at > ? RETURNING *`
+			`UPDATE sign_in_request SET code_attempts = code_attempts + (code_hash <> ?2)
+			WHERE id = ?1 AND code_attempts < ?3 AND expires_at > ?4 RETURNING *`
 		)
-		.bind(id, maxAttempts, now)
+		.bind(id, codeHash, maxAttempts, now)
 		.first<SignInRequestRow>();
 }
 

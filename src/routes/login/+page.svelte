@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { tick } from 'svelte';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import DisplayNameField from '#lib/components/account/display-name-field.svelte';
 	import { AppBar, PageBanner } from '#lib/components/event/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -14,9 +15,43 @@
 	let otherEmail = $state(false);
 
 	const event = $derived(pageLayout() === 'event');
-	const sentTo = $derived(otherEmail ? null : (form?.sent ?? data.pendingEmail));
+	const codeResult = $derived(form && 'code' in form ? form : null);
+	const codeEnded = $derived(codeResult?.needsNewEmail ?? false);
+	const sentTo = $derived(otherEmail || codeEnded ? null : (form?.sent ?? data.pendingEmail));
 	const requestAction = $derived(`?/request&next=${encodeURIComponent(data.next)}`);
-	const formError = $derived(form?.error ?? null);
+	const codeError = $derived(codeEnded ? null : (codeResult?.error ?? null));
+	const emailError = $derived(
+		form && 'email' in form ? form.error : codeEnded ? (codeResult?.error ?? null) : null
+	);
+	const needsName = $derived(!codeEnded && (codeResult?.needsName ?? false));
+	const step = $derived(sentTo ? (needsName ? 'name' : 'code') : 'email');
+
+	let emailField = $state<HTMLInputElement | null>(null);
+	let checkHeading = $state<HTMLElement | null>(null);
+	let nameField = $state<HTMLInputElement | null>(null);
+
+	/** Each step replaces the form that had focus, which would otherwise fall back to the page. */
+	async function moveFocus(change: () => Promise<void> | void) {
+		const before = step;
+		// After the change: SvelteKit resets focus once it applies a successful result.
+		await change();
+		if (step === before) return;
+		await tick();
+		({ email: emailField, code: checkHeading, name: nameField })[step]?.focus();
+	}
+
+	const submitCode: SubmitFunction =
+		() =>
+		({ update }) =>
+			moveFocus(() => update());
+	const submitEmail: SubmitFunction =
+		() =>
+		({ result, update }) =>
+			moveFocus(async () => {
+				// A refused address stays on this form; only a sent email moves on to the code.
+				if (result.type === 'success') otherEmail = false;
+				await update({ reset: false });
+			});
 </script>
 
 <svelte:head>
@@ -38,8 +73,15 @@
 
 	{#if sentTo}
 		<section aria-labelledby="check-heading" class="flex flex-col gap-4">
-			<h2 id="check-heading" class="font-display type-heading">Check your email</h2>
-			<p class="type-secondary">
+			<h2
+				bind:this={checkHeading}
+				id="check-heading"
+				tabindex="-1"
+				class="font-display type-heading"
+			>
+				Check your email
+			</h2>
+			<p class="type-secondary break-words">
 				We sent a sign-in link and a code to <strong class="text-ink">{sentTo}</strong>. Open the
 				link, or type the code here.
 			</p>
@@ -56,7 +98,7 @@
 				</div>
 			{/if}
 
-			<form method="POST" action="?/code" class="flex flex-col gap-4" use:enhance>
+			<form method="POST" action="?/code" class="flex flex-col gap-4" use:enhance={submitCode}>
 				<div class="flex flex-col gap-2">
 					<Label for="code">Code</Label>
 					<Input
@@ -67,19 +109,23 @@
 						autocomplete="one-time-code"
 						maxlength={7}
 						value={form && 'code' in form ? form.code : ''}
-						aria-invalid={formError ? true : undefined}
+						aria-invalid={codeError ? true : undefined}
 					/>
 				</div>
-				{#if form && 'needsName' in form && form.needsName}
-					<DisplayNameField error={formError} />
+				{#if needsName}
+					<DisplayNameField bind:ref={nameField} error={codeError} />
 				{/if}
-				{#if formError}
-					<p class="text-[15px] text-danger" role="alert">{formError}</p>
+				{#if codeError}
+					<p class="text-[15px] text-danger" role="alert">{codeError}</p>
 				{/if}
 				<Button type="submit" variant="primary" size="lg">Sign in</Button>
 			</form>
 
-			<Button variant="ghost" class="w-full" onclick={() => (otherEmail = true)}>
+			<Button
+				variant="ghost"
+				class="w-full"
+				onclick={() => moveFocus(() => void (otherEmail = true))}
+			>
 				Use a different email
 			</Button>
 		</section>
@@ -88,17 +134,12 @@
 			method="POST"
 			action={requestAction}
 			class="flex flex-col gap-4"
-			use:enhance={() => {
-				return async ({ result, update }) => {
-					// A refused address stays on this form; only a sent email moves on to the code.
-					if (result.type === 'success') otherEmail = false;
-					await update({ reset: false });
-				};
-			}}
+			use:enhance={submitEmail}
 		>
 			<div class="flex flex-col gap-2">
 				<Label for="email">Email</Label>
 				<Input
+					bind:ref={emailField}
 					id="email"
 					name="email"
 					type="email"
@@ -106,15 +147,15 @@
 					autocomplete="email"
 					maxlength={EMAIL_MAX_LENGTH}
 					value={form && 'email' in form ? form.email : ''}
-					aria-invalid={formError ? true : undefined}
+					aria-invalid={emailError ? true : undefined}
 					aria-describedby="email-hint"
 				/>
 				<p id="email-hint" class="type-secondary">
 					We email you a link to sign in. New here? The same link creates your account.
 				</p>
 			</div>
-			{#if formError}
-				<p class="text-[15px] text-danger" role="alert">{formError}</p>
+			{#if emailError}
+				<p class="text-[15px] text-danger" role="alert">{emailError}</p>
 			{/if}
 			<Button type="submit" variant="primary" size="lg">Email me a sign-in link</Button>
 		</form>

@@ -10,9 +10,19 @@
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+
+	let heading = $state<HTMLElement | null>(null);
+	let shownClaim: PageProps['data']['claim'] | undefined;
+
+	// Adding the game removes the claim section and the button that had focus.
+	$effect(() => {
+		const claim = data.claim;
+		if (shownClaim && !claim) heading?.focus();
+		shownClaim = claim;
+	});
 </script>
 
-<h1 class="type-title">Setup</h1>
+<h1 bind:this={heading} tabindex="-1" class="type-title">Setup</h1>
 
 <div class="mt-6 flex flex-col gap-10">
 	{#if data.claim}
