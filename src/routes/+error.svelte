@@ -5,6 +5,7 @@
 	import { checkConnection, connection, retryPage } from '#lib/components/connection/index.js';
 	import { AppBar } from '#lib/components/event/index.js';
 	import { startPolling } from '#lib/client/live-updates.js';
+	import { newAdminToken } from '#lib/client/new-admin-link.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 
 	const notFound = $derived(page.status === 404);
@@ -18,7 +19,12 @@
 
 	const event = $derived(pageLayout() === 'event');
 
+	// This tab rotated the admin link and lost the answer, so the link it is on may be the old one.
+	let newToken = $state<string | null>(null);
+
 	onMount(() => {
+		const token = page.route.id?.startsWith('/a/[token]') ? page.params.token : undefined;
+		if (notFound && token) newToken = newAdminToken(token);
 		if (notFound) return;
 		void checkConnection();
 		// Only on the polling schedule: retrying at once would loop on an error that persists.
@@ -37,7 +43,19 @@
 
 <main class="mx-auto flex max-w-content flex-col gap-3 px-gutter py-10">
 	<h1 class="type-title">{heading}</h1>
-	{#if notFound}
+	{#if newToken}
+		<p class="type-secondary">
+			This tab rotated the admin link, so it was probably replaced by the new one.
+		</p>
+		<p>
+			<a
+				href={resolve('/a/[token]/setup', { token: newToken })}
+				data-sveltekit-replacestate
+				class="inline-flex min-h-touch items-center font-semibold text-ink underline"
+				>Open the new admin link</a
+			>
+		</p>
+	{:else if notFound}
 		<p class="type-secondary">
 			It may have been replaced with a new one. Ask your organiser for the current link.
 		</p>
