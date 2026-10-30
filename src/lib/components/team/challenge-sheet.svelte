@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { enhance } from '$app/forms';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { CLAIM_NOTE_MAX_LENGTH } from '#lib/domain/claim-note.js';
 	import { Marker, markerLabel } from '#lib/components/marker/index.js';
 	import { nickname } from '#lib/components/nickname/index.js';
@@ -18,19 +18,39 @@
 
 	type Props = {
 		challenge: TeamChallenge | null;
+		/** Every challenge, so an answer applies to the one it was sent for, open or not. */
+		challenges: TeamChallenge[];
 		open: boolean;
 		clock: GameClock;
 		onclose: () => void;
 	};
 
-	let { challenge, open, clock, onclose }: Props = $props();
+	let { challenge, challenges, open, clock, onclose }: Props = $props();
 
 	let content = $state<HTMLElement | null>(null);
 	let drafts = $state<Record<number, string>>({});
-	const action = new TeamAction(
-		() => clock,
-		() => `${challenge?.id}:${challenge?.claim?.id}:${challenge?.claim?.status}`
-	);
+
+	const claimOf = (challengeId: number) =>
+		challenges.find((each) => each.id === challengeId)?.claim ?? null;
+
+	// One per challenge, so a slow answer stays with its challenge and others can be marked meanwhile.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- filled inside $derived, where state must not change; each action holds its own state
+	const actions = new Map<number, TeamAction>();
+	function actionFor(challengeId: number): TeamAction {
+		let found = actions.get(challengeId);
+		if (!found) {
+			found = new TeamAction(
+				() => clock,
+				() => {
+					const claim = claimOf(challengeId);
+					return `${claim?.id}:${claim?.status}`;
+				}
+			);
+			actions.set(challengeId, found);
+		}
+		return found;
+	}
+	const action = $derived(actionFor(challenge?.id ?? 0));
 
 	// One per challenge, so a finished upload stays with that challenge's draft note.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- filled inside $derived, where state must not change; each upload holds its own state
@@ -59,6 +79,10 @@
 		onclose();
 	}
 
+	function closeIfShowing(challengeId: number) {
+		if (open && challenge?.id === challengeId) close();
+	}
+
 	// The button that had focus leaves the page. Left alone, the sheet's focus trap moves focus to
 	// the note field, which opens the phone keyboard.
 	async function focusAfterSwap(target: () => HTMLElement | null) {
@@ -81,12 +105,36 @@
 		void focusAfterSwap(() => addButton);
 	}
 
-	function marked(formData: FormData) {
-		const challengeId = Number(formData.get('challengeId'));
-		delete drafts[challengeId];
-		uploadFor(challengeId).clear();
-		close();
-	}
+	const sentChallenge = (formData: FormData) => Number(formData.get('challengeId'));
+
+	const mark: SubmitFunction = (input) => {
+		const challengeId = sentChallenge(input.formData);
+		return actionFor(challengeId).submit(
+			'Marked done',
+			() => {
+				delete drafts[challengeId];
+				uploadFor(challengeId).clear();
+				closeIfShowing(challengeId);
+			},
+			() => {
+				const before = claimOf(challengeId)?.id;
+				return () => {
+					const after = claimOf(challengeId);
+					return after !== null && after.id !== before && after.status !== 'rejected';
+				};
+			}
+		)(input);
+	};
+
+	const undo: SubmitFunction = (input) => {
+		const challengeId = sentChallenge(input.formData);
+		const claimId = Number(input.formData.get('claimId'));
+		return actionFor(challengeId).submit(
+			'Claim undone',
+			() => closeIfShowing(challengeId),
+			() => () => claimOf(challengeId)?.id !== claimId
+		)(input);
+	};
 </script>
 
 <Sheet.Root open={open && challenge !== null} onOpenChange={(isOpen) => !isOpen && close()}>
@@ -149,25 +197,16 @@
 			{/snippet}
 
 			{#if claim?.status === 'pending'}
-				<form
-					method="POST"
-					action="?/undo"
-					class="flex flex-col gap-4"
-					use:enhance={action.submit('Claim undone', close)}
-				>
+				<form method="POST" action="?/undo" class="flex flex-col gap-4" use:enhance={undo}>
 					<input type="hidden" name="claimId" value={claim.id} />
+					<input type="hidden" name="challengeId" value={challenge.id} />
 					{@render message()}
 					<Button type="submit" size="lg" disabled={action.busy || clock.closedMessage !== null}>
 						Undo claim
 					</Button>
 				</form>
 			{:else if canMark}
-				<form
-					method="POST"
-					action="?/mark"
-					class="flex flex-col gap-4"
-					use:enhance={action.submit('Marked done', marked)}
-				>
+				<form method="POST" action="?/mark" class="flex flex-col gap-4" use:enhance={mark}>
 					<input type="hidden" name="challengeId" value={challenge.id} />
 					<input type="hidden" name="nickname" value={nickname.value ?? ''} />
 					<div class="flex flex-col gap-2">

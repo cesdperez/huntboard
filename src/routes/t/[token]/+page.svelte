@@ -96,7 +96,7 @@
 		countdown={clock.countdown}
 		onrename={() => (renaming = true)}
 	>
-		<AvatarForm hasAvatar={data.team.avatarKey !== null} {clock} />
+		<AvatarForm avatarKey={data.team.avatarKey} {clock} />
 	</TeamStrip>
 
 	<main class="mx-auto max-w-content px-gutter pt-2 pb-24">
@@ -124,7 +124,13 @@
 	</main>
 </div>
 
-<ChallengeSheet challenge={selected} open={sheetOpen} {clock} onclose={() => (sheetOpen = false)} />
+<ChallengeSheet
+	challenge={selected}
+	challenges={data.challenges}
+	open={sheetOpen}
+	{clock}
+	onclose={() => (sheetOpen = false)}
+/>
 <RenameSheet
 	open={renaming}
 	name={data.team.name}
