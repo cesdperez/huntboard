@@ -176,6 +176,20 @@ describe('markDone', () => {
 			result: { kind: 'error', message: 'That challenge is not in this game any more.' }
 		});
 	});
+
+	it('says the link is dead when the team was deleted after its link was checked', async () => {
+		await deleteTeam(db, game.id, rats.id);
+
+		const outcome = await markDone(db, media.asBucket(), { team: rats, game }, markForm(), DURING);
+
+		expect(outcome).toEqual({
+			status: 404,
+			result: {
+				kind: 'error',
+				message: 'This link does not work any more. Ask your organiser for the current link.'
+			}
+		});
+	});
 });
 
 describe('markDone with media', () => {
@@ -417,6 +431,26 @@ describe('requestMediaUpload', () => {
 		);
 
 		expect(outcome).toEqual({ status: 503, result: { kind: 'error', message: MEDIA_UPLOADS_OFF } });
+	});
+
+	it('says the link is dead when the team was deleted after its link was checked', async () => {
+		await deleteTeam(db, game.id, rats.id);
+
+		const outcome = await requestMediaUpload(
+			db,
+			presign,
+			{ team: rats, game },
+			uploadForm('image/jpeg', 100),
+			DURING
+		);
+
+		expect(outcome).toEqual({
+			status: 404,
+			result: {
+				kind: 'error',
+				message: 'This link does not work any more. Ask your organiser for the current link.'
+			}
+		});
 	});
 });
 

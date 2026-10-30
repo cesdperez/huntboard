@@ -11,9 +11,11 @@ export interface MediaUpload {
 	size: number;
 }
 
-export type RecordUploadResult = 'recorded' | 'team-count' | 'team-bytes' | 'game-bytes';
+export type RecordUploadResult =
+	'recorded' | 'team-count' | 'team-bytes' | 'game-bytes' | 'team-gone';
 
 interface Usage {
+	team_found: number;
 	team_count: number;
 	team_bytes: number;
 	game_bytes: number;
@@ -26,12 +28,14 @@ export async function recordMediaUpload(
 	{ gameId, teamId, key, size }: MediaUpload,
 	limits: MediaUploadLimits
 ): Promise<RecordUploadResult> {
-	// One statement, so two phones asking at once cannot both pass the check.
+	// One statement, so two phones asking at once cannot both pass the check. The team check makes
+	// a team deleted after its link was checked read as gone instead of failing the foreign key.
 	const inserted = await db
 		.prepare(
 			`INSERT INTO media_upload (key, team_id, size)
 			SELECT ?1, ?2, ?3
-			WHERE (SELECT count(*) FROM media_upload WHERE team_id = ?2)
+			WHERE EXISTS (SELECT 1 FROM team WHERE id = ?2 AND game_id = ?4)
+				AND (SELECT count(*) FROM media_upload WHERE team_id = ?2)
 					< ?5 * (SELECT count(*) FROM challenge WHERE game_id = ?4)
 				AND (SELECT coalesce(sum(size), 0) FROM media_upload WHERE team_id = ?2) + ?3 <= ?6
 				AND (SELECT coalesce(sum(size), 0) FROM media_upload
@@ -53,6 +57,7 @@ export async function recordMediaUpload(
 	const usage = await db
 		.prepare(
 			`SELECT
+				(SELECT count(*) FROM team WHERE id = ?1 AND game_id = ?2) AS team_found,
 				(SELECT count(*) FROM media_upload WHERE team_id = ?1) AS team_count,
 				(SELECT coalesce(sum(size), 0) FROM media_upload WHERE team_id = ?1) AS team_bytes,
 				(SELECT coalesce(sum(size), 0) FROM media_upload
@@ -61,7 +66,8 @@ export async function recordMediaUpload(
 		)
 		.bind(teamId, gameId)
 		.first<Usage>();
-	if (!usage || usage.team_count >= limits.uploadsPerChallenge * usage.challenges) {
+	if (!usage?.team_found) return 'team-gone';
+	if (usage.team_count >= limits.uploadsPerChallenge * usage.challenges) {
 		return 'team-count';
 	}
 	if (usage.team_bytes + size > limits.teamMaxBytes) return 'team-bytes';

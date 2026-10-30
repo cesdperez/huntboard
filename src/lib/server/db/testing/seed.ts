@@ -1,5 +1,6 @@
 import { titleKey } from '#lib/domain/challenge-parser.js';
 import { teamNameKey } from '#lib/domain/team-name.js';
+import { nextId, type FreshIdTable } from '../ids.js';
 import type { AdjustmentRow, ChallengeRow, ClaimRow, TeamRow } from '../types.js';
 
 /** Raw inserts for test setup, so a test does not depend on the query module it is testing. */
@@ -83,11 +84,16 @@ async function nextPosition(db: D1Database, table: 'team' | 'challenge', gameId:
 	return count ?? 0;
 }
 
-async function insert<T>(db: D1Database, table: string, row: Record<string, unknown>): Promise<T> {
+async function insert<T>(
+	db: D1Database,
+	table: FreshIdTable,
+	row: Record<string, unknown>
+): Promise<T> {
 	const columns = Object.keys(row);
 	const inserted = await db
 		.prepare(
-			`INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')}) RETURNING *`
+			`INSERT INTO ${table} (id, ${columns.join(', ')})
+			VALUES (${nextId(table)}, ${columns.map(() => '?').join(', ')}) RETURNING *`
 		)
 		.bind(...Object.values(row))
 		.first<T>();

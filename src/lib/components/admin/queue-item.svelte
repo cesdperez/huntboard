@@ -54,7 +54,12 @@
 
 	{#if live}
 		<JudgePanel
-			target={{ claimId: claim.id, from: 'pending' }}
+			target={{
+				claimId: claim.id,
+				from: 'pending',
+				teamId: claim.team_id,
+				challengeId: claim.challenge_id
+			}}
 			min={claim.min_points}
 			max={claim.max_points}
 			{label}

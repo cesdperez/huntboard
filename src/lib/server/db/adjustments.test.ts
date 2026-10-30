@@ -59,6 +59,19 @@ describe('addAdjustment', () => {
 			await addAdjustment(db, game.id, team.id, { points: 5, reason: 'Bonus', createdBy: 'Alex' })
 		).toBeNull();
 	});
+
+	it('never takes the id of a deleted adjustment, which a page not yet refreshed may still send', async () => {
+		const deleted = await seedAdjustment(db, rats.id);
+		await deleteAdjustment(db, game.id, deleted.id);
+
+		const added = await addAdjustment(db, game.id, rats.id, {
+			points: 25,
+			reason: 'Bonus',
+			createdBy: 'Alex'
+		});
+
+		expect(added?.id).toBe(deleted.id + 1);
+	});
 });
 
 describe('deleteAdjustment', () => {

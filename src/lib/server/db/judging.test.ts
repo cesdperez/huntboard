@@ -116,7 +116,7 @@ describe('judgeClaim', () => {
 		const claim = await seedClaim(db, rats.id, swim.id);
 
 		const result = await judgeClaim(db, game.id, {
-			claimId: claim.id,
+			claim,
 			from: 'pending',
 			verdict: { status: 'scored', points: 12 },
 			judgedBy: 'Alex'
@@ -142,7 +142,7 @@ describe('judgeClaim', () => {
 		const claim = await seedClaim(db, rats.id, swim.id);
 
 		const result = await judgeClaim(db, game.id, {
-			claimId: claim.id,
+			claim,
 			from: 'pending',
 			verdict: { status: 'scored', points },
 			judgedBy: 'Alex'
@@ -155,7 +155,7 @@ describe('judgeClaim', () => {
 		const claim = await seedClaim(db, rats.id, swim.id);
 
 		const result = await judgeClaim(db, game.id, {
-			claimId: claim.id,
+			claim,
 			from: 'pending',
 			verdict: { status: 'rejected', reason: 'No proof received' },
 			judgedBy: 'Alex'
@@ -180,7 +180,7 @@ describe('judgeClaim', () => {
 		});
 
 		const result = await judgeClaim(db, game.id, {
-			claimId: claim.id,
+			claim,
 			from: 'pending',
 			verdict: { status: 'rejected', reason: null },
 			judgedBy: 'Alex'
@@ -200,7 +200,7 @@ describe('judgeClaim', () => {
 		});
 
 		const result = await judgeClaim(db, game.id, {
-			claimId: claim.id,
+			claim,
 			from: 'scored',
 			verdict: { status: 'scored', points: 8 },
 			judgedBy: 'Alex'
@@ -213,7 +213,7 @@ describe('judgeClaim', () => {
 		const claim = await seedClaim(db, rats.id, swim.id, { status: 'scored', points: 15 });
 
 		const result = await judgeClaim(db, game.id, {
-			claimId: claim.id,
+			claim,
 			from: 'scored',
 			verdict: { status: 'rejected', reason: null },
 			judgedBy: 'Alex'
@@ -226,7 +226,7 @@ describe('judgeClaim', () => {
 		const claim = await seedClaim(db, rats.id, swim.id, { status: 'rejected', judged_by: 'Sam' });
 
 		const result = await judgeClaim(db, game.id, {
-			claimId: claim.id,
+			claim,
 			from: 'scored',
 			verdict: { status: 'scored', points: 8 },
 			judgedBy: 'Alex'
@@ -237,7 +237,7 @@ describe('judgeClaim', () => {
 
 	it('reports a claim the team undid', async () => {
 		const result = await judgeClaim(db, game.id, {
-			claimId: 9999,
+			claim: { id: 9999, team_id: rats.id, challenge_id: swim.id },
 			from: 'pending',
 			verdict: { status: 'scored', points: 8 },
 			judgedBy: 'Alex'
@@ -250,13 +250,30 @@ describe('judgeClaim', () => {
 		const claim = await otherGameClaim();
 
 		const result = await judgeClaim(db, game.id, {
-			claimId: claim.id,
+			claim,
 			from: 'pending',
 			verdict: { status: 'scored', points: 8 },
 			judgedBy: 'Alex'
 		});
 
 		expect(result).toEqual({ status: 'not-found' });
+	});
+
+	it.each([
+		['team', () => ({ team_id: owls.id })],
+		['challenge', () => ({ challenge_id: cake.id })]
+	])('leaves a claim alone that is now of another %s than the judge saw', async (_, seen) => {
+		const claim = await seedClaim(db, rats.id, swim.id);
+
+		const result = await judgeClaim(db, game.id, {
+			claim: { ...claim, ...seen() },
+			from: 'pending',
+			verdict: { status: 'scored', points: 8 },
+			judgedBy: 'Alex'
+		});
+
+		expect(result).toEqual({ status: 'not-found' });
+		expect((await listTeamClaims(db, rats.id))[0].status).toBe('pending');
 	});
 });
 
@@ -326,5 +343,19 @@ describe('scoreWithoutClaim', () => {
 
 		expect(await score(outsider.id, swim.id)).toEqual({ status: 'not-found' });
 		expect(await score(rats.id, elsewhere.id)).toEqual({ status: 'not-found' });
+	});
+
+	it('never takes the id of an undone claim, which a judge page not yet refreshed may still send', async () => {
+		const undone = await seedClaim(db, owls.id, cake.id);
+		await db.prepare('DELETE FROM claim WHERE id = ?').bind(undone.id).run();
+
+		const result = await scoreWithoutClaim(db, game.id, {
+			teamId: rats.id,
+			challengeId: swim.id,
+			points: 10,
+			judgedBy: 'Alex'
+		});
+
+		expect(result).toMatchObject({ status: 'judged', claim: { id: undone.id + 1 } });
 	});
 });

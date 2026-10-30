@@ -1,6 +1,7 @@
 import type { ChallengeFields, ImportPlan } from '#lib/domain/challenge-import.js';
 import type { ChallengeEditFields } from '#lib/domain/challenge-edit.js';
 import type { ExistingChallenge, ExistingClaim } from '#lib/domain/reimport-diff.js';
+import { nextId } from './ids.js';
 import type { ChallengeRow, ChallengeWithClaimCount } from './types.js';
 
 /** The challenge list as teams see it. No claim counts, because those would show other teams' progress. */
@@ -123,8 +124,8 @@ export async function applyChallengeImport(
 		db
 			.prepare(
 				`INSERT INTO challenge
-					(game_id, title, title_key, description, section, min_points, max_points, position)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+					(id, game_id, title, title_key, description, section, min_points, max_points, position)
+				VALUES (${nextId('challenge')}, ?, ?, ?, ?, ?, ?, ?, ?)`
 			)
 			.bind(
 				gameId,

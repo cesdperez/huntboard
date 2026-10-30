@@ -1,3 +1,4 @@
+import { nextId } from './ids.js';
 import type { AdjustmentRow } from './types.js';
 
 export async function listAdjustments(db: D1Database, gameId: number): Promise<AdjustmentRow[]> {
@@ -27,8 +28,8 @@ export function addAdjustment(
 ): Promise<AdjustmentRow | null> {
 	return db
 		.prepare(
-			`INSERT INTO adjustment (team_id, points, reason, created_by)
-			SELECT id, ?, ?, ? FROM team WHERE id = ? AND game_id = ?
+			`INSERT INTO adjustment (id, team_id, points, reason, created_by)
+			SELECT ${nextId('adjustment')}, id, ?, ?, ? FROM team WHERE id = ? AND game_id = ?
 			RETURNING *`
 		)
 		.bind(points, reason, createdBy, teamId, gameId)

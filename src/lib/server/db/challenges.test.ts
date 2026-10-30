@@ -259,6 +259,21 @@ describe('applyChallengeImport', () => {
 			{ ...elsewhere, claim_count: 0 }
 		]);
 	});
+
+	it('never gives a new challenge the id of a deleted one, which a page not yet refreshed may still send', async () => {
+		const dropped = await seedChallenge(db, game.id, { title: 'Drop' });
+
+		await applyChallengeImport(db, game.id, {
+			inserts: [fields('New one')],
+			updates: [],
+			deleteIds: [dropped.id],
+			deleteWithClaimsIds: []
+		});
+
+		expect((await listChallengesWithClaimCounts(db, game.id)).map(({ id }) => id)).toEqual([
+			dropped.id + 1
+		]);
+	});
 });
 
 describe('updateChallenge', () => {

@@ -1,7 +1,8 @@
 <script lang="ts" module>
 	/** A claim in the state the judge saw it, or an open cell to score without a claim. */
-	export type JudgeTarget =
-		{ claimId: number; from: 'pending' | 'scored' } | { teamId: number; challengeId: number };
+	export type JudgeTarget = { teamId: number; challengeId: number } & (
+		{ claimId: number; from: 'pending' | 'scored' } | { claimId?: never }
+	);
 </script>
 
 <script lang="ts">
@@ -39,7 +40,7 @@
 	// A tap acts on the state the judge saw when the panel opened or the last answer came, never
 	// on one a poll swapped in meanwhile. A change in between gets the server's conflict message.
 	let seen = $state(untrack(() => target));
-	const claimTarget = $derived('claimId' in seen ? seen : null);
+	const claimTarget = $derived(seen.claimId === undefined ? null : seen);
 	let mounted = true;
 	$effect(() => () => (mounted = false));
 
@@ -75,10 +76,9 @@
 	{#if claimTarget}
 		<input type="hidden" name="claimId" value={claimTarget.claimId} />
 		<input type="hidden" name="from" value={claimTarget.from} />
-	{:else if 'teamId' in seen}
-		<input type="hidden" name="teamId" value={seen.teamId} />
-		<input type="hidden" name="challengeId" value={seen.challengeId} />
 	{/if}
+	<input type="hidden" name="teamId" value={seen.teamId} />
+	<input type="hidden" name="challengeId" value={seen.challengeId} />
 {/snippet}
 
 <div class="flex flex-col gap-3">

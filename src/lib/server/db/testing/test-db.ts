@@ -12,11 +12,20 @@ export function createTestDb(): D1Database {
 	const sqlite = new DatabaseSync(':memory:');
 	// D1 enforces foreign keys; plain SQLite does not unless asked.
 	sqlite.exec('PRAGMA foreign_keys = ON');
-	const migrations = readdirSync(MIGRATIONS_DIR).filter((name) => name.endsWith('.sql'));
-	for (const file of migrations.sort()) {
-		sqlite.exec(readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8'));
-	}
+	for (const { sql } of readMigrations()) sqlite.exec(sql);
+	return asD1(sqlite);
+}
 
+/** Every migration in the order Wrangler applies them. */
+export function readMigrations(): { name: string; sql: string }[] {
+	return readdirSync(MIGRATIONS_DIR)
+		.filter((name) => name.endsWith('.sql'))
+		.sort()
+		.map((name) => ({ name, sql: readFileSync(path.join(MIGRATIONS_DIR, name), 'utf8') }));
+}
+
+/** The D1 subset over a SQLite database the caller set up. */
+export function asD1(sqlite: DatabaseSync): D1Database {
 	const db = {
 		prepare: (sql: string) => new FakeStatement(sqlite, sql, []),
 		batch: async (statements: FakeStatement[]) => {

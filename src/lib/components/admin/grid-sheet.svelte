@@ -25,7 +25,7 @@
 	const target = $derived<JudgeTarget | null>(
 		row && team
 			? claim && claim.status !== 'rejected'
-				? { claimId: claim.id, from: claim.status }
+				? { claimId: claim.id, from: claim.status, teamId: team.id, challengeId: row.id }
 				: { teamId: team.id, challengeId: row.id }
 			: null
 	);
