@@ -5,6 +5,7 @@ import {
 	findRequestByToken,
 	findRequests,
 	insertSignInRequest,
+	requestsSince,
 	takeRequest
 } from './sign-in-requests.js';
 import { createTestDb } from './testing/test-db.js';
@@ -53,6 +54,28 @@ describe('findRequests and findRequestByToken', () => {
 			{ id: 'request-1' }
 		]);
 		expect(await findRequests(db, [], NOW)).toEqual([]);
+	});
+});
+
+describe('requestsSince', () => {
+	it("counts the address's requests made after a time, and finds the oldest of them", async () => {
+		const later = {
+			...request,
+			id: 'request-2',
+			token_hash: 'token-hash-2',
+			created_at: '2030-01-01T00:05:00.000Z'
+		};
+		await insertSignInRequest(db, later, NO_LIMIT);
+
+		expect(await requestsSince(db, 'sam@example.com', '2029-12-31T23:59:00.000Z')).toEqual({
+			count: 2,
+			oldest: NOW
+		});
+		expect(await requestsSince(db, 'sam@example.com', NOW)).toEqual({
+			count: 1,
+			oldest: later.created_at
+		});
+		expect(await requestsSince(db, 'alex@example.com', NOW)).toEqual({ count: 0, oldest: null });
 	});
 });
 

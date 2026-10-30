@@ -1,12 +1,14 @@
 import { nextPath, normalizeDisplayName, normalizeEmail } from '#lib/domain/account.js';
 import { generateToken, sha256Base64Url } from '#lib/domain/token.js';
 import { MS_PER_MINUTE } from '#lib/format/duration.js';
+import { plural } from '#lib/format/plural.js';
 import {
 	checkCode,
 	deleteExpiredRequests,
 	findRequestByToken,
 	findRequests,
 	insertSignInRequest,
+	requestsSince,
 	takeRequest
 } from '../db/sign-in-requests.js';
 import type { SignInRequestRow } from '../db/types.js';
@@ -51,12 +53,6 @@ export type FinishResult =
 const EXPIRED: FinishResult = {
 	kind: 'error',
 	message: 'This sign-in link or code has expired or was already used. Ask for a new email.',
-	needsNewEmail: true
-};
-
-const TOO_MANY_WRONG_CODES: FinishResult = {
-	kind: 'error',
-	message: 'Too many wrong codes were tried, so the code no longer works. Ask for a new email.',
 	needsNewEmail: true
 };
 
@@ -121,16 +117,13 @@ export async function requestSignIn(
 			expires_at: new Date(now.getTime() + SIGN_IN_MINUTES * MS_PER_MINUTE).toISOString(),
 			created_at: now.toISOString()
 		},
-		{
-			since: new Date(now.getTime() - SIGN_IN_MINUTES * MS_PER_MINUTE).toISOString(),
-			max: MAX_REQUESTS_PER_WINDOW
-		}
+		{ since: windowStart(now), max: MAX_REQUESTS_PER_WINDOW }
 	);
 	if (!inserted) {
 		return {
 			kind: 'error',
 			status: 429,
-			message: 'We sent several emails to this address already. Wait a few minutes.'
+			message: `We sent several emails to this address already. Open the link in one of them, or ${await askAgain(db, email, now)}.`
 		};
 	}
 
@@ -214,7 +207,26 @@ export async function finishWithCode(
 		return NOT_RIGHT;
 	}
 	const unexpired = await findRequests(db, ids, now.toISOString());
-	return unexpired.length > 0 ? TOO_MANY_WRONG_CODES : EXPIRED;
+	if (unexpired.length === 0) return EXPIRED;
+	// The links still work: only the codes count wrong guesses.
+	const emails = unexpired.length > 1 ? 'any of the emails' : 'the email';
+	return {
+		kind: 'error',
+		message: `Too many wrong codes were tried, so the code no longer works. Open the link in ${emails}, or ${await askAgain(db, unexpired[0].email, now)}.`,
+		needsNewEmail: true
+	};
+}
+
+async function askAgain(db: D1Database, email: string, now: Date): Promise<string> {
+	const { count, oldest } = await requestsSince(db, email, windowStart(now));
+	if (count < MAX_REQUESTS_PER_WINDOW || !oldest) return 'ask for a new email';
+	const freesAt = Date.parse(oldest) + SIGN_IN_MINUTES * MS_PER_MINUTE;
+	const minutes = Math.max(1, Math.ceil((freesAt - now.getTime()) / MS_PER_MINUTE));
+	return `ask for a new email in ${plural(minutes, 'minute')}`;
+}
+
+function windowStart(now: Date): string {
+	return new Date(now.getTime() - SIGN_IN_MINUTES * MS_PER_MINUTE).toISOString();
 }
 
 async function complete(
