@@ -12,9 +12,9 @@ import { AVATAR_MAX_BYTES } from '#lib/domain/images.js';
 import { normalizeNickname } from '#lib/domain/nickname.js';
 import {
 	TEAM_MEMBERS_ERROR,
-	TEAM_NAME_ERROR,
 	normalizeTeamMembers,
-	normalizeTeamName
+	normalizeTeamName,
+	teamNameError
 } from '#lib/domain/team-name.js';
 import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
 import { markClaim, undoClaim } from '../db/claims.js';
@@ -177,7 +177,7 @@ export async function renameOwnTeam(
 	data: FormData
 ): Promise<TeamOutcome> {
 	const name = normalizeTeamName(data.get('name'));
-	if (!name) return error(400, TEAM_NAME_ERROR);
+	if (!name) return error(400, teamNameError(data.get('name')));
 	const members = normalizeTeamMembers(data.get('members'));
 	if (members === null) return error(400, TEAM_MEMBERS_ERROR);
 	if (!(await updateTeam(db, game.id, team.id, { name, members }))) {

@@ -8,6 +8,13 @@ export const TEAM_NAME_ERROR = `Give the team a name of at most ${TEAM_NAME_MAX_
 
 export const normalizeTeamName = (value: unknown) => normalizeName(value, TEAM_NAME_MAX_LENGTH);
 
+/** Why normalizeTeamName refused a name: missing or too long. */
+export function teamNameError(value: unknown): string {
+	return typeof value === 'string' && collapseSpaces(value)
+		? `Keep the team name to at most ${TEAM_NAME_MAX_LENGTH} characters.`
+		: 'Give the team a name.';
+}
+
 export const TEAM_MEMBERS_MAX_LENGTH = 80;
 
 export const TEAM_MEMBERS_ERROR = `Keep the team members to at most ${TEAM_MEMBERS_MAX_LENGTH} characters.`;
