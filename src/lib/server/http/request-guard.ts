@@ -36,7 +36,8 @@ export function securityHeaders(url: URL): Record<string, string> {
 		'X-Content-Type-Options': 'nosniff',
 		'X-Frame-Options': 'DENY',
 		// Admin, team, and scoreboard links carry their token in the path.
-		'Referrer-Policy': 'no-referrer',
+		// Not no-referrer: Chrome then sends Origin: null on plain form posts and SvelteKit's CSRF check rejects them.
+		'Referrer-Policy': 'same-origin',
 		'Cross-Origin-Opener-Policy': 'same-origin',
 		'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
 		'X-Robots-Tag': 'noindex, nofollow'

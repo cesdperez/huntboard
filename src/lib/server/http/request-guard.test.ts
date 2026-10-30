@@ -76,7 +76,7 @@ describe('securityHeaders', () => {
 		const headers = securityHeaders(new URL('https://huntboard.example/'));
 		expect(headers['X-Content-Type-Options']).toBe('nosniff');
 		expect(headers['X-Frame-Options']).toBe('DENY');
-		expect(headers['Referrer-Policy']).toBe('no-referrer');
+		expect(headers['Referrer-Policy']).toBe('same-origin');
 		expect(headers['Strict-Transport-Security']).toContain('max-age=');
 		expect(headers['Permissions-Policy']).toContain('camera=()');
 		expect(headers['X-Robots-Tag']).toBe('noindex, nofollow');
