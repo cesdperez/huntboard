@@ -67,11 +67,12 @@
 						>{countdown ?? ' '}</span
 					>
 				{:else}
-					<span class="block truncate type-heading">{teamName}</span>
+					<span class="line-clamp-2 type-heading break-words">{teamName}</span>
 					{#if members}<span class="block truncate type-secondary">{members}</span>{/if}
 				{/if}
 			</span>
-			<CountingPoints value={own?.total ?? 0} />
+			<!-- At full size a picture and a four digit total leave a phone too little room for the name. -->
+			<CountingPoints value={own?.total ?? 0} class="max-[400px]:text-[32px]" />
 			<ChevronDownIcon
 				aria-hidden="true"
 				class={cn('size-5 shrink-0 transition-transform duration-150', expanded && 'rotate-180')}

@@ -107,7 +107,7 @@ The bottom third of the screen is where thumbs reach. Primary actions live there
 
 Tapping a row opens a bottom sheet with the description, the note field, "Add photo or video" and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
 
-- The strip shows the rank in display type at 28px and the total at the full 40px, so the team name keeps room at 390px. Tapping it expands the scoreboard in place, with the team's own row marked by an `--own` bar on its left edge and a semibold name. "Edit team" and "Add picture" sit side by side under that list.
+- The strip shows the rank in display type at 28px and the total at the full 40px, or 32px on screens up to 400px wide. The team name takes up to two lines, so a typical name fits beside a picture and a four-digit total at 360px. Tapping it expands the scoreboard in place, with the team's own row marked by an `--own` bar on its left edge and a semibold name. "Edit team" and "Add picture" sit side by side under that list.
 - "Add picture" opens the phone's photo picker and saves at once: no preview, no second tap. While it uploads the button reads "Saving picture". Once the team has a picture it reads "Change picture". The toast says "Picture saved". Teams cannot remove their picture; the organiser can.
 - A picture error shows in place under the two buttons, like a sheet error.
 - With a game image, the event header sits between the game name and the strip: a 48px thumbnail, the label and "View". It is not sticky, so the strip and the list keep their room at 390 × 844. Tapping it opens the image whole in a sheet, titled with the label.
