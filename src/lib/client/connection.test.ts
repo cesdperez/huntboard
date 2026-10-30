@@ -108,6 +108,13 @@ describe('refreshKeepingPage', () => {
 				})
 		],
 		[
+			'a proxy or captive portal answers 200 with a web page',
+			async () =>
+				new Response('<html>Sign in to the Wi-Fi</html>', {
+					headers: { 'content-type': 'text/html' }
+				})
+		],
+		[
 			'the request fails',
 			async () => {
 				throw new TypeError('Failed to fetch');
@@ -129,6 +136,19 @@ describe('refreshKeepingPage', () => {
 				type: 'data',
 				nodes: [{ type: 'error', error: { status: 404, message: 'Not found' } }]
 			})
+		);
+		const { loaded, refresh } = loadData(page);
+
+		expect(await refreshKeepingPage(refresh, page)).toBe(true);
+		expect(loaded).toHaveBeenCalledOnce();
+	});
+
+	it('lets streamed page data through', async () => {
+		const page = fakePage(
+			async () =>
+				new Response('{"type":"data","nodes":[]}\n', {
+					headers: { 'content-type': 'text/sveltekit-data' }
+				})
 		);
 		const { loaded, refresh } = loadData(page);
 
