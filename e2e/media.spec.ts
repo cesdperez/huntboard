@@ -53,7 +53,7 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		await expect(challengeButton(rats, PHOTO_CHALLENGE).locator('img')).toBeVisible();
 	});
 
-	await test.step('a team marks another done with a video, compressed before upload', async () => {
+	await test.step('a team marks another done with a video, compressed when that makes it smaller', async () => {
 		await openChallenge(rats, VIDEO_CHALLENGE);
 		await pick(rats, await video(rats));
 		await expect(rats.getByRole('button', { name: 'Waiting for the upload' })).toBeDisabled();
@@ -90,7 +90,8 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		const src = await clip.getAttribute('src');
 		const range = await admin.request.get(src!, { headers: { Range: 'bytes=0-99' } });
 		expect(range.status()).toBe(206);
-		expect(range.headers()['content-type']).toBe('video/mp4');
+		// The browser sends the original when compressing would not make it smaller.
+		expect(range.headers()['content-type']).toMatch(/^video\/(mp4|webm)$/);
 		expect(range.headers()['content-range']).toMatch(/^bytes 0-99\/\d+$/);
 	});
 
@@ -120,7 +121,7 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		const zip = await streamBytes(await file.createReadStream());
 		expect(zipEntryNames(zip)).toEqual([
 			expect.stringMatching(new RegExp(`^${TEAM}/${PHOTO_CHALLENGE}-\\d+\\.webp$`)),
-			expect.stringMatching(new RegExp(`^${TEAM}/${VIDEO_CHALLENGE}-\\d+\\.mp4$`))
+			expect.stringMatching(new RegExp(`^${TEAM}/${VIDEO_CHALLENGE}-\\d+\\.(mp4|webm)$`))
 		]);
 	});
 

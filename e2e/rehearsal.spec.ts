@@ -115,7 +115,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 	for (const name of TEAMS) {
 		const page = await openAs(browser, `${name} player`);
 		await page.goto(teamUrls.get(name)!);
-		await expect(page.getByRole('banner')).toContainText(name);
+		await expect(page.getByRole('region', { name: 'Your team' })).toContainText(name);
 		teams.set(name, page);
 	}
 	const team = (name: TeamName) => teams.get(name)!;
@@ -207,16 +207,20 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await addAdjustment(admin, 'Night Owls', 'penalty', 3, 'Skipped a red light');
 	});
 
+	// Arrival times cannot be in the future, so the end moves into the past and every arrival
+	// is corrected to a time before now.
+	const [onTime, end, lateArrival] = await localInputs(admin, [-6, -5, -1]);
+
 	await test.step('three teams arrive on time', async () => {
 		for (const name of ['Canal Rats', 'Night Owls', 'Bike Thieves'] as const) {
 			const item = teamItem(admin, name);
 			await item.getByRole('button', { name: 'Record arrival' }).click();
+			await item.getByRole('button', { name: 'Correct' }).click();
+			await item.getByLabel('Arrival time').fill(onTime);
+			await item.getByRole('button', { name: 'Save time' }).click();
 			await expect(item.getByRole('button', { name: 'Correct' })).toBeVisible();
 		}
 	});
-
-	// The end moves to the current minute, so the arrivals just recorded are less than a minute late.
-	const [end, lateArrival] = await localInputs(admin, [0, 4]);
 
 	await test.step('the game ends', async () => {
 		await admin.getByRole('link', { name: 'Setup' }).click();
@@ -258,9 +262,9 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		for (const [rank, name, total] of FINAL_STANDINGS) {
 			const page = team(name as TeamName);
 			await page.reload();
-			await expect(page.getByRole('banner').getByRole('button').first()).toContainText(
-				new RegExp(`${rank}\\s*${name}\\s*${total}`)
-			);
+			await expect(
+				page.getByRole('region', { name: 'Your team' }).getByRole('button').first()
+			).toHaveAccessibleName(new RegExp(`^${rank} place, ${name}\\s*, ${total} points\\.`));
 		}
 	});
 
