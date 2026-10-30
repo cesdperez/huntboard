@@ -11,10 +11,11 @@
 		claim: QueueClaim;
 		/** False once a refresh shows the claim is no longer pending, kept in view for its notice. */
 		live: boolean;
+		/** Null while a lost answer is being checked, or when there is nothing to say. */
 		notice: string | null;
 		/** Null until the browser clock runs. */
 		now: Date | null;
-		onfailure: (message: string) => void;
+		onfailure: (message: string | null) => void;
 		ondone: () => void;
 		ondismiss: () => void;
 	};
@@ -64,7 +65,7 @@
 		{#if notice}
 			<p class="text-[15px] text-danger" role="alert">{notice}</p>
 		{/if}
-	{:else}
+	{:else if notice}
 		<div class="flex items-center gap-3">
 			<p class="min-w-0 flex-1 font-semibold" role="alert">{notice}</p>
 			<Button onclick={ondismiss}>OK</Button>
