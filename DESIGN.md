@@ -226,7 +226,7 @@ Built on shadcn-svelte where it saves time (Button, Input, Label, Sheet), restyl
 
 ## Themes
 
-The admin picks a theme for the game in Setup. It changes every page of that game: the team page, the scoreboard and the admin pages, so a `flag` game keeps a `flag` admin. `DEFAULT_THEME`, Highland Bru, is the theme a game made at `/new` starts in, and the one pages without a game wear: the home page, `/new`, error pages. An id that is no longer registered also reads as `DEFAULT_THEME`.
+The admin picks a theme for the game in Setup. It changes every page of that game: the team page, the scoreboard and the admin pages, so a `flag` game keeps a `flag` admin. `DEFAULT_THEME`, [Contour](#contour), is the theme a game made at `/new` starts in, and the one pages without a game wear: the home page, `/new`, error pages. An id that is no longer registered also reads as `DEFAULT_THEME`.
 
 A theme is two things:
 
@@ -283,7 +283,8 @@ A theme's registry entry names its layout. Structure changes only through it; th
 - `plain`: the layout described above. `flag` uses it.
 - `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The wordmark links to the home page, except on the home page itself. The banner shows the game name in `--font-banner`, large enough to fill the banner (17vw up to 80px, 40px past 16 characters and 30px past 40 so long names wrap into a few lines), on at most three lines with the rest cut by an ellipsis and words hyphenated in the page language, the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings are 26px `--font-display` with `--section-ornament` before and a 2px `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total, which the big screen scales like the members line. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row of at most two lines, its last word included, with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
   - Admin pages are worked fast on a phone, so they keep their density and touch sizes and skip the big banner. Under the app bar a one-row banner shows the game name in 32px `--font-banner`, on at most two lines, and the status line. Both banners keep the full name in the title attribute and the text, so screen readers read all of it. The tab bar marks the current tab with a 4px bar in the strip's text colour along its top, and its focus ring sits inside the bar.
-  - The home page and `/new` have no game, so their banner holds the page title in `--font-banner` and one line under it, with `--banner-art` beside. Error pages add only the app bar.
+  - `/new` has no game, so its banner holds the page title in `--font-banner` and one line under it, with `--banner-art` beside. Error pages add only the app bar.
+  - The home page is the landing page for organisers, built from the theme's tokens in a 1120px column: a hero in the banner colours with the title in `--font-banner` and an example leaderboard over contour lines, where one claim is scored once on load and its team climbs to first; "How a hunt runs" as an orienteering course in `--marker` (start triangle, numbered control circles, finish double circle, joined by the course line, down on a phone and across from 1024px); four facts; and a closing band in the app bar colours. "Create a hunt" goes to `/new`, which asks for sign-in first. With reduced motion the claim is scored with no movement.
 
 ### What a theme may change
 
@@ -298,6 +299,26 @@ A theme's registry entry names its layout. Structure changes only through it; th
 - WCAG AA for every text pair, checked in each mode the theme supports. That includes each `--on-` pair, `--waiting` on `--paper` and `--on-strip-muted` on `--strip` at 15px.
 - 3:1 for `--input-line` against `--surface` and `--paper` in each mode. `src/lib/themes/theme-contrast.test.ts` checks it.
 - State told by shape and words, not colour alone. The own row keeps its bar and its semibold name.
+
+### Contour
+
+`contour`, light and dark, `event` layout. The default theme, so it suits any hunt in any place: an orienteering map, with brown contour lines on map paper and the course printed over them in magenta. The control circle is its mark: in the banner on a hilltop, linked to the start triangle, and before each section heading.
+
+| Role | Light | Dark |
+|---|---|---|
+| `--paper`, `--surface` | Map paper `#F4F6F1`, `#FFFFFF` | `#121821`, `#1A222D` |
+| `--ink`, `--muted`, `--line` | `#1B2230`, `#5A6270` (5.7:1), `#DDE2D8` | `#E8ECE6`, `#9AA3AE` (7:1), `#2A3441` |
+| `--input-line` | `#858C84` (3.5:1 on surface, 3.2:1 on paper) | `#6B7584` (3.4:1, 3.8:1) |
+| `--marker`, `--action`, `--own`, `--section-rule` | Overprint magenta `#B4247E`, white on it (6:1). Hover `#9C1E6C` | `#F06BB5`, `#1B0F18` on it (6.6:1). Hover `#E35AA7` |
+| `--own-row` | `#F7E3EF` | `#33202D` |
+| `--strip`, `--on-strip`, `--on-strip-muted` | Ink `#1B2230`, white, `#C3C9D4` (9.6:1) | `#262F3D`, `#E8ECE6`, `#B4BCC8` (7:1) |
+| `--waiting` | Contour brown `#8A4B14` (6.2:1) | `#E0A867` (8.5:1) |
+| `--danger` | `#B42318` (6:1) | `#FF7B6E` (7:1) |
+| `--app-bar`, `--app-bar-base` | Ink `#1B2230`, white text | `#0C1117` |
+| `--banner`, `--on-banner` | Map green `#E3EAD9`, ink (12.9:1) | `#1B2A22`, `#E8ECE6` (12.5:1) |
+| `--banner-art`, `--section-ornament` | Contour rings with a magenta control circle and start triangle; a magenta control circle | The same in `#B7814A` and `#F06BB5` |
+
+Fonts: Big Shoulders, a condensed signage face, for `--font-banner` and `--font-score`, so game names and totals read from across a room. Instrument Sans for everything else. Its width axis runs from 75% to 100%, so `--stretch-display` is 100%.
 
 ### Highland Bru
 

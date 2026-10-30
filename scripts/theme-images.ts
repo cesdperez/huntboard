@@ -14,6 +14,8 @@ const THISTLE = `<svg viewBox="0 0 64 112" fill="none" stroke="#151515" stroke-w
 
 const TILE = `<svg viewBox="0 0 104 150" fill="none" stroke="#b8412d" stroke-width="1.8"><path d="M2 2H102V102H2Z M52 2V102M2 52H102"/><path d="M2 27Q27 27 27 2Q27 27 52 27Q27 27 27 52Q27 27 2 27ZM52 27Q77 27 77 2Q77 27 102 27Q77 27 77 52Q77 27 52 27ZM2 77Q27 77 27 52Q27 77 52 77Q27 77 27 102Q27 77 2 77ZM52 77Q77 77 77 52Q77 77 102 77Q77 77 77 102Q77 77 52 77Z"/><path d="M12 126H92M24 134H80"/></svg>`;
 
+const CONTOUR = `<svg viewBox="0 0 72 110" fill="none" stroke-linecap="round" stroke-linejoin="round"><g stroke="#8a4b14" stroke-width="1.5"><path d="M36 6C55 6 67 21 65 40S51 73 34 73 7 59 7 40 17 6 36 6Z"/><path d="M37 17C49 17 57 28 56 40S46 63 35 63 16 52 16 40 25 17 37 17Z"/><path d="M37 28C44 28 48 34 47 40S42 53 35 53 25 46 25 40 30 28 37 28Z"/></g><g stroke="#b4247e" stroke-width="2.5"><circle cx="36" cy="40" r="9"/><path d="M32 49L24 86"/><path d="M22 88L32 105H12Z"/></g></svg>`;
+
 interface ThemeArt {
 	/** Fills the touch icon's square, since iOS rounds the corners itself. */
 	touchBackground: string;
@@ -21,6 +23,41 @@ interface ThemeArt {
 }
 
 const ART: Record<string, ThemeArt> = {
+	contour: {
+		touchBackground: '#f4f6f1',
+		shareCard: `
+			<style>
+				body { background: #e3ead9; color: #1b2230; font-family: 'Instrument Sans', sans-serif; }
+				.bar {
+					height: 104px; padding: 0 72px; display: flex; align-items: center;
+					background: #1b2230; color: #fff; font: 700 44px 'Instrument Sans', sans-serif;
+				}
+				.banner { height: 392px; padding: 36px 72px 0; display: flex; justify-content: space-between; }
+				h1 { margin: 0; font: 800 148px/0.86 'Big Shoulders', sans-serif; letter-spacing: -0.01em; }
+				p { margin: 28px 0 0; font-weight: 600; font-size: 40px; }
+				.map { width: 196px; flex-shrink: 0; }
+				.strip {
+					height: 134px; padding: 0 72px; display: flex; align-items: center; gap: 28px;
+					background: #1b2230; color: #fff; border-top: 6px solid #b4247e;
+				}
+				.rank { font: 700 52px 'Instrument Sans', sans-serif; padding-right: 28px; border-right: 2px solid #3a4354; }
+				.team { flex: 1; font: 600 44px 'Instrument Sans', sans-serif; }
+				.score { font: 800 96px 'Big Shoulders', sans-serif; }
+			</style>
+			<div class="bar">Huntboard</div>
+			<div class="banner">
+				<div>
+					<h1>Scavenger<br>hunt</h1>
+					<p>Claim challenges. Climb the leaderboard.</p>
+				</div>
+				<div class="map">${CONTOUR}</div>
+			</div>
+			<div class="strip">
+				<span class="rank">1st</span>
+				<span class="team">Your team</span>
+				<span class="score">180</span>
+			</div>`
+	},
 	'highland-bru': {
 		touchBackground: '#ff741f',
 		shareCard: `

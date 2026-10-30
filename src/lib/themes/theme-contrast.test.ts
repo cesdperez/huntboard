@@ -43,11 +43,14 @@ function contrast(a: string, b: string): number {
 }
 
 const flag = css('flag');
+const contour = css('contour');
 const palettes = {
 	'flag light': flag.slice(0, flag.indexOf('@variant dark')),
 	'flag dark': flag.slice(flag.indexOf('@variant dark')),
 	'highland-bru': css('highland-bru'),
-	azulejo: css('azulejo')
+	azulejo: css('azulejo'),
+	'contour light': contour.slice(0, contour.indexOf('@variant dark')),
+	'contour dark': contour.slice(contour.indexOf('@variant dark'))
 };
 
 describe('--input-line', () => {

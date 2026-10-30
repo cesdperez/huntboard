@@ -1,0 +1,89 @@
+/* An orienteering map: brown contours on map paper, the course overprinted in magenta. Light and dark. */
+:root[data-game-theme='contour'] {
+	color-scheme: light;
+	--paper: #f4f6f1;
+	--surface: #ffffff;
+	--ink: #1b2230;
+	--muted: #5a6270;
+	--line: #dde2d8;
+	--input-line: #858c84;
+	--flag: #b4247e;
+	--on-flag: #ffffff;
+	/* Darker, since lightening the magenta drops white text under 4.5:1. */
+	--action-hover: #9c1e6c;
+	--danger: #b42318;
+	--scrim: rgb(27 34 48 / 0.45);
+
+	--own-row: #f7e3ef;
+	--strip: #1b2230;
+	--on-strip: #ffffff;
+	--on-strip-muted: #c3c9d4;
+	--strip-line: #3a4354;
+	--strip-score: #ffffff;
+	--strip-own-row: #2c3546;
+	--strip-danger: #ffc9c2;
+	/* Behind team initials on the strip. */
+	--strip-paper: #2c3546;
+	--score: #1b2230;
+	--waiting: #8a4b14;
+	--marker-outline: #5a6270;
+
+	--app-bar: var(--app-bar-base);
+	/* The browser chrome colour, since the app bar is the top of the page. */
+	--app-bar-base: #1b2230;
+	--on-app-bar: #ffffff;
+	--banner: #e3ead9;
+	--on-banner: #1b2230;
+	--banner-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 110' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%238a4b14' stroke-width='1.5'%3E%3Cpath d='M36 6C55 6 67 21 65 40S51 73 34 73 7 59 7 40 17 6 36 6Z'/%3E%3Cpath d='M37 17C49 17 57 28 56 40S46 63 35 63 16 52 16 40 25 17 37 17Z'/%3E%3Cpath d='M37 28C44 28 48 34 47 40S42 53 35 53 25 46 25 40 30 28 37 28Z'/%3E%3C/g%3E%3Cg stroke='%23b4247e' stroke-width='2.5'%3E%3Ccircle cx='36' cy='40' r='9'/%3E%3Cpath d='M32 49L24 86'/%3E%3Cpath d='M22 88L32 105H12Z'/%3E%3C/g%3E%3C/svg%3E");
+	--banner-transform: none;
+	--banner-weight: 800;
+	--banner-tracking: -0.01em;
+	--banner-title-leading: 0.9;
+	--section-rule: #b4247e;
+	--section-ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23b4247e' stroke-width='2.25'%3E%3Ccircle cx='10' cy='10' r='7'/%3E%3C/svg%3E");
+
+	--font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-score: 'Big Shoulders', ui-sans-serif, system-ui, sans-serif;
+	--font-banner: 'Big Shoulders', ui-sans-serif, system-ui, sans-serif;
+	/* Instrument Sans has a width axis from 75% to 100%, so display type stays at its widest. */
+	--stretch-display: 100%;
+	--stretch-condensed: 87%;
+	--stretch-compressed: 75%;
+
+	@variant dark {
+		color-scheme: dark;
+		--paper: #121821;
+		--surface: #1a222d;
+		--ink: #e8ece6;
+		--muted: #9aa3ae;
+		--line: #2a3441;
+		--input-line: #6b7584;
+		--flag: #f06bb5;
+		--on-flag: #1b0f18;
+		--action-hover: #e35aa7;
+		--danger: #ff7b6e;
+		--scrim: rgb(5 8 12 / 0.65);
+
+		--own-row: #33202d;
+		--strip: #262f3d;
+		--on-strip: #e8ece6;
+		--on-strip-muted: #b4bcc8;
+		--strip-line: #3d4858;
+		--strip-score: #e8ece6;
+		--strip-own-row: #3a2a38;
+		--strip-danger: #ffb4ab;
+		--strip-paper: #1a222d;
+		--score: #e8ece6;
+		--waiting: #e0a867;
+		--marker-outline: #9aa3ae;
+
+		--app-bar-base: #0c1117;
+		--on-app-bar: #e8ece6;
+		--banner: #1b2a22;
+		--on-banner: #e8ece6;
+		--banner-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 110' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23b7814a' stroke-width='1.5'%3E%3Cpath d='M36 6C55 6 67 21 65 40S51 73 34 73 7 59 7 40 17 6 36 6Z'/%3E%3Cpath d='M37 17C49 17 57 28 56 40S46 63 35 63 16 52 16 40 25 17 37 17Z'/%3E%3Cpath d='M37 28C44 28 48 34 47 40S42 53 35 53 25 46 25 40 30 28 37 28Z'/%3E%3C/g%3E%3Cg stroke='%23f06bb5' stroke-width='2.5'%3E%3Ccircle cx='36' cy='40' r='9'/%3E%3Cpath d='M32 49L24 86'/%3E%3Cpath d='M22 88L32 105H12Z'/%3E%3C/g%3E%3C/svg%3E");
+		--section-rule: #f06bb5;
+		--section-ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23f06bb5' stroke-width='2.25'%3E%3Ccircle cx='10' cy='10' r='7'/%3E%3C/svg%3E");
+	}
+}

@@ -4,6 +4,7 @@
 @import './lib/themes/flag.css';
 @import './lib/themes/highland-bru.css';
 @import './lib/themes/azulejo.css';
+@import './lib/themes/contour.css';
 
 /* Follows the OS colour scheme. data-theme on <html> forces one: a single-mode theme or a preview. */
 @custom-variant dark {
@@ -101,6 +102,7 @@
 	--spacing-marker: 28px;
 	--spacing-marker-lg: 40px;
 	--container-content: 640px;
+	--container-landing: 1120px;
 
 	--shadow-float: 0 -4px 24px rgb(5 10 20 / 0.18);
 	--shadow-strip: 0 4px 24px rgb(5 10 20 / 0.12);
