@@ -40,6 +40,8 @@
 	--banner-weight: 700;
 	/* Georgia is wide, so a name like "Birthday" still fits one line beside a game image. */
 	--banner-title-size: clamp(44px, 14vw, 72px);
+	/* Georgia's accented capitals reach up to the descenders of the line above at anything tighter. */
+	--banner-title-leading: 1.05;
 	--banner-title-tail-display: block;
 	--banner-title-tail-style: italic;
 	--banner-title-tail-weight: 400;

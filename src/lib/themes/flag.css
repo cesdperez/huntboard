@@ -47,6 +47,7 @@
 	--banner-tracking: normal;
 	--banner-weight: 450;
 	--banner-title-size: clamp(48px, 17vw, 80px);
+	--banner-title-leading: 0.85;
 	--banner-title-tail-display: inline;
 	--banner-title-tail-style: normal;
 	--banner-title-tail-weight: var(--banner-weight);

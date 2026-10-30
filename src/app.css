@@ -176,6 +176,13 @@
 	text-transform: var(--banner-transform);
 }
 
+/* Room for accents and descenders that a tight line height puts outside a clamped title, which would
+   cut them. More room below would show the top of the next line. */
+@utility banner-glyph-room {
+	padding-block: 0.2em 0.06em;
+	margin-block: -0.2em -0.06em;
+}
+
 @utility type-heading {
 	font-size: 17px;
 	line-height: 1.3;
