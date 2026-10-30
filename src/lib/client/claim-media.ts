@@ -120,6 +120,18 @@ export function originalVideo(file: File): PreparedMedia {
 	return { ok: true, file: typed, type: type as VideoType };
 }
 
+/**
+ * The re-encoded video, or the original when re-encoding did not make it smaller and the server
+ * takes the original as it is.
+ */
+export function compressedOrOriginal(original: File, buffer: ArrayBuffer): PreparedMedia {
+	if (buffer.byteLength >= original.size) {
+		const kept = originalVideo(original);
+		if (kept.ok) return kept;
+	}
+	return compressedVideo(buffer);
+}
+
 function compressedVideo(buffer: ArrayBuffer): PreparedMedia {
 	if (buffer.byteLength > VIDEO_MAX_BYTES)
 		return { ok: false, message: COMPRESSED_VIDEO_TOO_LARGE };
@@ -162,7 +174,7 @@ async function prepareVideo(
 			return originalVideo(file);
 		}
 		const buffer = await transcode(mediabunny, input, probe, onProgress, signal);
-		return buffer ? compressedVideo(buffer) : originalVideo(file);
+		return buffer ? compressedOrOriginal(file, buffer) : originalVideo(file);
 	} finally {
 		input.dispose();
 	}

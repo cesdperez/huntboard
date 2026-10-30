@@ -1,9 +1,9 @@
 import {
 	TEAM_MEMBERS_ERROR,
-	TEAM_NAME_ERROR,
 	TEAM_NAME_TAKEN_ERROR,
 	normalizeTeamMembers,
-	normalizeTeamName
+	normalizeTeamName,
+	teamNameError
 } from '#lib/domain/team-name.js';
 import type { ActionOutcome } from './action-outcome.js';
 import { addTeam, moveTeam, updateTeam } from '../db/teams.js';
@@ -111,7 +111,7 @@ function moveBy(offset: -1 | 1) {
 
 function readTeam(data: FormData): { name: string; members: string } | { error: string } {
 	const name = normalizeTeamName(data.get('name'));
-	if (!name) return { error: TEAM_NAME_ERROR };
+	if (!name) return { error: teamNameError(data.get('name')) };
 	const members = normalizeTeamMembers(data.get('members'));
 	if (members === null) return { error: TEAM_MEMBERS_ERROR };
 	return { name, members };

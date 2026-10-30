@@ -4,7 +4,12 @@
 </script>
 
 {#if nickname.value}
-	<Button variant="ghost" class="max-w-40 truncate" onclick={() => (nickname.editing = true)}>
+	<Button
+		bind:ref={nickname.button}
+		variant="ghost"
+		class="max-w-40 truncate"
+		onclick={() => (nickname.editing = true)}
+	>
 		<span class="sr-only">Change nickname. Current:</span>
 		<span class="truncate">{nickname.value}</span>
 	</Button>

@@ -567,7 +567,7 @@ describe('renameOwnTeam', () => {
 
 		expect(outcome).toEqual({
 			status: 400,
-			result: { kind: 'error', message: 'Give the team a name of at most 40 characters.' }
+			result: { kind: 'error', message: 'Give the team a name.' }
 		});
 		expect((await getTeamByToken(db, rats.token))?.name).toBe('Canal Rats');
 	});
@@ -585,6 +585,15 @@ describe('renameOwnTeam', () => {
 			}
 		});
 		expect((await getTeamByToken(db, rats.token))?.name).toBe('Canal Rats');
+	});
+
+	it('refuses a name that is too long', async () => {
+		const outcome = await renameOwnTeam(db, { team: rats, game }, form({ name: 'a'.repeat(41) }));
+
+		expect(outcome).toEqual({
+			status: 400,
+			result: { kind: 'error', message: 'Keep the team name to at most 40 characters.' }
+		});
 	});
 });
 

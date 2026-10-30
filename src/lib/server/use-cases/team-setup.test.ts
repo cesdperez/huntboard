@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	TEAM_MEMBERS_ERROR,
 	TEAM_MEMBERS_MAX_LENGTH,
-	TEAM_NAME_ERROR,
 	TEAM_NAME_TAKEN_ERROR
 } from '#lib/domain/team-name.js';
 import { createGame } from '../db/games.js';
@@ -62,7 +61,7 @@ describe('createTeam', () => {
 
 		expect(outcome).toEqual({
 			status: 400,
-			result: { error: TEAM_NAME_ERROR, name: '', members: 'Sam' }
+			result: { error: 'Give the team a name.', name: '', members: 'Sam' }
 		});
 		expect(await teamNames()).toEqual(['Canal Rats', 'Night Owls']);
 	});
@@ -132,7 +131,7 @@ describe('editTeam', () => {
 
 		expect(outcome).toEqual({
 			status: 400,
-			result: { error: TEAM_NAME_ERROR, teamId: rats.id, name: '', members: 'Sam' }
+			result: { error: 'Give the team a name.', teamId: rats.id, name: '', members: 'Sam' }
 		});
 	});
 

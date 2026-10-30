@@ -3,7 +3,7 @@ import type { GamePhase, GameWindow } from './game-window.js';
 import type { ClaimStatus } from './scoring.js';
 import type { TeamClaim } from './team-board.js';
 
-export const CLAIM_AGAIN = 'You can mark it done again.';
+const CLAIM_AGAIN = 'You can mark it done again.';
 
 export interface ConflictingClaim {
 	status: ClaimStatus;
@@ -41,10 +41,14 @@ export function claimsClosedMessage(
 	return `The game starts at ${formatTime(window.startsAt)}. Claims open then.`;
 }
 
-/** Who handled a claim, under its state in the team sheet, or null when there is nothing to say. */
+/**
+ * Who handled a claim, under its state in the team sheet, or null when there is nothing to say.
+ * A rejection offers a new claim only while claims are open.
+ */
 export function claimLine(
 	claim: Pick<TeamClaim, 'status' | 'markedBy' | 'markedAt' | 'judgedBy'>,
-	formatTime: (iso: string) => string
+	formatTime: (iso: string) => string,
+	claimsOpen: boolean
 ): string | null {
 	switch (claim.status) {
 		case 'pending':
@@ -52,18 +56,28 @@ export function claimLine(
 		case 'scored':
 			return claim.judgedBy ? `Judged by ${claim.judgedBy}.` : null;
 		case 'rejected':
-			return `${judgeName(claim.judgedBy)} rejected this. ${CLAIM_AGAIN}`;
+			return withClaimAgain(`${judgeName(claim.judgedBy)} rejected this.`, claimsOpen);
 	}
 }
 
 /** Tells a team that a judge scored or rejected its claim on the challenge with this title. */
 export function judgedClaimMessage(
 	title: string,
-	claim: Pick<TeamClaim, 'status' | 'points' | 'judgeNote'>
+	claim: Pick<TeamClaim, 'status' | 'points' | 'judgeNote'>,
+	claimsOpen: boolean
 ): string {
 	if (claim.status === 'scored') return `Scored ${claim.points ?? 0} for ${title}`;
 	const reason = claim.judgeNote ? `: ${claim.judgeNote}` : '';
-	return `Rejected ${title}${reason}. ${CLAIM_AGAIN}`;
+	return withClaimAgain(`Rejected ${title}${reason}.`, claimsOpen);
+}
+
+/** The line under a rejected row in the team's list. */
+export function rejectedRowLine(judgeNote: string | null, claimsOpen: boolean): string {
+	return judgeNote ? `Rejected: ${judgeNote}` : withClaimAgain('Rejected.', claimsOpen);
+}
+
+function withClaimAgain(message: string, claimsOpen: boolean): string {
+	return claimsOpen ? `${message} ${CLAIM_AGAIN}` : message;
 }
 
 /** The empty admin queue, by game phase. Null while the browser clock has not started. */

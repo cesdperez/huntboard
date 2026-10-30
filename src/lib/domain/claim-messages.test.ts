@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	claimConflictMessage,
 	claimLine,
+	rejectedRowLine,
 	claimsClosedMessage,
 	emptyQueueMessage
 } from './claim-messages.js';
@@ -77,29 +78,49 @@ describe('claimLine', () => {
 	};
 
 	it('says who marked a pending claim and when', () => {
-		expect(claimLine(claim, formatTime)).toBe('Marked done by Sam at <17:02>.');
+		expect(claimLine(claim, formatTime, true)).toBe('Marked done by Sam at <17:02>.');
 	});
 
 	it('names the judge of a scored claim', () => {
-		expect(claimLine({ ...claim, status: 'scored', judgedBy: 'Alex' }, formatTime)).toBe(
+		expect(claimLine({ ...claim, status: 'scored', judgedBy: 'Alex' }, formatTime, true)).toBe(
 			'Judged by Alex.'
 		);
 	});
 
 	it('has no line for a scored claim without a judge name', () => {
-		expect(claimLine({ ...claim, status: 'scored' }, formatTime)).toBeNull();
+		expect(claimLine({ ...claim, status: 'scored' }, formatTime, true)).toBeNull();
 	});
 
 	it('names the judge of a rejected claim and says it can be marked again', () => {
-		expect(claimLine({ ...claim, status: 'rejected', judgedBy: 'Alex' }, formatTime)).toBe(
+		expect(claimLine({ ...claim, status: 'rejected', judgedBy: 'Alex' }, formatTime, true)).toBe(
 			'Alex rejected this. You can mark it done again.'
 		);
 	});
 
 	it('falls back to "A judge" on a rejected claim without a judge name', () => {
-		expect(claimLine({ ...claim, status: 'rejected' }, formatTime)).toBe(
+		expect(claimLine({ ...claim, status: 'rejected' }, formatTime, true)).toBe(
 			'A judge rejected this. You can mark it done again.'
 		);
+	});
+
+	it('offers no new claim once claims are closed', () => {
+		expect(claimLine({ ...claim, status: 'rejected', judgedBy: 'Alex' }, formatTime, false)).toBe(
+			'Alex rejected this.'
+		);
+	});
+});
+
+describe('rejectedRowLine', () => {
+	it('shows the reason when the judge gave one', () => {
+		expect(rejectedRowLine('blurry', true)).toBe('Rejected: blurry');
+	});
+
+	it('offers a new claim while claims are open', () => {
+		expect(rejectedRowLine(null, true)).toBe('Rejected. You can mark it done again.');
+	});
+
+	it('offers no new claim once claims are closed', () => {
+		expect(rejectedRowLine(null, false)).toBe('Rejected.');
 	});
 });
 

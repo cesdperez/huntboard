@@ -253,7 +253,8 @@ export async function playHunt(
 		const points = random() < 0.7 ? between(5, 15, random) : -between(3, 10, random);
 		const result = await client.action('admin:adjust', `${admin}/teams`, 'adjustmentAdd', {
 			teamId: team.id,
-			points,
+			sign: points > 0 ? 'bonus' : 'penalty',
+			points: Math.abs(points),
 			reason: points > 0 ? 'Best costume' : 'Crossed on red',
 			nickname
 		});

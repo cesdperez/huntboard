@@ -11,9 +11,18 @@
 		preview: string | null;
 		error: string | null;
 		onremove: () => void;
+		removeButton?: HTMLElement | null;
 	};
 
-	let { phase, kind, progress, preview, error, onremove }: Props = $props();
+	let {
+		phase,
+		kind,
+		progress,
+		preview,
+		error,
+		onremove,
+		removeButton = $bindable(null)
+	}: Props = $props();
 
 	const noun = $derived(kind === 'video' ? 'video' : 'photo');
 	const label = $derived.by(() => {
@@ -60,7 +69,7 @@
 				</div>
 			{/if}
 		</div>
-		<Button variant="ghost" class="px-3" onclick={onremove}>
+		<Button bind:ref={removeButton} variant="ghost" class="px-3" onclick={onremove}>
 			Remove<span class="sr-only">{` ${noun}`}</span>
 		</Button>
 	</div>

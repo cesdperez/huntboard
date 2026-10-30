@@ -36,7 +36,13 @@ async function arrivedAt() {
 }
 
 describe('addTeamAdjustment', () => {
-	const fields = { teamId: '', points: '-10', reason: 'Never showed up', nickname: 'Alex' };
+	const fields = {
+		teamId: '',
+		sign: 'penalty',
+		points: '10',
+		reason: 'Never showed up',
+		nickname: 'Alex'
+	};
 
 	it('adds the adjustment by the nickname', async () => {
 		const outcome = await addTeamAdjustment(
@@ -62,9 +68,9 @@ describe('addTeamAdjustment', () => {
 			status: 400,
 			result: {
 				kind: 'adjustment-invalid',
-				values: { points: '0', reason: '' },
+				values: { sign: 'penalty', points: '0', reason: '' },
 				errors: {
-					points: 'Enter a whole number of points, like 10 or -5. Not 0.',
+					points: 'Enter a whole number of points above 0, like 10.',
 					reason: 'Say why, so other judges know what it was for.'
 				}
 			}

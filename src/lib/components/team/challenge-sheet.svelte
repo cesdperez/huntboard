@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { CLAIM_NOTE_MAX_LENGTH } from '#lib/domain/claim-note.js';
 	import { Marker, markerLabel } from '#lib/components/marker/index.js';
@@ -31,29 +32,59 @@
 		() => `${challenge?.id}:${challenge?.claim?.id}:${challenge?.claim?.status}`
 	);
 
-	const media = new ClaimMediaUpload((phase) => clock.closedMessageFor(phase));
-	// Leaving the team page must stop the upload and free the photo preview.
-	$effect(() => () => media.clear());
+	// One per challenge, so a finished upload stays with that challenge's draft note.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- filled inside $derived, where state must not change; each upload holds its own state
+	const uploads = new Map<number, ClaimMediaUpload>();
+	function uploadFor(challengeId: number): ClaimMediaUpload {
+		let upload = uploads.get(challengeId);
+		if (!upload) {
+			upload = new ClaimMediaUpload((phase) => clock.closedMessageFor(phase));
+			uploads.set(challengeId, upload);
+		}
+		return upload;
+	}
+	const media = $derived(uploadFor(challenge?.id ?? 0));
+	// Leaving the team page must stop the uploads and free the photo previews.
+	$effect(() => () => uploads.forEach((upload) => upload.clear()));
 	let fileInput = $state<HTMLInputElement | null>(null);
+	let addButton = $state<HTMLElement | null>(null);
+	let removeButton = $state<HTMLElement | null>(null);
 
 	const claim = $derived(challenge?.claim ?? null);
 	const canMark = $derived(!claim || claim.status === 'rejected');
 
 	function close() {
 		action.clearError();
-		media.clear();
+		media.stopUnfinished();
 		onclose();
+	}
+
+	// The button that had focus leaves the page. Left alone, the sheet's focus trap moves focus to
+	// the note field, which opens the phone keyboard.
+	async function focusAfterSwap(target: () => HTMLElement | null) {
+		await tick();
+		(target() ?? content)?.focus();
 	}
 
 	function picked() {
 		const file = fileInput?.files?.[0];
-		if (file) void media.start(file);
+		if (file) {
+			void media.start(file);
+			void focusAfterSwap(() => removeButton);
+		}
 		// An empty input lets the same file be picked again after Remove.
 		if (fileInput) fileInput.value = '';
 	}
 
+	function removeMedia() {
+		media.clear();
+		void focusAfterSwap(() => addButton);
+	}
+
 	function marked(formData: FormData) {
-		delete drafts[Number(formData.get('challengeId'))];
+		const challengeId = Number(formData.get('challengeId'));
+		delete drafts[challengeId];
+		uploadFor(challengeId).clear();
 		close();
 	}
 </script>
@@ -77,13 +108,13 @@
 			</Sheet.Header>
 
 			{#if challenge.description}
-				<Sheet.Description class="type-body whitespace-pre-line text-ink">
+				<Sheet.Description class="type-body break-words whitespace-pre-line text-ink">
 					{challenge.description}
 				</Sheet.Description>
 			{/if}
 
 			{#if claim}
-				{@const line = claimLine(claim, clock.formatTime)}
+				{@const line = claimLine(claim, clock.formatTime, clock.closedMessage === null)}
 				<div class="flex items-start gap-3 border-y py-3">
 					<Marker state={claim.status} points={claim.points ?? undefined} />
 					<div class="flex min-w-0 flex-col gap-1">
@@ -95,10 +126,10 @@
 						{#if claim.status === 'rejected' && claim.judgeNote}
 							<p class="text-danger">{claim.judgeNote}</p>
 						{/if}
-						{#if line}<p class="type-secondary">{line}</p>{/if}
 						{#if claim.note}
 							<p class="type-secondary break-words">Note: {claim.note}</p>
 						{/if}
+						{#if line}<p class="type-secondary">{line}</p>{/if}
 						{#if claim.media}
 							<p class="flex items-center gap-2 type-secondary">
 								<MediaThumb kind={claim.media.kind} src={claim.media.src} class="size-10" />
@@ -149,6 +180,7 @@
 							maxlength={CLAIM_NOTE_MAX_LENGTH}
 							autocomplete="off"
 							placeholder="Which photo, or what you did"
+							disabled={clock.closedMessage !== null}
 							bind:value={drafts[challenge.id]}
 						/>
 					</div>
@@ -160,7 +192,8 @@
 							progress={media.progress}
 							preview={media.preview}
 							error={media.error}
-							onremove={() => media.clear()}
+							onremove={removeMedia}
+							bind:removeButton
 						/>
 					{:else if clock.closedMessage === null}
 						<input
@@ -172,7 +205,9 @@
 							tabindex="-1"
 							onchange={picked}
 						/>
-						<Button onclick={() => fileInput?.click()}>Add photo or video</Button>
+						<Button bind:ref={addButton} onclick={() => fileInput?.click()}>
+							Add photo or video
+						</Button>
 					{/if}
 					{@render message()}
 					<Button

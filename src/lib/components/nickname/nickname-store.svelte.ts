@@ -10,6 +10,8 @@ class NicknameStore {
 	value = $state<string | null>(null);
 	loaded = $state(false);
 	editing = $state(false);
+	/** The nickname button on this page, where focus goes after the first prompt. */
+	button = $state<HTMLElement | null>(null);
 
 	readonly promptOpen = $derived(this.loaded && (this.value === null || this.editing));
 

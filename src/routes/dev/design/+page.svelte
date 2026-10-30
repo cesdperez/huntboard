@@ -303,7 +303,7 @@
 			<SectionHeading section="Around town" />
 			<ul class={['flex flex-col', theme.layout === 'plain' && 'border-t']}>
 				{#each sampleChallenges as challenge (challenge.id)}
-					<ChallengeRow {challenge} onselect={() => {}} />
+					<ChallengeRow {challenge} claimsOpen onselect={() => {}} />
 				{/each}
 			</ul>
 		</div>
@@ -358,6 +358,7 @@
 			<MediaThumb kind="video" class="size-8" />
 			<MediaThumb kind="photo" src={sampleImage.src} class="size-10" />
 			<MediaThumb kind="video" class="size-10" />
+			<MediaThumb kind="photo" class="size-10" />
 			<span class="type-secondary">Thumbnails on a team row and in its sheet</span>
 		</div>
 		<ClaimMediaView

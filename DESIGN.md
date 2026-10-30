@@ -109,20 +109,20 @@ The bottom third of the screen is where thumbs reach. Primary actions live there
 
 Tapping a row opens a bottom sheet with the description, the note field, "Add photo or video" and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
 
-- The strip shows the rank in display type at 28px and the total at the full 40px, so the team name keeps room at 390px. Tapping it expands the scoreboard in place, with the team's own row marked by an `--own` bar on its left edge and a semibold name. "Edit team" and "Add picture" sit side by side under that list.
+- The strip shows the rank in display type at 28px and the total at the full 40px, or 32px on screens up to 400px wide. The team name takes up to two lines, so a typical name fits beside a picture and a four-digit total at 360px. Tapping it expands the scoreboard in place, with the team's own row marked by an `--own` bar on its left edge and a semibold name. "Edit team" and "Add picture" sit side by side under that list.
 - "Add picture" opens the phone's photo picker and saves at once: no preview, no second tap. While it uploads the button reads "Saving picture". Once the team has a picture it reads "Change picture". The toast says "Picture saved". Teams cannot remove their picture; the organiser can.
 - A picture error shows in place under the two buttons, like a sheet error.
 - With a game image, the event header sits between the game name and the strip: a 48px thumbnail, the label and "View". It is not sticky, so the strip and the list keep their room at 390 × 844. Tapping it opens the image whole in a sheet, titled with the label.
 - A pending row reads "Waiting for a judge" under its title, in `--waiting`. A rejected row shows the reason in `--danger`.
-- The sheet moves focus to itself, not to the note field, so the phone keyboard opens only when the player taps the field.
-- Outside the game window the sheet keeps "Mark done" visible but disabled, with the closed message above it.
+- The sheet moves focus to itself, not to the note field, so the phone keyboard opens only when the player taps the field. When "Add photo or video" gives way to the status row, focus moves to "Remove", and back to "Add photo or video" after Remove.
+- Outside the game window the sheet keeps "Mark done" and the note field visible but disabled, with the closed message above it.
 - An error in the sheet stays only while the claim it is about is unchanged. Once a poll shows a new state, the error goes, so it never contradicts the button under it.
 - A confirmation shows as a toast: a `--ink` pill above the bottom edge for three seconds.
-- "Add photo or video" is an optional secondary button under the note. It opens the phone's picker for photos and videos, and the work starts at once: no second tap. The button gives way to a status row: a 56px thumbnail (the photo itself, or a play tile for a video), a label, a progress bar and "Remove". The labels are "Shrinking photo", "Compressing video" and "Uploading" with a percentage, then "Photo attached" or "Video attached". The bar is indeterminate until the step reports progress: shrinking a photo never does, compressing a video and uploading do.
+- "Add photo or video" is an optional secondary button under the note. It opens the phone's picker for photos and videos, and the work starts at once: no second tap. The button gives way to a status row: a 56px thumbnail (the photo itself, a photo tile until it is shrunk or when it fails, or a play tile for a video), a label, a progress bar and "Remove". The labels are "Shrinking photo", "Compressing video" and "Uploading" with a percentage, then "Photo attached" or "Video attached". The bar is indeterminate until the step reports progress: shrinking a photo never does, compressing a video and uploading do.
 - While the media is on its way, "Mark done" stays disabled and reads "Waiting for the upload". Once attached, "Mark done" sends it with the note. A claim needs no media, so the team can still send proof in the group chat or show it in person.
-- "Remove", closing the sheet, or marking done stops any step still running and forgets the file. An error shows in place under the status row, and "Remove" clears it so the team can pick another file. Outside the game window the button is hidden.
+- "Remove" or marking done stops any step still running and forgets the file. Closing the sheet stops a step still running, but a finished upload stays with the challenge's note, so opening the sheet again spends no second upload. An error shows in place under the status row, and "Remove" clears it so the team can pick another file. Outside the game window the button is hidden.
 - A claim with media shows its thumbnail on the row, 32px between the title and the points, and in the sheet, 40px beside "Photo sent" or "Video sent". A video shows the play tile, so a list never loads videos. Thumbnails have 8px corners, so they never read as a 3px marker.
-- When a poll shows that a judge scored or rejected a claim, a toast says so: "Scored 8 for Swim in a fountain", or "Rejected Free dessert: no proof received. You can mark it done again." Several judgements show one after another, and the phone vibrates briefly where the browser allows it. Opening the page and the team's own marks and undos stay quiet.
+- When a poll shows that a judge scored or rejected a claim, a toast says so: "Scored 8 for Swim in a fountain", or "Rejected Free dessert: no proof received. You can mark it done again." Once claims are closed, a rejection no longer offers to mark it done again, in the toast, the row or the sheet. Several judgements show one after another, and the phone vibrates briefly where the browser allows it. Opening the page and the team's own marks and undos stay quiet.
 
 ### Admin
 
@@ -168,7 +168,7 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 
 - "Record arrival" takes the server's clock. "Correct" and "Enter time" take a time in the viewer's time zone, no later than now. They start at the end time, or at now while the end is still to come. "Clear" confirms first.
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
-- Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
+- Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. The choice sets the sign: a penalty typed with a minus counts the same, and a bonus typed with one says "A bonus adds points. Choose Penalty to take points off." Removing one confirms first.
 
 A game made before accounts opens Setup with a "My games" section: "Add to My games" for a signed-in visitor, or "Sign in to add it to your games", which returns to Setup after sign-in. A game with an owner has no such section.
 
@@ -353,7 +353,7 @@ A team picture is a circle, so it never reads as a marker. Without a picture a t
 ### Claim media
 
 - Photos are shrunk in the browser to 1600px on their long edge, like the game image, and stay under 512 KB.
-- Videos are re-encoded in the browser to 720p H.264 at about 2 Mbps, at most 60 seconds long. A video that already fits that budget goes as it is. A phone that cannot re-encode sends the original MP4, MOV or WebM, up to 80 MB.
+- Videos are re-encoded in the browser to 720p H.264 at about 2 Mbps, at most 60 seconds long. A video that already fits that budget goes as it is. So does an MP4, MOV or WebM up to 80 MB that re-encoding would not make smaller. A phone that cannot re-encode sends the original MP4, MOV or WebM, up to 80 MB.
 - The phone uploads straight to storage, never through the app, so a slow upload never blocks other requests.
 
 ## Motion
@@ -372,7 +372,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 
 ### Offline and errors
 
-- When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. When the browser comes back online, polls run again at once, and pages that do not poll check the server.
+- When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. When the server answers a poll with an error, the page also keeps what it showed, open sheets and typed notes included, and the notice reads "This page did not update. It tries again by itself." A dead link still shows the dead link page. When the browser comes back online, polls run again at once, and pages that do not poll check the server.
 - A page that cannot load at all says so plainly. Offline: "You are offline" with "This page loads again once you reconnect." Otherwise: "This page did not load" with "It tries again by itself. If it keeps happening, reload the page or tell your organiser." Both reload by themselves on the polling schedule once the server answers.
 - A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
 - Every error page ends with a "Go to the home page" link.
@@ -396,5 +396,6 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - Points read with their unit: a range as "5 to 20 points", a single value as "25 points".
 - A button repeated in every item ("Score", "Reject", "Record arrival", "Add adjustment") carries the team and challenge in a visually hidden label, so a screen reader list of buttons tells them apart.
 - A form that opens in place of its button (Reject, Correct, Enter time, Add adjustment) takes focus itself, not its first field, so the phone keyboard stays closed. Closing it returns focus to that button.
+- Closing the nickname prompt moves focus to the nickname button, the first prompt included.
 - Moving focus scrolls controls clear of the admin tab bar, the sticky team strip and the grid's sticky header and challenge column.
 - Test each milestone at 390 × 844 first, then 1280 × 800.

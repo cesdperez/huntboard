@@ -72,15 +72,10 @@
 		})(input);
 	};
 
-	const add: SubmitFunction = (input) => {
-		const points = String(input.formData.get('magnitude') ?? '').trim();
-		const penalty = input.formData.get('sign') === 'penalty';
-		input.formData.set('points', penalty && points ? `-${points}` : points);
-		return adjusting.submit(() => {
-			void adding.hide();
-			toast.show('Adjustment added');
-		})(input);
-	};
+	const add = adjusting.submit(() => {
+		void adding.hide();
+		toast.show('Adjustment added');
+	});
 </script>
 
 <li class="flex flex-col gap-3 border-b py-4" aria-labelledby="{id}-name">
@@ -240,7 +235,7 @@
 					<Label for="{id}-points">Points</Label>
 					<Input
 						id="{id}-points"
-						name="magnitude"
+						name="points"
 						inputmode="numeric"
 						autocomplete="off"
 						required

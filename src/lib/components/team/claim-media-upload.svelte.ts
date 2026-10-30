@@ -68,6 +68,11 @@ export class ClaimMediaUpload {
 		}
 	}
 
+	/** Keeps a finished upload, so attaching it again costs no upload from the team's limit. */
+	stopUnfinished() {
+		if (this.phase !== 'ready') this.clear();
+	}
+
 	/** Stops any step still running and forgets the file. */
 	clear() {
 		this.#controller?.abort();

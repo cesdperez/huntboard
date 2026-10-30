@@ -15,7 +15,9 @@
 	// Pages that do not poll would otherwise keep the offline notice after loading fine. A failed
 	// load offline also lands on the error page, so that says nothing about the connection.
 	afterNavigate(() => {
-		if (!page.error) connection.online = true;
+		if (page.error) return;
+		connection.online = true;
+		connection.stale = false;
 	});
 
 	// The server sets these on <html>. Client-side navigation keeps them in step.
