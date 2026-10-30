@@ -107,6 +107,8 @@ export async function markDone(
 			return error(409, conflictMessage(result.claim));
 		case 'media-taken':
 			return error(409, MEDIA_TAKEN);
+		case 'team-gone':
+			return error(404, DEAD_LINK_MESSAGE);
 		case 'not-found':
 			return error(404, CHALLENGE_GONE);
 	}
@@ -144,6 +146,8 @@ export async function requestMediaUpload(
 			return error(400, TEAM_MEDIA_FULL);
 		case 'game-bytes':
 			return error(400, GAME_MEDIA_FULL);
+		case 'team-gone':
+			return error(404, DEAD_LINK_MESSAGE);
 	}
 	return { status: 200, result: { kind: 'media-upload', key, ...target } };
 }

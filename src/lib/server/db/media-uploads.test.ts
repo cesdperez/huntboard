@@ -62,6 +62,13 @@ describe('recordMediaUpload', () => {
 		);
 		expect(await record(rats, 'a', 100)).toBe('recorded');
 	});
+
+	it('reports a team deleted since its link was checked', async () => {
+		const gone = await seedTeam(db, game.id, { name: 'Gone' });
+		await db.prepare('DELETE FROM team WHERE id = ?').bind(gone.id).run();
+
+		expect(await record(gone, 'a', 10)).toBe('team-gone');
+	});
 });
 
 describe('isTeamUpload', () => {

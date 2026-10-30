@@ -170,6 +170,13 @@ describe('markClaim', () => {
 		});
 	});
 
+	it('reports a team deleted since its link was checked', async () => {
+		const gone = await seedTeam(db, game.id, { name: 'Gone' });
+		await db.prepare('DELETE FROM team WHERE id = ?').bind(gone.id).run();
+
+		expect(await mark(gone.id, swim.id)).toEqual({ status: 'team-gone' });
+	});
+
 	it('never takes the id of an undone claim, which a judge page not yet refreshed may still send', async () => {
 		const undone = await seedClaim(db, rats.id, swim.id);
 		await undoClaim(db, rats.id, undone.id);

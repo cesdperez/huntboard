@@ -26,22 +26,24 @@ export type MarkClaimResult =
 	| { status: 'conflict'; claim: ClaimRow }
 	/** Another claim, of any team and status, already has this media key. */
 	| { status: 'media-taken' }
+	/** The team was deleted after its link was checked. */
+	| { status: 'team-gone' }
 	| { status: 'not-found' };
 
 /** Adds a pending claim, unless the team already has an active one on that challenge. */
 export async function markClaim(db: D1Database, claim: NewClaim): Promise<MarkClaimResult> {
 	let marked: D1Result<ClaimRow>;
 	let active: D1Result<ClaimRow>;
+	let team: D1Result<ClaimRow>;
 	try {
-		[marked, active] = await db.batch<ClaimRow>(markStatements(db, claim));
+		[marked, active, team] = await db.batch<ClaimRow>(markStatements(db, claim));
 	} catch (error) {
 		if (isMediaKeyTaken(error)) return { status: 'media-taken' };
 		throw error;
 	}
 	if (marked.results[0]) return { status: 'marked', claim: marked.results[0] };
-	return active.results[0]
-		? { status: 'conflict', claim: active.results[0] }
-		: { status: 'not-found' };
+	if (active.results[0]) return { status: 'conflict', claim: active.results[0] };
+	return team.results[0] ? { status: 'not-found' } : { status: 'team-gone' };
 }
 
 // One batch is one transaction: the SELECT must see the claim the INSERT ran into, even if
@@ -52,15 +54,17 @@ function markStatements(db: D1Database, claim: NewClaim): D1PreparedStatement[] 
 		db
 			.prepare(
 				`INSERT INTO claim (id, team_id, challenge_id, status, note, marked_by, media_key)
-				SELECT ${nextId('claim')}, ?, id, 'pending', ?, ?, ? FROM challenge WHERE id = ? AND game_id = ?
+				SELECT ${nextId('claim')}, team.id, challenge.id, 'pending', ?1, ?2, ?3
+				FROM team, challenge
+				WHERE team.id = ?4 AND team.game_id = ?6 AND challenge.id = ?5 AND challenge.game_id = ?6
 				ON CONFLICT (team_id, challenge_id) WHERE status IN ('pending', 'scored') DO NOTHING
 				RETURNING *`
 			)
 			.bind(
-				claim.teamId,
 				claim.note,
 				claim.markedBy,
 				claim.mediaKey,
+				claim.teamId,
 				claim.challengeId,
 				claim.gameId
 			),
@@ -68,7 +72,10 @@ function markStatements(db: D1Database, claim: NewClaim): D1PreparedStatement[] 
 			.prepare(
 				`SELECT * FROM claim WHERE team_id = ? AND challenge_id = ? AND status IN ('pending', 'scored')`
 			)
-			.bind(claim.teamId, claim.challengeId)
+			.bind(claim.teamId, claim.challengeId),
+		// The INSERT also needs the team, so a team deleted after its link was checked reads as gone
+		// instead of failing the foreign key.
+		db.prepare('SELECT 1 FROM team WHERE id = ? AND game_id = ?').bind(claim.teamId, claim.gameId)
 	];
 }
 
