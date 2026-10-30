@@ -40,7 +40,8 @@
 		{ token: '--surface', use: 'Sheets, rows, inputs' },
 		{ token: '--ink', use: 'Text, outlines, icons' },
 		{ token: '--muted', use: 'Secondary text, open markers' },
-		{ token: '--line', use: 'Dividers, input borders' },
+		{ token: '--line', use: 'Dividers' },
+		{ token: '--input-line', use: 'Input borders' },
 		{ token: '--danger', use: 'Reject, penalties' },
 		{ token: '--scrim', use: 'Overlay behind sheets' }
 	];
@@ -486,7 +487,7 @@
 					<span class="type-secondary">Note for the judge</span>
 					<textarea
 						rows="3"
-						class="w-full rounded-control border-2 border-line bg-surface p-3 text-ink"
+						class="w-full rounded-control border-2 border-input-line bg-surface p-3 text-ink"
 						placeholder="Photo sent at 17:02"></textarea>
 				</label>
 				<Sheet.Footer>

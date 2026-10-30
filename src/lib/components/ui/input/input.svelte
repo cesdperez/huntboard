@@ -15,7 +15,7 @@
 	bind:value
 	data-slot="input"
 	class={cn(
-		'min-h-touch w-full min-w-0 rounded-control border-2 border-line bg-surface px-3 text-ink placeholder:text-muted focus-visible:border-ink disabled:opacity-50 aria-invalid:border-danger',
+		'min-h-touch w-full min-w-0 rounded-control border-2 border-input-line bg-surface px-3 text-ink placeholder:text-muted focus-visible:border-ink disabled:opacity-50 aria-invalid:border-danger',
 		className
 	)}
 	{...restProps}

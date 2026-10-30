@@ -143,7 +143,7 @@
 									name="description"
 									rows="3"
 									value={current.description}
-									class="w-full rounded-control border-2 border-line bg-surface px-3 py-2 text-ink focus-visible:border-ink"
+									class="w-full rounded-control border-2 border-input-line bg-surface px-3 py-2 text-ink focus-visible:border-ink"
 								></textarea>
 							</div>
 							<div class="flex gap-3">
