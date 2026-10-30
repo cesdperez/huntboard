@@ -69,10 +69,8 @@ async function judge(
 ): Promise<JudgeOutcome> {
 	const from = data.get('from') === 'scored' ? 'scored' : 'pending';
 	const id = readId(data, 'claimId');
-	const teamId = readId(data, 'teamId');
-	const challengeId = readId(data, 'challengeId');
-	if (id === null || teamId === null || challengeId === null) return error(404, CLAIM_GONE);
-	const claim = { id, team_id: teamId, challenge_id: challengeId };
+	if (id === null) return error(404, CLAIM_GONE);
+	const claim = { id, team_id: readId(data, 'teamId'), challenge_id: readId(data, 'challengeId') };
 	return toOutcome(await judgeClaim(db, gameId, { claim, from, verdict, judgedBy }), CLAIM_GONE);
 }
 

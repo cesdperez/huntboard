@@ -52,6 +52,18 @@ describe('scoreClaim', () => {
 		});
 	});
 
+	it('still scores from a page loaded before forms carried the team and challenge', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id);
+
+		const outcome = await scoreClaim(
+			db,
+			game.id,
+			form({ claimId: String(claim.id), from: 'pending', points: '12', nickname: 'Alex' })
+		);
+
+		expect(outcome).toEqual({ status: 200, result: { kind: 'scored', points: 12 } });
+	});
+
 	it('says how many points a value outside the range became', async () => {
 		const claim = await seedClaim(db, rats.id, swim.id);
 

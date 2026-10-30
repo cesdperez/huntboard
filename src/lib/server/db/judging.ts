@@ -67,8 +67,11 @@ export type Verdict =
 	{ status: 'scored'; points: number } | { status: 'rejected'; reason: string | null };
 
 export interface Judgement {
-	/** As the judge saw it. A claim that now has another team or challenge is not found. */
-	claim: Pick<ClaimRow, 'id' | 'team_id' | 'challenge_id'>;
+	/**
+	 * As the judge saw it. A claim that now has another team or challenge is not found.
+	 * Team and challenge are null from a page loaded before its forms sent them.
+	 */
+	claim: { id: number; team_id: number | null; challenge_id: number | null };
 	/**
 	 * The state the judge saw. A pending claim is judged only while still pending, so the first
 	 * judge wins. A scored claim can be fixed or rejected while still scored, last write wins.
@@ -92,7 +95,7 @@ export async function judgeClaim(
 	gameId: number,
 	{ claim, from, verdict, judgedBy }: Judgement
 ): Promise<JudgeResult> {
-	const seen = `id = ? AND team_id = ? AND challenge_id = ? AND status = ?
+	const seen = `id = ? AND team_id = coalesce(?, team_id) AND challenge_id = coalesce(?, challenge_id) AND status = ?
 		AND team_id IN (SELECT id FROM team WHERE game_id = ?)`;
 	const seenValues = [claim.id, claim.team_id, claim.challenge_id, from, gameId];
 	const update =
@@ -120,7 +123,8 @@ export async function judgeClaim(
 		db
 			.prepare(
 				`SELECT claim.* FROM claim JOIN team ON team.id = claim.team_id
-				WHERE claim.id = ? AND claim.team_id = ? AND claim.challenge_id = ? AND team.game_id = ?`
+				WHERE claim.id = ? AND claim.team_id = coalesce(?, claim.team_id)
+					AND claim.challenge_id = coalesce(?, claim.challenge_id) AND team.game_id = ?`
 			)
 			.bind(claim.id, claim.team_id, claim.challenge_id, gameId)
 	]);
