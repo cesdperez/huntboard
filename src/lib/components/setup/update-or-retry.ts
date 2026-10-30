@@ -1,7 +1,7 @@
 import type { ActionResult } from '$app/forms';
 import { focusIfLost } from '#lib/client/focus.js';
 import { needsRetry } from '#lib/components/admin/admin-message.js';
-import { connection, refreshGameData } from '#lib/components/connection/index.js';
+import { refreshGameData, reportOnline } from '#lib/components/connection/index.js';
 import { RETRY } from '#lib/components/team/action-message.js';
 import { toast } from '#lib/components/toast/index.js';
 
@@ -25,7 +25,7 @@ export async function updateOrRetry(
 		return;
 	}
 	// Only an error result can come from a request that never reached the server.
-	if (result.type !== 'error') connection.online = true;
+	if (result.type !== 'error') reportOnline(true);
 	const focused = document.activeElement;
 	await update(options);
 	// After a success SvelteKit moves focus to the page top, as it does after a navigation.

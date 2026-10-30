@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import { connection } from '#lib/components/connection/index.js';
+	import { connection, reportOnline } from '#lib/components/connection/index.js';
 	import { resolveAppearance, supportedModes, themeImages } from '#lib/themes/index.js';
 	import type { LayoutProps } from './$types';
 
@@ -16,7 +16,7 @@
 	// load offline also lands on the error page, so that says nothing about the connection.
 	afterNavigate(() => {
 		if (page.error) return;
-		connection.online = true;
+		reportOnline(true);
 		connection.stale = false;
 	});
 

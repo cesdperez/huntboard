@@ -2,14 +2,14 @@
 	import RefreshCwOffIcon from '@lucide/svelte/icons/refresh-cw-off';
 	import WifiOffIcon from '@lucide/svelte/icons/wifi-off';
 	import { cn } from '#lib/utils.js';
-	import { checkConnection, connection } from './connection.svelte.js';
+	import { checkConnection, connection, reportOnline } from './connection.svelte.js';
 
 	let { class: className }: { class?: string } = $props();
 </script>
 
 <!-- Pages that do not poll still clear the notice once the browser is back online. -->
 <svelte:window
-	onoffline={() => (connection.online = false)}
+	onoffline={() => reportOnline(false)}
 	ononline={() => void checkConnection()}
 />
 

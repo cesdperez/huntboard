@@ -97,19 +97,36 @@ describe('startPolling', () => {
 		expect(refresh).toHaveBeenCalledTimes(1);
 	});
 
-	it('skips a refresh while the previous one is still running', async () => {
+	it('runs one follow-up refresh for events that arrive while a refresh is running', async () => {
 		let finish = () => {};
 		refresh.mockImplementation(() => new Promise<void>((resolve) => (finish = resolve)));
 		start();
 
 		win.dispatchEvent(new Event('focus'));
+		await vi.advanceTimersByTimeAsync(0);
+		win.dispatchEvent(new Event('online'));
 		doc.set('visible');
 		await vi.advanceTimersByTimeAsync(0);
 		expect(refresh).toHaveBeenCalledTimes(1);
 
 		finish();
-		await vi.advanceTimersByTimeAsync(15_000);
+		await vi.advanceTimersByTimeAsync(0);
 		expect(refresh).toHaveBeenCalledTimes(2);
+		finish();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(refresh).toHaveBeenCalledTimes(2);
+	});
+
+	it('skips an interval tick while a refresh is still running', async () => {
+		let finish = () => {};
+		refresh.mockImplementation(() => new Promise<void>((resolve) => (finish = resolve)));
+		start();
+
+		await vi.advanceTimersByTimeAsync(30_000);
+		finish();
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(refresh).toHaveBeenCalledTimes(1);
 	});
 
 	it('keeps polling after a refresh fails', async () => {

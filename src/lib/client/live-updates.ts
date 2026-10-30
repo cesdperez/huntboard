@@ -9,7 +9,8 @@ export interface PollingOptions {
 
 /**
  * Calls refresh every interval while the page is visible, and at once when it shows again, gets
- * focus or comes back online. Never runs two refreshes at a time. Returns a function that stops it.
+ * focus or comes back online. Never runs two refreshes at a time: such an event during a refresh
+ * runs one more after it. Returns a function that stops it.
  */
 export function startPolling(
 	refresh: () => Promise<unknown>,
@@ -21,17 +22,20 @@ export function startPolling(
 ): () => void {
 	let timer: ReturnType<typeof setInterval> | undefined;
 	let running = false;
+	let followUp = false;
 
 	async function poll() {
 		if (running) return;
 		running = true;
-		try {
-			await refresh();
-		} catch {
-			// Offline or a failed load: the next tick tries again.
-		} finally {
-			running = false;
-		}
+		do {
+			followUp = false;
+			try {
+				await refresh();
+			} catch {
+				// Offline or a failed load: the next tick tries again.
+			}
+		} while (followUp);
+		running = false;
 	}
 
 	function schedule() {
@@ -41,7 +45,10 @@ export function startPolling(
 
 	function refreshNow() {
 		schedule();
-		if (doc.visibilityState === 'visible') void poll();
+		if (doc.visibilityState !== 'visible') return;
+		// The running refresh may have read the server before the change this event signals.
+		if (running) followUp = true;
+		else void poll();
 	}
 
 	doc.addEventListener('visibilitychange', refreshNow);
@@ -51,6 +58,7 @@ export function startPolling(
 
 	return () => {
 		clearInterval(timer);
+		followUp = false;
 		doc.removeEventListener('visibilitychange', refreshNow);
 		win.removeEventListener('focus', refreshNow);
 		win.removeEventListener('online', refreshNow);
