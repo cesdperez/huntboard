@@ -21,7 +21,7 @@ const ORIGIN = 'https://huntboard.example';
 
 beforeEach(() => {
 	db = createTestDb();
-	send = vi.fn<SendEmail>().mockResolvedValue(true);
+	send = vi.fn<SendEmail>().mockResolvedValue('sent');
 });
 
 async function sent(
@@ -94,7 +94,7 @@ describe('requestSignIn', () => {
 	});
 
 	it('drops the request when the email cannot be sent', async () => {
-		send.mockResolvedValue(false);
+		send.mockResolvedValue('failed');
 		const result = await requestSignIn(
 			db,
 			send,
@@ -103,6 +103,26 @@ describe('requestSignIn', () => {
 		);
 
 		expect(result).toMatchObject({ kind: 'error', status: 502 });
+		const { results } = await db.prepare('SELECT id FROM sign_in_request').all();
+		expect(results).toEqual([]);
+	});
+
+	it.each([
+		[
+			'daily-quota',
+			'We have sent all the sign-in emails we can for today. Try again after 00:00 UTC.'
+		],
+		['monthly-quota', 'We have sent all the sign-in emails we can for this month. Try again later.']
+	] as const)('says when to try again after a %s refusal', async (outcome, message) => {
+		send.mockResolvedValue(outcome);
+		const result = await requestSignIn(
+			db,
+			send,
+			{ email: 'sam@example.com', next: null, origin: ORIGIN, earlierRequestIds: [] },
+			NOW
+		);
+
+		expect(result).toEqual({ kind: 'error', status: 503, message });
 		const { results } = await db.prepare('SELECT id FROM sign_in_request').all();
 		expect(results).toEqual([]);
 	});

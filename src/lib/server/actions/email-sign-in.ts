@@ -29,7 +29,7 @@ export function emailSignInActions(env: SignInEnv, preview: boolean) {
 		if (!resend && !preview) {
 			return fail(503, { email, error: 'Email sign-in is not set up here.' });
 		}
-		const send: SendEmail = resend ?? (async () => true);
+		const send: SendEmail = resend ?? (async () => 'sent');
 
 		const result = await requestSignIn(env.DB, send, {
 			email,

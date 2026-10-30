@@ -184,7 +184,7 @@ Sign-in needs a sending domain in Resend first (see [Sign-in email](#sign-in-ema
 
 ### Sign-in email
 
-Sign-in emails go through [Resend](https://resend.com). Its free plan sends 3,000 emails a month and 100 a day.
+Sign-in emails go through [Resend](https://resend.com). Its free plan sends 3,000 emails a month and 100 a day. Once a quota is spent, Resend refuses the email and the sign-in form says to try again after 00:00 UTC, or later for the monthly one.
 
 1. Create a Resend account and an API key with sending access.
 2. Add a sending domain on a zone you own, for example `send.example.com`, and add the DNS records Resend lists. Wait until Resend shows it as verified.
