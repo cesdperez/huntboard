@@ -16,7 +16,9 @@
 
 {#snippet organisers()}
 	<p class="mt-6 type-secondary">
-		Organising a hunt? <a href={resolve('/games')} class="font-semibold text-ink underline"
+		Organising a hunt? <a
+			href={resolve('/games')}
+			class="inline-flex min-h-touch min-w-touch items-center font-semibold text-ink underline"
 			>Sign in</a
 		>
 	</p>
