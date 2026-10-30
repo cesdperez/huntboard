@@ -76,7 +76,7 @@
 		value={url}
 		readonly
 		onfocus={(event) => event.currentTarget.select()}
-		class="min-h-touch w-full min-w-0 truncate rounded-control border-2 border-line bg-surface px-3 text-ink focus-visible:border-ink"
+		class="min-h-touch w-full min-w-0 truncate rounded-control border-2 border-input-line bg-surface px-3 text-ink focus-visible:border-ink"
 	/>
 
 	<div class="flex flex-col">

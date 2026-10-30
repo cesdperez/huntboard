@@ -94,7 +94,7 @@
 			bind:value={text}
 			aria-describedby="challenge-text-hint"
 			aria-invalid={previewResult?.error && !preview ? true : undefined}
-			class="min-h-48 w-full rounded-control border-2 border-line bg-surface px-3 py-2 text-ink placeholder:text-muted focus-visible:border-ink aria-invalid:border-danger"
+			class="min-h-48 w-full rounded-control border-2 border-input-line bg-surface px-3 py-2 text-ink placeholder:text-muted focus-visible:border-ink aria-invalid:border-danger"
 			placeholder={EXAMPLE}></textarea>
 	</div>
 	<Button type="submit" disabled={pending || text.trim() === ''}>Preview</Button>
