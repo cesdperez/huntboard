@@ -8,11 +8,21 @@ export interface TeamLink {
 	game: GameRow;
 }
 
-/** Gives the game a new admin token. The old admin link stops working at once. */
-export async function rotateAdminToken(db: D1Database, gameId: number): Promise<string> {
-	const token = generateToken();
-	await db.prepare('UPDATE game SET admin_token = ? WHERE id = ?').bind(token, gameId).run();
-	return token;
+/** Moves the game to a new admin token. The old admin link stops working at once. False when another game has it. */
+export async function rotateAdminToken(
+	db: D1Database,
+	gameId: number,
+	token: string
+): Promise<boolean> {
+	const moved = await db
+		.prepare(
+			`UPDATE game SET admin_token = ?1
+			WHERE id = ?2 AND NOT EXISTS (SELECT 1 FROM game WHERE admin_token = ?1)
+			RETURNING id`
+		)
+		.bind(token, gameId)
+		.first<number>('id');
+	return moved !== null;
 }
 
 /** Gives the game a new scoreboard token. The old scoreboard link stops working at once. */
