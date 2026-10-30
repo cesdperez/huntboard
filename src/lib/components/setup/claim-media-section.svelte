@@ -18,9 +18,9 @@
 		if (!confirm(warning)) return cancel();
 		pending = true;
 		return async (settled) => {
-			await updateOrRetry(settled);
+			const result = await updateOrRetry(settled, { tookEffect: () => mediaCount === 0 });
 			pending = false;
-			if (settled.result.type === 'success') toast.show('Media deleted');
+			if (result.type === 'success') toast.show('Media deleted');
 		};
 	};
 </script>

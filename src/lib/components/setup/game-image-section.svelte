@@ -9,6 +9,7 @@
 	import { GAME_IMAGE_SPEC, resizeImage } from '#lib/client/image-resize.js';
 	import { IMAGE_LABEL_MAX_LENGTH, imageSrc } from '#lib/domain/images.js';
 	import type { GameRow } from '#lib/server/db/types.js';
+	import { gameImageSaved } from './setup-checks.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { game }: { game: GameRow } = $props();
@@ -24,6 +25,7 @@
 	const error = $derived(browserError ?? result?.error ?? null);
 
 	const save: SubmitFunction = async ({ formData, cancel }) => {
+		const before = game;
 		browserError = null;
 		submitting = true;
 		const file = formData.get('image');
@@ -37,9 +39,12 @@
 			formData.set('image', resized.image);
 		}
 		return async (settled) => {
-			await updateOrRetry(settled, { reset: false });
+			const result = await updateOrRetry(settled, {
+				reset: false,
+				tookEffect: () => gameImageSaved(before, game, formData) && { gameImage: { saved: true } }
+			});
 			submitting = false;
-			if (settled.result.type === 'success' && fileInput) fileInput.value = '';
+			if (result.type === 'success' && fileInput) fileInput.value = '';
 		};
 	};
 
@@ -49,9 +54,9 @@
 		}
 		submitting = true;
 		return async (settled) => {
-			await updateOrRetry(settled);
+			const result = await updateOrRetry(settled, { tookEffect: () => game.image_key === null });
 			submitting = false;
-			if (settled.result.type === 'success') toast.show('Image removed');
+			if (result.type === 'success') toast.show('Image removed');
 		};
 	};
 </script>

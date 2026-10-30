@@ -11,6 +11,7 @@
 	import { plural } from '#lib/format/plural.js';
 	import type { ChallengeWithClaimCount } from '#lib/server/db/types.js';
 	import { groupBySection } from '#lib/format/group-by-section.js';
+	import { challengeSaved } from './setup-checks.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { challenges }: { challenges: ChallengeWithClaimCount[] } = $props();
@@ -20,11 +21,12 @@
 	let editingId = $state<number | null>(null);
 	let pending = $state(false);
 
-	const submit: SubmitFunction = () => {
+	const submit: SubmitFunction = ({ formData }) => {
 		pending = true;
 		return async (settled) => {
-			const { result } = settled;
-			await updateOrRetry(settled);
+			const result = await updateOrRetry(settled, {
+				tookEffect: () => challengeSaved(challenges, formData)
+			});
 			pending = false;
 			if (result.type === 'success') void stopEditing();
 		};

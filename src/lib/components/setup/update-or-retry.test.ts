@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
 	refreshGameData: vi.fn(async () => {}),
 	reportOnline: vi.fn(),
 	show: vi.fn(),
-	focusIfLost: vi.fn((_target: unknown) => {})
+	focusIfLost: vi.fn<(target: unknown) => void>()
 }));
 
 vi.mock('$app/forms', () => ({ applyAction: mocks.applyAction }));

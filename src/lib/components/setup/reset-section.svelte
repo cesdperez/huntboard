@@ -4,9 +4,14 @@
 	import { isolate } from '#lib/format/text.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { GameRow } from '#lib/server/db/types.js';
+	import { gameIsBlank } from './setup-checks.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
-	let { game }: { game: GameRow } = $props();
+	let {
+		game,
+		teamCount,
+		challengeCount
+	}: { game: GameRow; teamCount: number; challengeCount: number } = $props();
 
 	let pending = $state(false);
 
@@ -18,9 +23,11 @@
 		}
 		pending = true;
 		return async (settled) => {
-			await updateOrRetry(settled);
+			const result = await updateOrRetry(settled, {
+				tookEffect: () => gameIsBlank(game, teamCount, challengeCount)
+			});
 			pending = false;
-			if (settled.result.type === 'success') toast.show('Game reset');
+			if (result.type === 'success') toast.show('Game reset');
 		};
 	};
 </script>

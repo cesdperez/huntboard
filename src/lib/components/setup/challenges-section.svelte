@@ -19,6 +19,6 @@
 
 	<!-- Remounts when the list empties, as after a reset, so the example comes back. -->
 	{#key challenges.length === 0}
-		<ChallengeImport hasChallenges={challenges.length > 0} />
+		<ChallengeImport hasChallenges={challenges.length > 0} {challenges} />
 	{/key}
 </section>

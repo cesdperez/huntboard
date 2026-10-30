@@ -34,5 +34,9 @@
 	<ChallengesSection game={data.game} challenges={data.challenges} />
 	<LinksSection game={data.game} teams={data.teams} />
 	<ClaimMediaSection game={data.game} mediaCount={data.mediaCount} />
-	<ResetSection game={data.game} />
+	<ResetSection
+		game={data.game}
+		teamCount={data.teams.length}
+		challengeCount={data.challenges.length}
+	/>
 </div>
