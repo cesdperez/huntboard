@@ -13,6 +13,10 @@ export class InPlaceForm {
 
 	show = () => this.#set(true);
 	hide = () => this.#set(false);
+	/** Closes without moving focus, for an action whose result places focus itself. */
+	dismiss = () => {
+		this.open = false;
+	};
 
 	async #set(open: boolean) {
 		this.open = open;

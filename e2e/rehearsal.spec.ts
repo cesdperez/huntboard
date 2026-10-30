@@ -156,6 +156,9 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await scoreQuick(admin, 'Canal Rats', 'Make a birthday card', 20);
 		await scoreQuick(admin, 'Canal Rats', 'Swim in a fountain', 25);
 		await reject(admin, 'Canal Rats', 'Get a free dessert from a restaurant', 'No proof received');
+		await expect(
+			queueItem(admin, 'Night Owls', 'Deliver a free Marktplaats item by bike')
+		).toBeFocused();
 		await scoreTyped(admin, 'Night Owls', 'Deliver a free Marktplaats item by bike', 77);
 		await scoreQuick(admin, 'Night Owls', 'Build a human pyramid', 20);
 		await scoreQuick(admin, 'Bike Thieves', 'Order a drink in Dutch', 5);
@@ -198,7 +201,18 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await expect(toast(admin)).toHaveText('Scored 20');
 		await expect(
 			admin.getByRole('button', { name: 'Tulip Squad, Find a canal cat: Scored 20 points' })
-		).toBeVisible();
+		).toBeFocused();
+
+		await admin
+			.getByRole('button', { name: 'Canal Rats, Make a birthday card: Scored 20 points' })
+			.click();
+		await sheet
+			.getByRole('button', { name: 'Score 20 for Canal Rats, Make a birthday card' })
+			.click();
+		await expect(toast(admin)).toHaveText('Scored 20');
+		await expect(
+			admin.getByRole('button', { name: 'Canal Rats, Make a birthday card: Scored 20 points' })
+		).toBeFocused();
 	});
 
 	await test.step('the admin adds a bonus and a penalty', async () => {

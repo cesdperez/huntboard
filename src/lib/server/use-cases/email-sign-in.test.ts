@@ -24,16 +24,21 @@ beforeEach(() => {
 	send = vi.fn<SendEmail>().mockResolvedValue('sent');
 });
 
+function minutesAfter(minutes: number, start = NOW) {
+	return new Date(start.getTime() + minutes * 60_000);
+}
+
 async function sent(
 	email = 'sam@example.com',
 	next: string | null = '/new',
-	earlierRequestIds: string[] = []
+	earlierRequestIds: string[] = [],
+	now = NOW
 ) {
 	const result = await requestSignIn(
 		db,
 		send,
 		{ email, next, origin: ORIGIN, earlierRequestIds },
-		NOW
+		now
 	);
 	if (result.kind !== 'sent') throw new Error(`Expected a sent email, got ${result.message}`);
 	return { ...result, token: new URL(result.link).searchParams.get('token') ?? '' };
@@ -80,17 +85,35 @@ describe('requestSignIn', () => {
 		expect(result).toEqual({ kind: 'error', status: 400, message });
 	});
 
-	it('limits how many emails one address gets in a window', async () => {
+	it('limits how many emails one address gets in a window, and says when the next one can go', async () => {
+		for (let i = 0; i < MAX_REQUESTS_PER_WINDOW; i++)
+			await sent('sam@example.com', null, [], minutesAfter(i));
+
+		const result = await requestSignIn(
+			db,
+			send,
+			{ email: 'sam@example.com', next: null, origin: ORIGIN, earlierRequestIds: [] },
+			minutesAfter(3)
+		);
+		expect(result).toEqual({
+			kind: 'error',
+			status: 429,
+			message:
+				'We sent several emails to this address already. Open the link in one of them, or ask for a new email in 12 minutes.'
+		});
+		expect(send).toHaveBeenCalledTimes(MAX_REQUESTS_PER_WINDOW);
+	});
+
+	it('counts the wait up to a whole minute', async () => {
 		for (let i = 0; i < MAX_REQUESTS_PER_WINDOW; i++) await sent();
 
 		const result = await requestSignIn(
 			db,
 			send,
 			{ email: 'sam@example.com', next: null, origin: ORIGIN, earlierRequestIds: [] },
-			NOW
+			minutesAfter(14.5)
 		);
-		expect(result).toMatchObject({ kind: 'error', status: 429 });
-		expect(send).toHaveBeenCalledTimes(MAX_REQUESTS_PER_WINDOW);
+		expect(result).toMatchObject({ message: expect.stringMatching(/in 1 minute\.$/) });
 	});
 
 	it('drops the request when the email cannot be sent', async () => {
@@ -205,12 +228,14 @@ describe('finishWithCode', () => {
 		});
 	});
 
-	it('stops accepting codes after too many wrong ones, and says so', async () => {
-		const { requestId, code } = await sent();
+	it('stops accepting codes after too many wrong ones, and points to the link', async () => {
+		await findOrCreateUser(db, 'sam@example.com', 'Sam');
+		const { requestId, code, token } = await sent();
 		const wrong = code === '000000' ? '111111' : '000000';
 		const tooMany = {
 			kind: 'error',
-			message: 'Too many wrong codes were tried, so the code no longer works. Ask for a new email.',
+			message:
+				'Too many wrong codes were tried, so the code no longer works. Open the link in the email, or ask for a new email.',
 			needsNewEmail: true
 		};
 
@@ -223,6 +248,26 @@ describe('finishWithCode', () => {
 		}
 		expect(await finishWithCode(db, [requestId], wrong, '', NOW)).toEqual(tooMany);
 		expect(await finishWithCode(db, [requestId], code, '', NOW)).toEqual(tooMany);
+		expect(await finishWithLink(db, token, '', NOW)).toMatchObject({ kind: 'signed-in' });
+	});
+
+	it('says when a new email can go once the codes run out and the address has had its emails', async () => {
+		let requestIds: string[] = [];
+		for (let i = 0; i < MAX_REQUESTS_PER_WINDOW; i++) {
+			({ requestIds } = await sent('sam@example.com', '/new', requestIds, minutesAfter(i)));
+		}
+
+		let result;
+		for (let i = 0; i < MAX_CODE_ATTEMPTS; i++) {
+			result = await finishWithCode(db, requestIds, 'wrong', '', minutesAfter(5));
+		}
+
+		expect(result).toEqual({
+			kind: 'error',
+			message:
+				'Too many wrong codes were tried, so the code no longer works. Open the link in any of the emails, or ask for a new email in 10 minutes.',
+			needsNewEmail: true
+		});
 	});
 
 	it('asks for a new email once the code has expired', async () => {

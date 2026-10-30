@@ -32,7 +32,31 @@ describe('rejection', () => {
 			});
 
 		expect(rejection(upload(), { dev: true })).toBeNull();
-		expect(rejection(upload(), { dev: false })?.status).toBe(413);
+		expect(rejection(upload(), { dev: false })?.status).toBe(404);
+	});
+
+	it.each(['GET', 'HEAD', 'OPTIONS', 'PUT', 'POST', 'DELETE'])(
+		'answers %s on every dev path with 404 outside dev',
+		(method) => {
+			for (const path of [
+				'/dev',
+				'/dev/',
+				'/dev/design',
+				'/dev/sign-in?name=x',
+				'/dev/media/1/a.mp4'
+			]) {
+				const request = new Request(`https://huntboard.example${path}`, {
+					method,
+					headers: { 'Content-Length': '0' }
+				});
+				expect(rejection(request, { dev: false })?.status).toBe(404);
+				expect(rejection(request, { dev: true })).toBeNull();
+			}
+		}
+	);
+
+	it('leaves paths that only start like dev alone', () => {
+		expect(rejection(new Request('https://huntboard.example/devices'))).toBeNull();
 	});
 
 	it('requires a declared length on bodies', () => {

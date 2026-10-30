@@ -55,7 +55,8 @@
 		const send = action.submit(
 			(result) => {
 				toast.show(result?.kind === 'scored' ? `Scored ${result.points}` : 'Rejected');
-				void rejecting.hide();
+				// The queue moves focus to the next claim, and the grid sheet back to its cell.
+				rejecting.dismiss();
 				ondone?.();
 			},
 			(message) => onfailure?.(message),

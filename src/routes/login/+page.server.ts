@@ -9,7 +9,7 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	const next = nextPath(url.searchParams.get('next'));
 	if (await getSignedInUser(cookies)) redirect(303, next);
-	return { next, pendingEmail: await pendingEmail(env, cookies) };
+	return { pendingEmail: await pendingEmail(env, cookies) };
 };
 
 export const actions = emailSignInActions(env, dev) satisfies Actions;

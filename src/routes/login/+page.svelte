@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import { page } from '$app/state';
 	import DisplayNameField from '#lib/components/account/display-name-field.svelte';
 	import { AppBar, PageBanner } from '#lib/components/event/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -18,7 +19,8 @@
 	const codeResult = $derived(form && 'code' in form ? form : null);
 	const codeEnded = $derived(codeResult?.needsNewEmail ?? false);
 	const sentTo = $derived(otherEmail || codeEnded ? null : (form?.sent ?? data.pendingEmail));
-	const requestAction = $derived(`?/request&next=${encodeURIComponent(data.next)}`);
+	// On the current query, so the result lands on this page instead of navigating away from it.
+	const query = $derived(page.url.search.replace(/^\?/, '&'));
 	const codeError = $derived(codeEnded ? null : (codeResult?.error ?? null));
 	const nameError = $derived(codeEnded ? null : (codeResult?.nameError ?? null));
 	const emailError = $derived(
@@ -29,6 +31,7 @@
 
 	let emailField = $state<HTMLInputElement | null>(null);
 	let checkHeading = $state<HTMLElement | null>(null);
+	let codeField = $state<HTMLInputElement | null>(null);
 	let nameField = $state<HTMLInputElement | null>(null);
 
 	/** Each step replaces the form that had focus, which would otherwise fall back to the page. */
@@ -36,9 +39,12 @@
 		const before = step;
 		// After the change: SvelteKit resets focus once it applies a successful result.
 		await change();
-		if (step === before) return;
 		await tick();
-		({ email: emailField, code: checkHeading, name: nameField })[step]?.focus();
+		if (step !== before) {
+			({ email: emailField, code: checkHeading, name: nameField })[step]?.focus();
+		} else if (emailError) emailField?.focus();
+		else if (codeError) codeField?.focus();
+		else if (nameError) nameField?.focus();
 	}
 
 	const submitCode: SubmitFunction =
@@ -101,10 +107,16 @@
 				</div>
 			{/if}
 
-			<form method="POST" action="?/code" class="flex flex-col gap-4" use:enhance={submitCode}>
+			<form
+				method="POST"
+				action="?/code{query}"
+				class="flex flex-col gap-4"
+				use:enhance={submitCode}
+			>
 				<div class="flex flex-col gap-2">
 					<Label for="code">Code</Label>
 					<Input
+						bind:ref={codeField}
 						id="code"
 						name="code"
 						required
@@ -136,7 +148,7 @@
 	{:else}
 		<form
 			method="POST"
-			action={requestAction}
+			action="?/request{query}"
 			class="flex flex-col gap-4"
 			use:enhance={submitEmail}
 		>

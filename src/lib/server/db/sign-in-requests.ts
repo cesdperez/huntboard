@@ -30,6 +30,22 @@ export async function insertSignInRequest(
 	return result.meta.changes > 0;
 }
 
+/** The oldest of the address's requests made after `since`, and how many there are. */
+export async function requestsSince(
+	db: D1Database,
+	email: string,
+	since: string
+): Promise<{ count: number; oldest: string | null }> {
+	const row = await db
+		.prepare(
+			`SELECT COUNT(*) AS count, MIN(created_at) AS oldest FROM sign_in_request
+			WHERE email = ? AND created_at > ?`
+		)
+		.bind(email, since)
+		.first<{ count: number; oldest: string | null }>();
+	return row ?? { count: 0, oldest: null };
+}
+
 /** The unexpired requests among `ids`, newest first. */
 export async function findRequests(
 	db: D1Database,

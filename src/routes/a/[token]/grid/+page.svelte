@@ -14,6 +14,7 @@
 	// The ids outlive the open flag, so the sheet keeps its content while it slides away.
 	let selected = $state<{ teamId: number; challengeId: number } | null>(null);
 	let sheetOpen = $state(false);
+	let opener = $state<HTMLElement | null>(null);
 	const selectedRow = $derived(data.rows.find((row) => row.id === selected?.challengeId) ?? null);
 	const selectedTeam = $derived(data.teams.find((team) => team.id === selected?.teamId) ?? null);
 
@@ -43,8 +44,9 @@
 		}
 	}
 
-	function select(teamId: number, challengeId: number) {
+	function select(teamId: number, challengeId: number, cell: HTMLElement) {
 		selected = { teamId, challengeId };
+		opener = cell;
 		sheetOpen = true;
 	}
 </script>
@@ -120,7 +122,7 @@
 										type="button"
 										class="inline-flex size-14 items-center justify-center"
 										aria-label="{team.name}, {row.title}: {markerLabel(state, points)}"
-										onclick={() => select(cell.teamId, row.id)}
+										onclick={(event) => select(cell.teamId, row.id, event.currentTarget)}
 									>
 										<Marker {state} {points} size="grid" aria-hidden="true" />
 									</button>
@@ -138,6 +140,7 @@
 	row={selectedRow}
 	team={selectedTeam}
 	open={sheetOpen}
+	{opener}
 	onclose={() => (sheetOpen = false)}
 />
 
