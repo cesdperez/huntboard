@@ -196,6 +196,7 @@ These pages belong to no game, so they wear the default theme.
 - A new address learns it is new only after a right code or from the link's page. Then "Your name" appears above the button, and the link's button reads "Create account".
 - The link opens a page that names the address and waits for "Sign in". An expired link says so and offers "Ask for a new email".
 - The dev server sends no email. It shows the link and code in a dashed box under the address instead.
+- The email wears the default theme, light and dark, in a 560px card: the app bar with "Huntboard", the banner with "Sign in" in `--font-banner` after a magenta control ring and the address under it, a "Sign in" button in `--action`, then the code in `--font-score` in a bordered box. How long both work and the link spelled out close it in `--muted`. A plain-text part carries the same words. Email clients ignore CSS variables, so `src/lib/server/email/sign-in-email.ts` repeats the Contour colours: change them there with the theme. `/dev/email` previews it.
 - My games: "New game" as the primary button, then the games, newest first, each opening its admin link. "Sign out" comes last, as a ghost button.
 - Sign-in errors show in place, above the button they are about.
 

@@ -54,7 +54,8 @@ describe('requestSignIn', () => {
 		expect(send).toHaveBeenCalledWith({
 			to: 'sam@example.com',
 			subject: 'Sign in to Huntboard',
-			text: expect.stringContaining(link)
+			text: expect.stringContaining(link),
+			html: expect.stringContaining(link)
 		});
 		expect(send.mock.calls[0][0].text).toContain(code);
 	});

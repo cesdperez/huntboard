@@ -13,12 +13,7 @@ import {
 } from '../db/sign-in-requests.js';
 import type { SignInRequestRow } from '../db/types.js';
 import { findOrCreateUser, findUserByEmail } from '../db/users.js';
-
-export interface SignInEmail {
-	to: string;
-	subject: string;
-	text: string;
-}
+import { signInEmail, type SignInEmail } from '../email/sign-in-email.js';
 
 /** How a send went. A spent quota comes back only when the provider resets it, not on a retry. */
 export type SendOutcome = 'sent' | 'failed' | 'daily-quota' | 'monthly-quota';
@@ -128,7 +123,7 @@ export async function requestSignIn(
 	}
 
 	const link = `${input.origin}/login/verify?token=${token}`;
-	const outcome = await send(signInEmail(email, link, code));
+	const outcome = await send(signInEmail(email, link, code, SIGN_IN_MINUTES));
 	if (outcome !== 'sent') {
 		await takeRequest(db, requestId);
 		return { kind: 'error', ...SEND_FAILURES[outcome] };
@@ -251,20 +246,4 @@ function generateCode(): string {
 
 function codeHash(requestId: string, code: string): Promise<string> {
 	return sha256Base64Url(`${requestId}:${code}`);
-}
-
-function signInEmail(to: string, link: string, code: string): SignInEmail {
-	return {
-		to,
-		subject: 'Sign in to Huntboard',
-		text: [
-			'Open this link to sign in to Huntboard:',
-			link,
-			'',
-			`Or type this code on the sign-in page: ${code}`,
-			'',
-			`The link and the code work once, for ${SIGN_IN_MINUTES} minutes.`,
-			'If you did not ask to sign in, you can ignore this email.'
-		].join('\n')
-	};
 }

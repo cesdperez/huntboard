@@ -94,6 +94,8 @@ Without `RESEND_API_KEY` in `.env.dev`, the dev server sends no sign-in email an
 
 `/dev/design` shows every component in every theme: `/dev/design?theme=<id>&mode=dark`. It answers 404 outside `pnpm dev`.
 
+`/dev/email` shows the sign-in email as its HTML part renders, with an example link and code. It answers 404 outside `pnpm dev`.
+
 `pnpm dev` has no R2 S3 endpoint for claim media. While `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are blank, it signs uploads to `/dev/media/...` instead, which stores them in the local `MEDIA` bucket and also answers 404 outside `pnpm dev`. A deployment with the secrets blank refuses uploads.
 
 ## Testing
