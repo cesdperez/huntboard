@@ -36,6 +36,13 @@
 		showCloseButton={dismissable}
 		interactOutsideBehavior={dismissable ? 'close' : 'ignore'}
 		escapeKeydownBehavior={dismissable ? 'close' : 'ignore'}
+		onCloseAutoFocus={(event) => {
+			// The page opens the first prompt, and Safari never focuses a tapped button, so the
+			// default would often leave focus on the page body.
+			if (!nickname.button) return;
+			event.preventDefault();
+			nickname.button.focus();
+		}}
 	>
 		<Sheet.Header>
 			<Sheet.Title>What should we call you?</Sheet.Title>
