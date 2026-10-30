@@ -12,10 +12,12 @@
 		row: GridRow | null;
 		team: GridTeam | null;
 		open: boolean;
+		/** The cell that opened the sheet, which takes focus back when it closes. */
+		opener: HTMLElement | null;
 		onclose: () => void;
 	};
 
-	let { row, team, open, onclose }: Props = $props();
+	let { row, team, open, opener, onclose }: Props = $props();
 
 	let content = $state<HTMLElement | null>(null);
 
@@ -52,6 +54,12 @@
 			// The default focuses the first field, which opens the phone keyboard over the sheet.
 			event.preventDefault();
 			content?.focus();
+		}}
+		onCloseAutoFocus={(event) => {
+			// Safari never focuses a tapped button, so the default would leave focus on the page body.
+			if (!opener) return;
+			event.preventDefault();
+			opener.focus();
 		}}
 	>
 		{#if row && team && target}
