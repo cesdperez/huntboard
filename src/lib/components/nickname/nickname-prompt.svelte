@@ -63,7 +63,9 @@
 					aria-describedby={invalid ? 'nickname-error' : undefined}
 				/>
 				{#if invalid}
-					<p id="nickname-error" class="text-[15px] text-danger">Type a nickname to continue.</p>
+					<p id="nickname-error" class="text-[15px] text-danger" role="alert">
+						Type a nickname to continue.
+					</p>
 				{/if}
 			</div>
 			<Button type="submit" variant="primary" size="lg">Save nickname</Button>
