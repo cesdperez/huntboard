@@ -142,7 +142,7 @@ It serves the build with `wrangler dev` on port 4174 and keeps its own D1 state 
 
 ## Free-tier budget
 
-Pages poll: clients reload their data every 60 seconds, pause while the tab is hidden, and refresh at once on focus and after their own actions. `POLL_INTERVAL_MS` in `src/lib/client/live-updates.ts` holds the interval. Before each poll the client fetches `/reachable.txt`, a static file that never runs the Worker. When it fails, the poll is skipped and the page shows an offline notice instead of an error page. When the page data request fails anyway, for a server error or the zone's rate limit, the poll is dropped: the page keeps what it showed and its open sheets, says it did not update, and the next poll tries again.
+Pages poll: clients reload their data every 60 seconds, pause while the tab is hidden, and refresh at once on focus and after their own actions. `POLL_INTERVAL_MS` in `src/lib/client/live-updates.ts` holds the interval. Before each poll the client fetches `/reachable.txt`, a static file that never runs the Worker. When it fails, the poll is skipped and the page shows an offline notice instead of an error page. When the page data request fails anyway, for a server error or the zone's rate limit, or takes over 10 seconds, the poll is dropped: the page keeps what it showed and its open sheets, says it did not update, and the next poll tries again.
 
 D1 rows read decide the interval, not Worker requests. The free plan allows 5 million rows read and 100,000 Worker requests per day, reset at 00:00 UTC. Past either limit every request fails until the reset, which ends a running game, so the budget keeps about half the rows limit spare.
 

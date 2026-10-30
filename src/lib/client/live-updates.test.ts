@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DATA_TIMEOUT_MS, refreshKeepingPage } from './connection.js';
 import { startPolling } from './live-updates.js';
 
 class FakeDocument extends EventTarget {
@@ -131,5 +132,51 @@ describe('startPolling', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(refresh).not.toHaveBeenCalled();
+	});
+
+	describe('with refreshes that keep the page', () => {
+		const DATA_URL = '/t/abc/__data.json';
+
+		function pageAnswering(answer: () => Promise<Response>) {
+			const requests = vi.fn(answer);
+			const page = { fetch: requests as typeof fetch, location: { pathname: '/t/abc' } };
+			const refreshPage = () => refreshKeepingPage(() => page.fetch(DATA_URL), page);
+			return { requests, refreshPage };
+		}
+
+		it('keeps polling after a failure that follows two overlapping refreshes', async () => {
+			const answers: Array<(response: Response) => void> = [];
+			const { requests, refreshPage } = pageAnswering(
+				() => new Promise<Response>((resolve) => answers.push(resolve))
+			);
+			refresh.mockImplementation(async () => void (await refreshPage()));
+			start();
+
+			const action = refreshPage();
+			win.dispatchEvent(new Event('focus'));
+			await vi.advanceTimersByTimeAsync(0);
+			answers[0](Response.json({ type: 'data', nodes: [] }));
+			answers[1](Response.json({ type: 'data', nodes: [] }));
+			await action;
+			await vi.advanceTimersByTimeAsync(15_000);
+			answers[2](new Response('', { status: 503 }));
+			await vi.advanceTimersByTimeAsync(15_000);
+
+			expect(refresh).toHaveBeenCalledTimes(3);
+			expect(requests).toHaveBeenCalledTimes(4);
+		});
+
+		it('runs the next poll once a stalled data request times out', async () => {
+			const { refreshPage } = pageAnswering(() => new Promise<Response>(() => {}));
+			refresh.mockImplementation(async () => void (await refreshPage()));
+			start();
+
+			win.dispatchEvent(new Event('focus'));
+			await vi.advanceTimersByTimeAsync(DATA_TIMEOUT_MS);
+			win.dispatchEvent(new Event('focus'));
+			await vi.advanceTimersByTimeAsync(0);
+
+			expect(refresh).toHaveBeenCalledTimes(2);
+		});
 	});
 });
