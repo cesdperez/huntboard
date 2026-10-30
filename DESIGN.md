@@ -387,6 +387,8 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
   - When the server takes no uploads: "Photos and videos cannot be attached right now. Mark it done without one and send the proof another way."
   - When the team or the game has reached its upload limit: "Your team has sent all the photos and videos this game allows. Mark it done without one and show a judge in person." or "This game has no room left for photos and videos. Mark it done without one and show a judge in person."
   - A failed upload gets the usual "This did not go through. Check your connection and try again."
+  - An upload storage refuses gets "Storage refused this upload. Mark it done without one and send the proof another way.", because sending it again would spend another upload and fail the same way.
+  - An upload with no progress for 30 seconds stops: "The upload stopped moving. Check your connection and try again."
 
 ## Accessibility floor
 

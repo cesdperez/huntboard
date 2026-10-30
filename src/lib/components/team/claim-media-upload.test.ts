@@ -1,6 +1,7 @@
 import { parse, stringify } from 'devalue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PreparedMedia } from '#lib/client/claim-media.js';
+import type { PutOutcome } from '#lib/client/media-upload.js';
 import { RETRY } from './action-message.js';
 
 const mocks = vi.hoisted(() => ({ prepareClaimMedia: vi.fn(), putFile: vi.fn() }));
@@ -18,7 +19,7 @@ vi.mock('$app/forms', () => ({
 	}
 }));
 
-import { ClaimMediaUpload } from './claim-media-upload.svelte.js';
+import { ClaimMediaUpload, UPLOAD_REFUSED, UPLOAD_STALLED } from './claim-media-upload.svelte.js';
 
 const TARGET = { url: 'https://r2.example/put', headers: { 'content-type': 'image/jpeg' } };
 const PHOTO = new File(['photo'], 'photo.jpg', { type: 'image/jpeg' });
@@ -76,7 +77,7 @@ beforeEach(() => {
 	vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 	mocks.prepareClaimMedia.mockImplementation(async (file: File) => prepared(file));
 	fetchMock.mockImplementation(async () => presignAnswer('media/k1'));
-	mocks.putFile.mockResolvedValue(true);
+	mocks.putFile.mockResolvedValue('uploaded');
 	upload = new ClaimMediaUpload((phase) => `closed ${phase}`);
 });
 
@@ -88,7 +89,7 @@ afterEach(() => {
 describe('ClaimMediaUpload', () => {
 	it('goes from preparing to uploading to ready with the key', async () => {
 		const preparing = deferred<PreparedMedia>();
-		const putting = deferred<boolean>();
+		const putting = deferred<PutOutcome>();
 		mocks.prepareClaimMedia.mockReturnValue(preparing.promise);
 		mocks.putFile.mockReturnValue(putting.promise);
 
@@ -104,7 +105,7 @@ describe('ClaimMediaUpload', () => {
 		mocks.putFile.mock.calls[0][3](0.5);
 		expect(upload.progress).toBe(0.5);
 
-		putting.resolve(true);
+		putting.resolve('uploaded');
 		await done;
 		expect(upload.phase).toBe('ready');
 		expect(upload.key).toBe('media/k1');
@@ -119,12 +120,26 @@ describe('ClaimMediaUpload', () => {
 		expect(mocks.putFile).not.toHaveBeenCalled();
 	});
 
-	it('fails with a retry message when storage refuses the file', async () => {
-		mocks.putFile.mockResolvedValue(false);
+	it('fails with a retry message when the upload cannot reach storage', async () => {
+		mocks.putFile.mockResolvedValue('failed');
 		await upload.start(PHOTO);
 		expect(upload.phase).toBe('failed');
 		expect(upload.error).toBe(RETRY);
 		expect(upload.key).toBeNull();
+	});
+
+	it('says so when storage refuses the file, rather than asking for a retry', async () => {
+		mocks.putFile.mockResolvedValue('refused');
+		await upload.start(PHOTO);
+		expect(upload.phase).toBe('failed');
+		expect(upload.error).toBe(UPLOAD_REFUSED);
+	});
+
+	it('says the upload stopped moving when it stalls', async () => {
+		mocks.putFile.mockResolvedValue('stalled');
+		await upload.start(PHOTO);
+		expect(upload.phase).toBe('failed');
+		expect(upload.error).toBe(UPLOAD_STALLED);
 	});
 
 	it('shows why the file cannot be prepared', async () => {
@@ -164,7 +179,7 @@ describe('ClaimMediaUpload', () => {
 		const first = deferred<PreparedMedia>();
 		const second = deferred<PreparedMedia>();
 		mocks.prepareClaimMedia.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
-		const putting = deferred<boolean>();
+		const putting = deferred<PutOutcome>();
 		mocks.putFile.mockReturnValue(putting.promise);
 
 		const firstRun = upload.start(new File(['a'], 'a.jpg', { type: 'image/jpeg' }));
@@ -179,7 +194,7 @@ describe('ClaimMediaUpload', () => {
 		second.resolve(prepared(PHOTO));
 		await vi.waitFor(() => expect(upload.phase).toBe('uploading'));
 		expect(upload.preview).toBe('blob:preview-1');
-		putting.resolve(true);
+		putting.resolve('uploaded');
 		await secondRun;
 		expect(upload.phase).toBe('ready');
 	});
@@ -224,7 +239,7 @@ describe('ClaimMediaUpload', () => {
 	});
 
 	it('forgets a failed file when unfinished work stops', async () => {
-		mocks.putFile.mockResolvedValue(false);
+		mocks.putFile.mockResolvedValue('failed');
 		await upload.start(PHOTO);
 		upload.stopUnfinished();
 		expect(upload.phase).toBe('idle');
