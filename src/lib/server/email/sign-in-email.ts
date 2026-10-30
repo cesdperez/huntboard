@@ -93,7 +93,7 @@ function html(to: string, link: string, code: string, minutes: number): string {
 <p class="ink" style="margin:0;font-family:${BANNER};font-size:40px;line-height:1;font-weight:800;letter-spacing:0.12em;font-variant-numeric:tabular-nums;color:${c.ink};">${code}</p>
 </td></tr></table>
 <p class="muted" style="margin:28px 0 0;font-size:15px;line-height:1.4;color:${c.muted};">The link and the code work once, for ${minutes} minutes. If you did not ask to sign in, you can ignore this email.</p>
-<p class="muted" style="margin:16px 0 20px;padding-top:16px;border-top:1px solid ${c.line};font-size:13px;line-height:1.4;color:${c.muted};word-break:break-all;">If the button does not open, copy this link: <a href="${link}" class="muted" style="color:${c.muted};">${link}</a></p>
+<p class="muted" style="margin:16px 0 20px;padding-top:16px;border-top:1px solid ${c.line};font-size:13px;line-height:1.4;color:${c.muted};">If the button does not open, copy this link:<br><a href="${link}" class="muted" style="color:${c.muted};">${breakable(link)}</a></p>
 </td></tr>
 </table>
 </td></tr>
@@ -118,6 +118,11 @@ function darkStyles(): string {
 .button-text{color:${d.onFlag} !important;}
 .code{border-color:${d.line} !important;}
 }`;
+}
+
+// Only after separators: a break anywhere else splits a word of the link in two.
+function breakable(url: string): string {
+	return url.replace(/:\/\/|\/|\?|=|&amp;/g, '$&<wbr>');
 }
 
 function escapeHtml(value: string): string {

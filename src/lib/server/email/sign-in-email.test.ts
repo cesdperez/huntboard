@@ -55,6 +55,15 @@ describe('signInEmail', () => {
 		}
 	});
 
+	it('lets the spelled-out link wrap only after its separators, so no word splits', () => {
+		const html = signInEmail('sam@example.com', 'https://x.example/login?a=1&b=2', '0', 15).html;
+
+		expect(html).toContain(
+			'>https://<wbr>x.example/<wbr>login?<wbr>a=<wbr>1&amp;<wbr>b=<wbr>2</a>'
+		);
+		expect(html).not.toContain('break-all');
+	});
+
 	it('escapes what it puts into the markup', () => {
 		const html = signInEmail('a&b@example.com', 'https://x.example/?a=1&b="2"', '000000', 15).html;
 
