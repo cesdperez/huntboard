@@ -3,12 +3,16 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { DISPLAY_NAME_MAX_LENGTH } from '#lib/domain/account.js';
 
-	let { error = null }: { error?: string | null } = $props();
+	let {
+		error = null,
+		ref = $bindable(null)
+	}: { error?: string | null; ref?: HTMLInputElement | null } = $props();
 </script>
 
 <div class="flex flex-col gap-2">
 	<Label for="display-name">Your name</Label>
 	<Input
+		bind:ref
 		id="display-name"
 		name="displayName"
 		required
