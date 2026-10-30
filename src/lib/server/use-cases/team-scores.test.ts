@@ -94,6 +94,30 @@ describe('addTeamAdjustment', () => {
 		});
 	});
 
+	it('adds a resent adjustment once and answers the resend as added', async () => {
+		const resent = form({
+			...fields,
+			teamId: String(rats.id),
+			requestId: 'q7Zt3kV9xW2mN4pL8rB6sA'
+		});
+
+		await addTeamAdjustment(db, game.id, resent);
+		const outcome = await addTeamAdjustment(db, game.id, resent);
+
+		expect(outcome).toEqual({ status: 200, result: { kind: 'adjusted' } });
+		expect(await listAdjustments(db, game.id)).toHaveLength(1);
+	});
+
+	it('adds the same values twice when each send has its own request id', async () => {
+		const send = (requestId: string) =>
+			addTeamAdjustment(db, game.id, form({ ...fields, teamId: String(rats.id), requestId }));
+
+		await send('q7Zt3kV9xW2mN4pL8rB6sA');
+		await send('Hc1Yd5Ue8Rf0Tg3Ih6Jk9w');
+
+		expect(await listAdjustments(db, game.id)).toHaveLength(2);
+	});
+
 	it('refuses a team that is gone', async () => {
 		const outcome = await addTeamAdjustment(db, game.id, form({ ...fields, teamId: '9999' }));
 

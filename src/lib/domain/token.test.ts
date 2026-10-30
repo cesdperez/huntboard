@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodeBase64Url, generateToken, sha256Base64Url } from './token.js';
+import { encodeBase64Url, generateToken, isToken, sha256Base64Url } from './token.js';
 
 describe('generateToken', () => {
 	it('encodes 128 bits as 22 base64url characters without padding', () => {
@@ -15,6 +15,23 @@ describe('generateToken', () => {
 	it('uses the whole base64url alphabet over many samples', () => {
 		const seen = new Set(Array.from({ length: 2_000 }, generateToken).join(''));
 		expect(seen.size).toBe(64);
+	});
+});
+
+describe('isToken', () => {
+	it('takes what generateToken makes', () => {
+		expect(Array.from({ length: 1_000 }, generateToken).every(isToken)).toBe(true);
+	});
+
+	it('refuses other lengths, characters and types', () => {
+		expect(isToken('q7Zt3kV9xW2mN4pL8rB6s')).toBe(false);
+		expect(isToken('q7Zt3kV9xW2mN4pL8rB6sAA')).toBe(false);
+		expect(isToken('q7Zt3kV9xW2mN4pL8r+6sA')).toBe(false);
+		expect(isToken(null)).toBe(false);
+	});
+
+	it('refuses a last character that 128 bits cannot end in', () => {
+		expect(isToken('q7Zt3kV9xW2mN4pL8rB6sB')).toBe(false);
 	});
 });
 

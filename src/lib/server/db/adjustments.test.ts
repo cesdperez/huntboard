@@ -38,7 +38,8 @@ describe('addAdjustment', () => {
 		const added = await addAdjustment(db, game.id, rats.id, {
 			points: -10,
 			reason: 'Never showed up',
-			createdBy: 'Alex'
+			createdBy: 'Alex',
+			requestId: null
 		});
 
 		expect(added).toEqual(
@@ -56,8 +57,44 @@ describe('addAdjustment', () => {
 		const team = await outsider();
 
 		expect(
-			await addAdjustment(db, game.id, team.id, { points: 5, reason: 'Bonus', createdBy: 'Alex' })
+			await addAdjustment(db, game.id, team.id, {
+				points: 5,
+				reason: 'Bonus',
+				createdBy: 'Alex',
+				requestId: null
+			})
 		).toBeNull();
+	});
+
+	it('adds once per request id and returns the first adjustment to a repeat', async () => {
+		const send = (points: number) =>
+			addAdjustment(db, game.id, rats.id, {
+				points,
+				reason: 'Bonus',
+				createdBy: 'Alex',
+				requestId: 'q7Zt3kV9xW2mN4pL8rB6sA'
+			});
+
+		const first = await send(5);
+		const repeat = await send(6);
+
+		expect(repeat).toEqual(first);
+		expect(await listAdjustments(db, game.id)).toEqual([first]);
+	});
+
+	it('adds every adjustment without a request id', async () => {
+		const send = () =>
+			addAdjustment(db, game.id, rats.id, {
+				points: 5,
+				reason: 'Bonus',
+				createdBy: 'Alex',
+				requestId: null
+			});
+
+		await send();
+		await send();
+
+		expect(await listAdjustments(db, game.id)).toHaveLength(2);
 	});
 });
 
