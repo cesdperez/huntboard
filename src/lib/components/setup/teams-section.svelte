@@ -25,7 +25,6 @@
 	let editingId = $state<number | null>(null);
 	let pending = $state(false);
 	let editForm = $state<HTMLElement | null>(null);
-	const editButtons = $state<Record<number, HTMLElement | null>>({});
 
 	// Focus follows the form in and back to its Edit button, so it never falls back to the page top.
 	async function startEditing(teamId: number) {
@@ -38,7 +37,7 @@
 		const teamId = editingId;
 		editingId = null;
 		await tick();
-		if (teamId !== null) editButtons[teamId]?.focus();
+		if (teamId !== null) document.getElementById(`team-edit-${teamId}`)?.focus();
 	}
 
 	const initial = resultUnder(page.form, 'teams');
@@ -217,7 +216,7 @@
 								</Button>
 							</form>
 							<Button
-								bind:ref={editButtons[team.id]}
+								id="team-edit-{team.id}"
 								variant="ghost"
 								aria-label="Edit {team.name}"
 								onclick={() => startEditing(team.id)}
