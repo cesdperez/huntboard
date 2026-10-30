@@ -219,7 +219,7 @@ Built on shadcn-svelte where it saves time (Button, Input, Label, Sheet), restyl
 - Touch targets at least 48px. Rows in lists are at least 56px tall.
 - Radii by hierarchy: sheets 16px on the top corners, buttons and inputs 10px, markers 3px, list rows 0 (rows are divided by `--line`, not boxed in cards).
 - No box shadows except on sheets and the sticky strip, where they show something floats above the page.
-- Native radios take `--action` as their accent colour.
+- Native radios take `--radio` as their accent colour. WebKit fills a checked radio with it and draws no ring, so it keeps 3:1 against `--surface` and `--paper` (WCAG 1.4.11). `theme-contrast.test.ts` checks every theme.
 - Buttons: one primary (filled `--action`, label in `--on-action`) per screen or sheet. Secondary buttons are `--ink` outlines. Destructive buttons are `--danger` outlines and confirm before acting.
 - shadcn's semantic names (`--primary`, `--background` and the rest) map onto the tokens in `app.css`, so generated components follow the theme.
 
@@ -247,6 +247,7 @@ Components use roles, never a theme's own colour names.
 | `--marker`, `--on-marker` | `--flag`, `--on-flag` | Pending triangle and scored fill, the points on it, the Queue badge |
 | `--action`, `--on-action` | `--flag`, `--on-flag` | The primary button and its label |
 | `--action-hover` | `#F26C1D`, dark `#E7702E` | The primary button under the pointer, keeping 4.5:1 with `--on-action` |
+| `--radio` | `--action` | The checked native radio. A theme whose `--action` is under 3:1 on `--surface` or `--paper` points it at `--ink` |
 | `--own` | `--flag` | Bar on the team's own row |
 | `--own-row` | `--strip` | Background of the team's own row |
 | `--strip`, `--on-strip` | `--surface`, `--ink` | The sticky team strip and the admin tab bar, and their text |
@@ -307,6 +308,7 @@ A theme's registry entry names its layout. Structure changes only through it; th
 | `--ink`, `--muted`, `--line` | `#151515`, `#5E564D`, `#E8DCC8` |
 | `--input-line` | `#958877` (3.4:1 on surface, 3.3:1 on paper) |
 | `--marker`, `--action`, `--own`, `--banner`, `--section-rule` | Orange `#FF741F`, with ink on it (6.8:1; white is 2.7:1 and fails) |
+| `--radio` | Ink, since the orange is 2.7:1 on ivory |
 | `--own-row` | `#FFE8D6` |
 | `--strip`, `--on-strip`, `--strip-score` | Cobalt `#124BCC`, white (7.2:1) |
 | `--on-strip-muted`, `--strip-own-row`, `--strip-danger` | `#D9E3FF` (5.6:1 at 15px), `#0C3A9E`, `#FFD1CC` (5.3:1) |

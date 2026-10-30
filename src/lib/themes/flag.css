@@ -19,6 +19,7 @@
 	--on-action: var(--on-flag);
 	/* A hex per theme and mode, so the label's contrast on it can be checked. */
 	--action-hover: #f26c1d;
+	--radio: var(--action);
 	--own: var(--flag);
 	--own-row: var(--strip);
 	--strip: var(--surface);

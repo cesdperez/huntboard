@@ -18,6 +18,17 @@ function token(block: string, name: string): string {
 	return match[1];
 }
 
+/** A token's colour, following var() and falling back to the base layer as the cascade does. */
+function resolve(block: string, name: string): string {
+	for (const source of [block, palettes['flag light']]) {
+		const match = source.match(
+			new RegExp(`--${name}:\\s*(#[0-9a-f]{6}|var\\(--([\\w-]+)\\));`, 'i')
+		);
+		if (match) return match[2] ? resolve(block, match[2]) : match[1];
+	}
+	throw new Error(`--${name} is not a colour here`);
+}
+
 function luminance(hex: string): number {
 	const [r, g, b] = [1, 3, 5].map((i) => {
 		const channel = parseInt(hex.slice(i, i + 2), 16) / 255;
@@ -46,6 +57,18 @@ describe('--input-line', () => {
 			const border = token(block, 'input-line');
 			expect(contrast(border, token(block, 'surface'))).toBeGreaterThanOrEqual(NON_TEXT_CONTRAST);
 			expect(contrast(border, token(block, 'paper'))).toBeGreaterThanOrEqual(NON_TEXT_CONTRAST);
+		}
+	);
+});
+
+describe('--radio', () => {
+	// WebKit fills a checked radio with the accent colour and draws no ring around it.
+	it.each(Object.entries(palettes))(
+		'reaches 3:1 against --surface and --paper in %s',
+		(_, block) => {
+			const radio = resolve(block, 'radio');
+			expect(contrast(radio, resolve(block, 'surface'))).toBeGreaterThanOrEqual(NON_TEXT_CONTRAST);
+			expect(contrast(radio, resolve(block, 'paper'))).toBeGreaterThanOrEqual(NON_TEXT_CONTRAST);
 		}
 	);
 });

@@ -217,8 +217,8 @@
 	html {
 		@apply font-sans;
 		-webkit-text-size-adjust: 100%;
-		/* Native radios take the theme's action colour, not the browser's blue. */
-		accent-color: var(--action);
+		/* Native radios take the theme's colour, not the browser's blue. */
+		accent-color: var(--radio);
 	}
 	body {
 		@apply bg-paper type-body text-ink;
