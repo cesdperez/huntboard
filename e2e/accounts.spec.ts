@@ -23,6 +23,10 @@ test('accounts: sign up with a code, create a game, sign out and back in with th
 	await test.step('/new sends a visitor to sign in first', async () => {
 		await page.goto('/new');
 		await expect(page).toHaveURL(/\/login\?next=%2Fnew$/);
+		await expect(page.getByRole('banner').getByRole('link', { name: 'Huntboard' })).toHaveAttribute(
+			'href',
+			'/'
+		);
 	});
 
 	let code = '';
