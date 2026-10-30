@@ -8,10 +8,7 @@
 </script>
 
 <!-- Pages that do not poll still clear the notice once the browser is back online. -->
-<svelte:window
-	onoffline={() => reportOnline(false)}
-	ononline={() => void checkConnection()}
-/>
+<svelte:window onoffline={() => reportOnline(false)} ononline={() => void checkConnection()} />
 
 <!-- The live region stays mounted so screen readers hear the notice when it appears. -->
 <div role="status" class={cn(connection.online && !connection.stale && 'sr-only', className)}>
