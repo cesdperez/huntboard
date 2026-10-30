@@ -57,10 +57,20 @@ const AZULEJO: Theme = {
 	wordmark: { src: '/themes/azulejo/wordmark.svg', alt: 'Lightmile' }
 };
 
-export const THEMES: readonly Theme[] = [FLAG_THEME, HIGHLAND_BRU, AZULEJO];
+const CONTOUR: Theme = {
+	id: 'contour',
+	name: 'Contour',
+	modes: { light: { themeColor: '#1b2230' }, dark: { themeColor: '#0c1117' } },
+	fonts: [
+		'https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,700..900&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap'
+	],
+	layout: 'event'
+};
+
+export const THEMES: readonly Theme[] = [CONTOUR, FLAG_THEME, HIGHLAND_BRU, AZULEJO];
 
 /** The theme /new gives a game, and the one pages without a game wear. */
-export const DEFAULT_THEME: Theme = HIGHLAND_BRU;
+export const DEFAULT_THEME: Theme = CONTOUR;
 
 /** Ids stored before a theme was removed still open their game, in the default theme. */
 export function resolveTheme(id: string | null | undefined, themes = THEMES): Theme {

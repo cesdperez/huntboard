@@ -19,8 +19,8 @@ describe('getAdminLayout', () => {
 
 		const layout = await getAdminLayout(db, game, locals);
 
-		expect(layout).toEqual({ game, pendingCount: 1, gameTheme: 'highland-bru' });
-		expect(locals.gameTheme).toBe('highland-bru');
+		expect(layout).toEqual({ game, pendingCount: 1, gameTheme: 'contour' });
+		expect(locals.gameTheme).toBe('contour');
 	});
 
 	it('keeps a flag game in flag', async () => {

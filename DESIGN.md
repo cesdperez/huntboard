@@ -226,7 +226,7 @@ Built on shadcn-svelte where it saves time (Button, Input, Label, Sheet), restyl
 
 ## Themes
 
-The admin picks a theme for the game in Setup. It changes every page of that game: the team page, the scoreboard and the admin pages, so a `flag` game keeps a `flag` admin. `DEFAULT_THEME`, Highland Bru, is the theme a game made at `/new` starts in, and the one pages without a game wear: the home page, `/new`, error pages. An id that is no longer registered also reads as `DEFAULT_THEME`.
+The admin picks a theme for the game in Setup. It changes every page of that game: the team page, the scoreboard and the admin pages, so a `flag` game keeps a `flag` admin. `DEFAULT_THEME`, [Contour](#contour), is the theme a game made at `/new` starts in, and the one pages without a game wear: the home page, `/new`, error pages. An id that is no longer registered also reads as `DEFAULT_THEME`.
 
 A theme is two things:
 
@@ -298,6 +298,26 @@ A theme's registry entry names its layout. Structure changes only through it; th
 - WCAG AA for every text pair, checked in each mode the theme supports. That includes each `--on-` pair, `--waiting` on `--paper` and `--on-strip-muted` on `--strip` at 15px.
 - 3:1 for `--input-line` against `--surface` and `--paper` in each mode. `src/lib/themes/theme-contrast.test.ts` checks it.
 - State told by shape and words, not colour alone. The own row keeps its bar and its semibold name.
+
+### Contour
+
+`contour`, light and dark, `event` layout. The default theme, so it suits any hunt in any place: an orienteering map, with brown contour lines on map paper and the course printed over them in magenta. The control circle is its mark: in the banner on a hilltop, linked to the start triangle, and before each section heading.
+
+| Role | Light | Dark |
+|---|---|---|
+| `--paper`, `--surface` | Map paper `#F4F6F1`, `#FFFFFF` | `#121821`, `#1A222D` |
+| `--ink`, `--muted`, `--line` | `#1B2230`, `#5A6270` (5.7:1), `#DDE2D8` | `#E8ECE6`, `#9AA3AE` (7:1), `#2A3441` |
+| `--input-line` | `#858C84` (3.5:1 on surface, 3.2:1 on paper) | `#6B7584` (3.4:1, 3.8:1) |
+| `--marker`, `--action`, `--own`, `--section-rule` | Overprint magenta `#B4247E`, white on it (6:1). Hover `#9C1E6C` | `#F06BB5`, `#1B0F18` on it (6.6:1). Hover `#E35AA7` |
+| `--own-row` | `#F7E3EF` | `#33202D` |
+| `--strip`, `--on-strip`, `--on-strip-muted` | Ink `#1B2230`, white, `#C3C9D4` (9.6:1) | `#262F3D`, `#E8ECE6`, `#B4BCC8` (7:1) |
+| `--waiting` | Contour brown `#8A4B14` (6.2:1) | `#E0A867` (8.5:1) |
+| `--danger` | `#B42318` (6:1) | `#FF7B6E` (7:1) |
+| `--app-bar`, `--app-bar-base` | Ink `#1B2230`, white text | `#0C1117` |
+| `--banner`, `--on-banner` | Map green `#E3EAD9`, ink (12.9:1) | `#1B2A22`, `#E8ECE6` (12.5:1) |
+| `--banner-art`, `--section-ornament` | Contour rings with a magenta control circle and start triangle; a magenta control circle | The same in `#B7814A` and `#F06BB5` |
+
+Fonts: Big Shoulders, a condensed signage face, for `--font-banner` and `--font-score`, so game names and totals read from across a room. Instrument Sans for everything else. Its width axis runs from 75% to 100%, so `--stretch-display` is 100%.
 
 ### Highland Bru
 

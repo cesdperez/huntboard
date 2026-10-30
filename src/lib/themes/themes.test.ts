@@ -37,14 +37,14 @@ describe('resolveTheme', () => {
 		expect(resolveTheme(undefined, registry)).toBe(DEFAULT_THEME);
 	});
 
-	it('knows the flag, Highland Bru and Azulejo themes by default', () => {
-		expect(THEMES.map((theme) => theme.id)).toEqual(['flag', 'highland-bru', 'azulejo']);
+	it('knows the Contour, flag, Highland Bru and Azulejo themes by default', () => {
+		expect(THEMES.map((theme) => theme.id)).toEqual(['contour', 'flag', 'highland-bru', 'azulejo']);
 		expect(resolveTheme('flag')).toBe(FLAG_THEME);
 	});
 
 	// Pages without a game wear the theme new games start in, so the app reads as one product.
-	it('defaults to Highland Bru while flag stays selectable', () => {
-		expect(DEFAULT_THEME.id).toBe('highland-bru');
+	it('defaults to Contour while the other themes stay selectable', () => {
+		expect(DEFAULT_THEME.id).toBe('contour');
 		expect(resolveTheme(undefined)).toBe(DEFAULT_THEME);
 		expect(resolveTheme('flag').id).toBe('flag');
 	});
