@@ -8,6 +8,7 @@
 	import { Label } from '#lib/components/ui/label/index.js';
 	import { plural } from '#lib/format/plural.js';
 	import { groupBySection } from '#lib/format/group-by-section.js';
+	import { importSummary } from '#lib/format/import-summary.js';
 	import type { ImportPreviewRow } from '#lib/domain/challenge-import.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
@@ -70,19 +71,7 @@
 		};
 	};
 
-	const summary = $derived.by(() => {
-		if (!preview || preview.rows.length === 0) return null;
-		const count = (change: ImportPreviewRow['change']) =>
-			preview.rows.filter((row) => row.change === change).length;
-		const counts: [number, string][] = [
-			[count('new'), 'new challenge'],
-			[count('updated'), 'update'],
-			[preview.deleted.length + preview.deletedWithClaims.length, 'delete']
-		];
-		const parts = counts.filter(([count]) => count > 0).map(([count, noun]) => plural(count, noun));
-		if (preview.reordered) parts.push('a new order');
-		return parts.length > 0 ? `${parts.join(', ')}.` : 'No changes.';
-	});
+	const summary = $derived(preview && importSummary(preview));
 
 	const announcement = $derived.by(() => {
 		// Empty while a request runs, so the same summary twice is still read out.
