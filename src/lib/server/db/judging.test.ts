@@ -327,4 +327,18 @@ describe('scoreWithoutClaim', () => {
 		expect(await score(outsider.id, swim.id)).toEqual({ status: 'not-found' });
 		expect(await score(rats.id, elsewhere.id)).toEqual({ status: 'not-found' });
 	});
+
+	it('never takes the id of an undone claim, which a judge page not yet refreshed may still send', async () => {
+		const undone = await seedClaim(db, owls.id, cake.id);
+		await db.prepare('DELETE FROM claim WHERE id = ?').bind(undone.id).run();
+
+		const result = await scoreWithoutClaim(db, game.id, {
+			teamId: rats.id,
+			challengeId: swim.id,
+			points: 10,
+			judgedBy: 'Alex'
+		});
+
+		expect(result).toMatchObject({ status: 'judged', claim: { id: undone.id + 1 } });
+	});
 });

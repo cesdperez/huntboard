@@ -1,5 +1,6 @@
 import { teamNameKey } from '#lib/domain/team-name.js';
 import { generateToken } from '#lib/domain/token.js';
+import { nextId } from './ids.js';
 import type { TeamRow, SetupTeam } from './types.js';
 
 export async function listSetupTeams(db: D1Database, gameId: number): Promise<SetupTeam[]> {
@@ -38,8 +39,9 @@ export async function addTeam(
 	try {
 		const team = await db
 			.prepare(
-				`INSERT INTO team (game_id, name, name_key, members, token, position)
-				SELECT ?1, ?2, ?3, ?4, ?5, coalesce(max(position) + 1, 0) FROM team WHERE game_id = ?1
+				`INSERT INTO team (id, game_id, name, name_key, members, token, position)
+				SELECT ${nextId('team')}, ?1, ?2, ?3, ?4, ?5, coalesce(max(position) + 1, 0)
+				FROM team WHERE game_id = ?1
 				RETURNING *`
 			)
 			.bind(gameId, name, teamNameKey(name), members, generateToken())

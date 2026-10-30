@@ -1,5 +1,6 @@
 import type { ClaimRow } from './types.js';
 import { GAME_CLAIMS } from './game-claims.js';
+import { nextId } from './ids.js';
 
 /** A claim waiting in the judging queue, with what the judge needs to see beside it. */
 export interface PendingClaimRow extends ClaimRow {
@@ -143,8 +144,9 @@ export async function scoreWithoutClaim(
 		// The only conflict possible is the one active claim per team and challenge.
 		db
 			.prepare(
-				`INSERT INTO claim (team_id, challenge_id, status, marked_by, points, judged_by, judged_at)
-				SELECT team.id, challenge.id, 'scored', ?1, MAX(challenge.min_points, MIN(challenge.max_points, ?2)),
+				`INSERT INTO claim
+					(id, team_id, challenge_id, status, marked_by, points, judged_by, judged_at)
+				SELECT ${nextId('claim')}, team.id, challenge.id, 'scored', ?1, MAX(challenge.min_points, MIN(challenge.max_points, ?2)),
 					?1, ${NOW}
 				FROM team, challenge
 				WHERE team.id = ?3 AND team.game_id = ?5 AND challenge.id = ?4 AND challenge.game_id = ?5

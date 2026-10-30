@@ -169,6 +169,15 @@ describe('markClaim', () => {
 			claim: expect.objectContaining({ id: existing.id, marked_by: 'Kim' })
 		});
 	});
+
+	it('never takes the id of an undone claim, which a judge page not yet refreshed may still send', async () => {
+		const undone = await seedClaim(db, rats.id, swim.id);
+		await undoClaim(db, rats.id, undone.id);
+
+		const result = await mark(owls.id, swim.id);
+
+		expect(result).toMatchObject({ status: 'marked', claim: { id: undone.id + 1 } });
+	});
 });
 
 /** Runs `change` after every statement that runs on its own, as a concurrent request could. A batch runs as one. */

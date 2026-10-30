@@ -1,3 +1,4 @@
+import { nextId } from './ids.js';
 import type { ClaimRow } from './types.js';
 
 /** All claims of one team, rejected history included, oldest first. Never another team's. */
@@ -50,8 +51,8 @@ function markStatements(db: D1Database, claim: NewClaim): D1PreparedStatement[] 
 		// Targeted, so a taken media key throws instead of reading as an active claim.
 		db
 			.prepare(
-				`INSERT INTO claim (team_id, challenge_id, status, note, marked_by, media_key)
-				SELECT ?, id, 'pending', ?, ?, ? FROM challenge WHERE id = ? AND game_id = ?
+				`INSERT INTO claim (id, team_id, challenge_id, status, note, marked_by, media_key)
+				SELECT ${nextId('claim')}, ?, id, 'pending', ?, ?, ? FROM challenge WHERE id = ? AND game_id = ?
 				ON CONFLICT (team_id, challenge_id) WHERE status IN ('pending', 'scored') DO NOTHING
 				RETURNING *`
 			)

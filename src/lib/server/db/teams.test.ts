@@ -122,6 +122,15 @@ describe('addTeam', () => {
 
 		expect((await addTeam(db, game.id, 'Canal Rats', '')).status).toBe('added');
 	});
+
+	it('never takes the id of a deleted team, which a page not yet refreshed may still send', async () => {
+		const deleted = await seedTeam(db, game.id, { name: 'Canal Rats' });
+		await deleteTeam(db, game.id, deleted.id);
+
+		const added = await addTeam(db, game.id, 'Night Owls', '');
+
+		expect(added).toMatchObject({ status: 'added', team: { id: deleted.id + 1 } });
+	});
 });
 
 describe('updateTeam', () => {
