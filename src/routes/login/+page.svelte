@@ -81,7 +81,7 @@
 			>
 				Check your email
 			</h2>
-			<p class="type-secondary">
+			<p class="type-secondary break-words">
 				We sent a sign-in link and a code to <strong class="text-ink">{sentTo}</strong>. Open the
 				link, or type the code here.
 			</p>

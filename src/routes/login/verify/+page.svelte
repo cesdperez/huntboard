@@ -28,7 +28,7 @@
 	{/if}
 
 	{#if data.link}
-		<p>Signing in as <strong>{data.link.email}</strong>.</p>
+		<p class="break-words">Signing in as <strong>{data.link.email}</strong>.</p>
 		<form method="POST" class="flex flex-col gap-4" use:enhance>
 			<input type="hidden" name="token" value={data.token} />
 			{#if data.link.isNew}

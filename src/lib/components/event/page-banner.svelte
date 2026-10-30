@@ -18,7 +18,7 @@
 			{title}
 		</h1>
 		{#if children}
-			<div class="page-banner-text text-[17px] leading-snug font-semibold">
+			<div class="page-banner-text text-[17px] leading-snug font-semibold break-words">
 				{@render children()}
 			</div>
 		{/if}
