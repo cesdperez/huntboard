@@ -13,7 +13,7 @@
 	let { data }: PageProps = $props();
 
 	// A claim judged elsewhere drops out of the data, but its notice says who judged it, so it stays until dismissed.
-	let notices = $state<Record<number, { claim: QueueClaim; message: string }>>({});
+	let notices = $state<Record<number, { claim: QueueClaim; message: string | null }>>({});
 	const clock = getGameClock();
 
 	const liveIds = $derived(new Set(data.claims.map((claim) => claim.id)));

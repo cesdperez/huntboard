@@ -17,6 +17,7 @@
 	import { REASON_MAX_LENGTH } from '#lib/domain/reason.js';
 	import { AdminAction } from './admin-action.svelte.js';
 	import { clampTypedPoints } from './clamped-points.js';
+	import { askWhatJudgementDid } from './judgement-check.js';
 
 	type Props = {
 		/** The claim as the last refresh shows it. An error shows only while it stays the same. */
@@ -27,8 +28,11 @@
 		label: string;
 		/** Score is the sheet's primary action. In the queue every item has one, so none is. */
 		primary?: boolean;
-		/** Gets every error instead of showing it here, for a parent that keeps the item in view. */
-		onfailure?: (message: string) => void;
+		/**
+		 * Gets every error instead of showing it here, for a parent that keeps the item in view. Null
+		 * while a lost answer is being checked.
+		 */
+		onfailure?: (message: string | null) => void;
 		ondone?: () => void;
 	};
 
@@ -47,14 +51,15 @@
 
 	const rejecting = new InPlaceForm();
 
-	function submit(): SubmitFunction {
+	function submit(verdict: 'scored' | 'rejected'): SubmitFunction {
 		const send = action.submit(
 			(result) => {
-				toast.show(result.kind === 'scored' ? `Scored ${result.points}` : 'Rejected');
+				toast.show(result?.kind === 'scored' ? `Scored ${result.points}` : 'Rejected');
 				void rejecting.hide();
 				ondone?.();
 			},
-			(message) => onfailure?.(message)
+			(message) => onfailure?.(message),
+			(formData) => () => askWhatJudgementDid(formData, verdict)
 		);
 		return async (input) => {
 			const settle = await send(input);
@@ -94,7 +99,7 @@
 			tabindex="-1"
 			aria-label="Reject {label}"
 			class="flex flex-col gap-3 outline-none"
-			use:enhance={submit()}
+			use:enhance={submit('rejected')}
 		>
 			{@render targetFields()}
 			<div class="flex flex-col gap-2">
@@ -125,7 +130,7 @@
 				method="POST"
 				action={claimTarget ? '?/judgeScore' : '?/judgeScoreOpen'}
 				class="flex flex-1 gap-2"
-				use:enhance={submit()}
+				use:enhance={submit('scored')}
 			>
 				{@render targetFields()}
 				{#each quickPointValues(range) as points (points)}
@@ -161,7 +166,7 @@
 			method="POST"
 			action={claimTarget ? '?/judgeScore' : '?/judgeScoreOpen'}
 			class="flex gap-3"
-			use:enhance={submit()}
+			use:enhance={submit('scored')}
 		>
 			{@render targetFields()}
 			{#if claimTarget}

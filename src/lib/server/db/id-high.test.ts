@@ -70,6 +70,8 @@ describe(ID_HIGH, () => {
 	});
 
 	it('gives new rows ids no row had since, even after the highest is deleted', async () => {
+		// The insert functions follow the current schema, so later migrations apply first.
+		for (const { name, sql } of readMigrations()) if (name > ID_HIGH) sqlite.exec(sql);
 		const db = asD1(sqlite);
 		const bats = await addTeam(db, 1, 'Bats', '');
 		sqlite.exec('DELETE FROM team WHERE id = 4');
@@ -90,7 +92,12 @@ describe(ID_HIGH, () => {
 			})
 		).toMatchObject({ status: 'marked', claim: { id: 5 } });
 		expect(
-			await addAdjustment(db, 1, 1, { points: 1, reason: 'Bonus', createdBy: 'Alex' })
+			await addAdjustment(db, 1, 1, {
+				points: 1,
+				reason: 'Bonus',
+				createdBy: 'Alex',
+				requestId: null
+			})
 		).toMatchObject({ id: 3 });
 	});
 

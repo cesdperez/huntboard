@@ -25,12 +25,33 @@ function form(fields: Record<string, string>): FormData {
 }
 
 describe('rotateAdminLink', () => {
-	it('returns the new admin token, and the old one stops opening the game', async () => {
-		const token = await rotateAdminLink(db, game.id);
+	const NEW_TOKEN = 'q7Zt3kV9xW2mN4pL8rB6sA';
 
-		expect(token).not.toBe(game.admin_token);
-		expect(await getGameByAdminToken(db, token)).toMatchObject({ id: game.id });
+	it('moves the game to the token the browser made, and the old one stops opening it', async () => {
+		const outcome = await rotateAdminLink(db, game.id, form({ adminToken: NEW_TOKEN }));
+
+		expect(outcome).toEqual({ token: NEW_TOKEN });
+		expect(await getGameByAdminToken(db, NEW_TOKEN)).toMatchObject({ id: game.id });
 		expect(await getGameByAdminToken(db, game.admin_token)).toBeNull();
+	});
+
+	it.each(['', 'short', 'q7Zt3kV9xW2mN4pL8rB6sB', 'q7Zt3kV9xW2mN4pL8rB6s/'])(
+		'refuses a token not made like generateToken: %j',
+		async (adminToken) => {
+			const outcome = await rotateAdminLink(db, game.id, form({ adminToken }));
+
+			expect(outcome).toMatchObject({ status: 400 });
+			expect(await getGameByAdminToken(db, game.admin_token)).toMatchObject({ id: game.id });
+		}
+	);
+
+	it('refuses a token another game has', async () => {
+		const other = await createGame(db, 'Other hunt');
+
+		const outcome = await rotateAdminLink(db, game.id, form({ adminToken: other.admin_token }));
+
+		expect(outcome).toMatchObject({ status: 409 });
+		expect(await getGameByAdminToken(db, game.admin_token)).toMatchObject({ id: game.id });
 	});
 });
 

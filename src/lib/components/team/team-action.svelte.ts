@@ -1,5 +1,6 @@
 import type { SubmitFunction } from '$app/forms';
-import { FormAction } from '#lib/components/form-action.svelte.js';
+import { needsRetry } from '#lib/components/admin/admin-message.js';
+import { FormAction, type Recheck } from '#lib/components/form-action.svelte.js';
 import { toast } from '#lib/components/toast/index.js';
 import type { GameClock } from '#lib/client/game-clock.svelte.js';
 import { actionFailureMessage } from './action-message.js';
@@ -22,13 +23,25 @@ export class TeamAction extends FormAction {
 		this.recordFailure(message);
 	}
 
-	/** On success, runs onsuccess with the sent form and shows `done` as a toast. */
-	submit(done: string, onsuccess: (formData: FormData) => void): SubmitFunction {
+	/**
+	 * On success, runs onsuccess with the sent form and shows `done` as a toast. tookEffect tells
+	 * whether a request that lost its answer went through after all.
+	 */
+	submit(
+		done: string,
+		onsuccess: (formData: FormData) => void,
+		tookEffect?: Recheck<boolean>
+	): SubmitFunction {
 		return ({ formData }) => {
 			this.start();
+			const check = tookEffect?.(formData);
 			return async ({ result }) => {
-				await this.refresh();
-				const message = actionFailureMessage(result, this.#clock().closedMessageFor);
+				const current = await this.refresh();
+				this.busy = false;
+				const landed = needsRetry(result) && current && check?.() === true;
+				const message = landed
+					? null
+					: actionFailureMessage(result, this.#clock().closedMessageFor);
 				if (message) {
 					this.recordFailure(message);
 					return;

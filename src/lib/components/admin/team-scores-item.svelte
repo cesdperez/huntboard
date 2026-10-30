@@ -16,7 +16,10 @@
 	import { isolate } from '#lib/format/text.js';
 	import { REASON_MAX_LENGTH } from '#lib/domain/reason.js';
 	import type { TeamScoresRow } from '#lib/server/pages/judging-pages.js';
-	import { AdminAction } from './admin-action.svelte.js';
+	import { generateToken } from '#lib/domain/token.js';
+	import type { Recheck } from '#lib/components/form-action.svelte.js';
+	import { AdminAction, type LostAnswer } from './admin-action.svelte.js';
+	import { adjustmentAdded } from './adjustment-added.js';
 
 	type Props = {
 		team: TeamScoresRow;
@@ -27,8 +30,28 @@
 	let { team, endsAt, latePenaltyPerMinute }: Props = $props();
 
 	const id = $props.id();
-	const arrival = new AdminAction('teamScores');
-	const adjusting = new AdminAction('teamScores');
+	const arrival = new AdminAction('teamScores', () => team.arrivedAt);
+	const adjusting = new AdminAction('teamScores', () => adjustmentIds().join());
+	const adjustmentIds = () => team.adjustments.map((adjustment) => adjustment.id);
+
+	const arrivedWhen =
+		(arrived: (formData: FormData) => boolean): Recheck<LostAnswer> =>
+		(formData) =>
+		() =>
+			arrived(formData);
+	const recorded = arrivedWhen(() => team.arrivedAt !== null);
+	const cleared = arrivedWhen(() => team.arrivedAt === null);
+	const corrected = arrivedWhen((formData) => team.arrivedAt === formData.get('arrivedAt'));
+
+	const added: Recheck<LostAnswer> = (formData) => {
+		const before = adjustmentIds();
+		return () => adjustmentAdded(before, team.adjustments, formData);
+	};
+	const removed: Recheck<LostAnswer> = (formData) => () =>
+		!adjustmentIds().includes(Number(formData.get('adjustmentId')));
+
+	// Sent with the adjustment, so sending the same one again cannot add it twice.
+	let requestId = $state(generateToken());
 
 	const correcting = new InPlaceForm();
 	const adding = new InPlaceForm();
@@ -69,24 +92,37 @@
 		focusIfLost(target());
 	}
 
-	const record = arrival.submit(() => {
-		toast.show('Arrival recorded');
-		void refocus(() => correcting.opener);
-	});
+	const record = arrival.submit(
+		() => {
+			toast.show('Arrival recorded');
+			void refocus(() => correcting.opener);
+		},
+		undefined,
+		recorded
+	);
 
 	const correct: SubmitFunction = (input) => {
 		const local = input.formData.get('arrivedAtLocal');
 		input.formData.set('arrivedAt', localInputToUtc(typeof local === 'string' ? local : '') ?? '');
-		return arrival.submit(() => {
-			void correcting.hide();
-			toast.show('Arrival corrected');
-		})(input);
+		return arrival.submit(
+			() => {
+				void correcting.hide();
+				toast.show('Arrival corrected');
+			},
+			undefined,
+			corrected
+		)(input);
 	};
 
-	const add = adjusting.submit(() => {
-		void adding.hide();
-		toast.show('Adjustment added');
-	});
+	const add = adjusting.submit(
+		() => {
+			requestId = generateToken();
+			void adding.hide();
+			toast.show('Adjustment added');
+		},
+		undefined,
+		added
+	);
 </script>
 
 <li class="flex flex-col gap-3 border-b py-4" aria-labelledby="{id}-name">
@@ -153,10 +189,14 @@
 						class="flex flex-1"
 						use:enhance={confirmFirst(
 							`Clear the arrival of ${isolate(team.name)}? Its late penalty goes too.`,
-							arrival.submit(() => {
-								toast.show('Arrival cleared');
-								void refocus(() => correcting.opener);
-							})
+							arrival.submit(
+								() => {
+									toast.show('Arrival cleared');
+									void refocus(() => correcting.opener);
+								},
+								undefined,
+								cleared
+							)
 						)}
 					>
 						<input type="hidden" name="teamId" value={team.id} />
@@ -204,10 +244,14 @@
 							action="?/adjustmentRemove"
 							use:enhance={confirmFirst(
 								`Remove ${signed(adjustment.points)} for “${isolate(adjustment.reason)}”?`,
-								adjusting.submit(() => {
-									toast.show('Adjustment removed');
-									void refocus(() => adding.opener);
-								})
+								adjusting.submit(
+									() => {
+										toast.show('Adjustment removed');
+										void refocus(() => adding.opener);
+									},
+									undefined,
+									removed
+								)
 							)}
 						>
 							<input type="hidden" name="adjustmentId" value={adjustment.id} />
@@ -235,8 +279,10 @@
 				aria-label="Adjustment for {team.name}"
 				class="flex flex-col gap-3 outline-none"
 				use:enhance={add}
+				oninput={() => (requestId = generateToken())}
 			>
 				<input type="hidden" name="teamId" value={team.id} />
+				<input type="hidden" name="requestId" value={requestId} />
 				<fieldset class="flex gap-3">
 					<legend class="sr-only">Bonus or penalty</legend>
 					<label class="flex min-h-touch flex-1 items-center gap-2">

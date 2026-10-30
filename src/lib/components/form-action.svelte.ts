@@ -1,10 +1,17 @@
-import { refreshGameData } from '#lib/components/connection/index.js';
+import { connection, refreshGameData } from '#lib/components/connection/index.js';
 
 interface Failure<R> {
 	message: string | null;
 	result: R | undefined;
 	subject: unknown;
 }
+
+/**
+ * Called as a request leaves, with its form, so it can note the state the request started from.
+ * The function it returns runs after a request that lost its answer, once the page shows the
+ * server's state again, and tells from that state what the request did.
+ */
+export type Recheck<T> = (formData: FormData) => () => T;
 
 /**
  * Busy and error state of a form that changes game data. An error belongs to the subject the form
@@ -37,10 +44,13 @@ export class FormAction<R = never> {
 		this.#failure = null;
 	}
 
-	/** Refresh either way: a failure usually means someone else changed the same thing. */
-	protected async refresh() {
+	/**
+	 * Refresh either way: a failure usually means someone else changed the same thing. Resolves
+	 * whether the page now shows the server's state, so a lost answer can be judged from it.
+	 */
+	protected async refresh(): Promise<boolean> {
 		await refreshGameData().catch(() => {});
-		this.busy = false;
+		return connection.online && !connection.stale;
 	}
 
 	protected recordFailure(

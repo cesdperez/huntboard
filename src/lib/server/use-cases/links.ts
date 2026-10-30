@@ -1,3 +1,4 @@
+import { isToken } from '#lib/domain/token.js';
 import type { ActionOutcome } from './action-outcome.js';
 import { rotateAdminToken, rotateScoreboardToken, rotateTeamToken } from '../db/links.js';
 import { readId } from './form.js';
@@ -13,9 +14,26 @@ export interface LinksFormResult {
 
 type LinksOutcome = ActionOutcome<LinksFormResult>;
 
-/** The new admin token. The caller moves the organiser to it, because the old link stops working. */
-export function rotateAdminLink(db: D1Database, gameId: number): Promise<string> {
-	return rotateAdminToken(db, gameId);
+/** The new admin token on success, for the caller to move the organiser to, as the old link stops working. */
+export type RotateAdminOutcome = { token: string } | LinksOutcome;
+
+/**
+ * Moves the game to the admin token the browser made. The browser makes it, so when the answer is
+ * lost it can still check the new link and go there, instead of staying on the dead one.
+ */
+export async function rotateAdminLink(
+	db: D1Database,
+	gameId: number,
+	data: FormData
+): Promise<RotateAdminOutcome> {
+	const token = data.get('adminToken');
+	if (!isToken(token)) {
+		return { status: 400, result: { error: 'The new link was not made right. Reload the page.' } };
+	}
+	if (!(await rotateAdminToken(db, gameId, token))) {
+		return { status: 409, result: { error: 'That link is taken. Rotate again.' } };
+	}
+	return { token };
 }
 
 export async function rotateScoreboardLink(db: D1Database, gameId: number): Promise<LinksOutcome> {

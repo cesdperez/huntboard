@@ -1,14 +1,25 @@
-import { parsePoints } from '#lib/domain/points.js';
+import { clampPoints, parsePoints } from '#lib/domain/points.js';
 import { normalizeNickname } from '#lib/domain/nickname.js';
 import { normalizeReason, REASON_MAX_LENGTH, REASON_TOO_LONG } from '#lib/domain/reason.js';
 import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
 import { conflictMessage } from './conflict-message.js';
-import { judgeClaim, scoreWithoutClaim, type JudgeResult, type Verdict } from '../db/judging.js';
+import {
+	getActiveRangedClaim,
+	getRangedClaim,
+	judgeClaim,
+	scoreWithoutClaim,
+	type JudgeResult,
+	type RangedClaimRow,
+	type Verdict
+} from '../db/judging.js';
 import { readId, readString } from './form.js';
 
-/** What a judging action returns under `judge`. Scored points are after clamping. */
+/**
+ * What a judging action returns under `judge`. Scored points are after clamping. Unchanged comes
+ * only from a check: the claim is still as the judge saw it.
+ */
 export type JudgeFormResult =
-	{ kind: 'scored'; points: number } | { kind: 'rejected' } | ErrorResult;
+	{ kind: 'scored'; points: number } | { kind: 'rejected' } | { kind: 'unchanged' } | ErrorResult;
 
 type JudgeOutcome = ActionOutcome<JudgeFormResult>;
 
@@ -58,6 +69,51 @@ export async function scoreOpenCell(
 	if (teamId === null || challengeId === null) return error(404, OPEN_CELL_GONE);
 	const result = await scoreWithoutClaim(db, gameId, { teamId, challengeId, ...score });
 	return toOutcome(result, OPEN_CELL_GONE);
+}
+
+/**
+ * Tells a judge whose answer was lost what their judgement did, changing nothing: scored or
+ * rejected when it went through, unchanged when the claim is still as they saw it, or who got
+ * there first. verdict is 'scored' or 'rejected'; the other fields are the judgement's own.
+ */
+export async function checkJudgement(
+	db: D1Database,
+	gameId: number,
+	data: FormData
+): Promise<JudgeOutcome> {
+	const rejecting = data.get('verdict') === 'rejected';
+	const sent = rejecting ? readJudge(data) : readScore(data);
+	if (isRefusal(sent)) return sent;
+	const claimId = readId(data, 'claimId');
+	if (claimId !== null) {
+		const claim = await getRangedClaim(db, gameId, claimId);
+		if (!claim) return error(404, CLAIM_GONE);
+		const from = data.get('from') === 'scored' ? 'scored' : 'pending';
+		return checked(claim, sent, claim.status === from);
+	}
+	const teamId = readId(data, 'teamId');
+	const challengeId = readId(data, 'challengeId');
+	if (teamId === null || challengeId === null) return error(404, OPEN_CELL_GONE);
+	const claim = await getActiveRangedClaim(db, gameId, teamId, challengeId);
+	return claim ? checked(claim, sent, false) : UNCHANGED;
+}
+
+const UNCHANGED: JudgeOutcome = { status: 200, result: { kind: 'unchanged' } };
+
+function checked(
+	claim: RangedClaimRow,
+	sent: { judgedBy: string; points?: number },
+	asSeen: boolean
+): JudgeOutcome {
+	const verdict = sent.points === undefined ? 'rejected' : 'scored';
+	const points =
+		sent.points === undefined
+			? null
+			: clampPoints(sent.points, { min: claim.min_points, max: claim.max_points });
+	if (claim.judged_by === sent.judgedBy && claim.status === verdict && claim.points === points) {
+		return toOutcome({ status: 'judged', claim }, CLAIM_GONE);
+	}
+	return asSeen ? UNCHANGED : error(409, conflictMessage(claim));
 }
 
 async function judge(

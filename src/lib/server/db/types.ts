@@ -69,6 +69,7 @@ export interface AdjustmentRow {
 	reason: string;
 	created_by: string;
 	created_at: string;
+	request_id: string | null;
 }
 
 /** Counts every claim, rejected history included, because deleting cascades to all of them. */

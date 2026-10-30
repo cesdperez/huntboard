@@ -1,10 +1,21 @@
 import { deserialize } from '$app/forms';
 import { resultUnder } from '#lib/action-results.js';
 import { classifyMedia, prepareClaimMedia } from '#lib/client/claim-media.js';
-import { putFile } from '#lib/client/media-upload.js';
+import { putFile, type PutOutcome } from '#lib/client/media-upload.js';
 import { isVideoType, type MediaKind } from '#lib/domain/claim-media.js';
 import type { GamePhase } from '#lib/domain/game-window.js';
 import { actionFailureMessage, RETRY } from './action-message.js';
+
+// Sending it again would only spend another upload from the team's limit.
+export const UPLOAD_REFUSED =
+	'Storage refused this upload. Mark it done without one and send the proof another way.';
+export const UPLOAD_STALLED = 'The upload stopped moving. Check your connection and try again.';
+
+const UPLOAD_FAILURES: Record<Exclude<PutOutcome, 'uploaded'>, string> = {
+	refused: UPLOAD_REFUSED,
+	stalled: UPLOAD_STALLED,
+	failed: RETRY
+};
 
 export type UploadPhase = 'idle' | 'preparing' | 'uploading' | 'ready' | 'failed';
 
@@ -56,9 +67,9 @@ export class ClaimMediaUpload {
 
 			this.phase = 'uploading';
 			this.progress = 0;
-			const uploaded = await putFile(target.url, target.headers, prepared.file, onProgress, signal);
+			const outcome = await putFile(target.url, target.headers, prepared.file, onProgress, signal);
 			if (signal.aborted) return;
-			if (!uploaded) return this.#fail(RETRY);
+			if (outcome !== 'uploaded') return this.#fail(UPLOAD_FAILURES[outcome]);
 			this.key = target.key;
 			this.phase = 'ready';
 		} catch (error) {

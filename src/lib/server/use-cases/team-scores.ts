@@ -4,6 +4,7 @@ import {
 	type AdjustmentInput
 } from '#lib/domain/adjustment.js';
 import { normalizeNickname } from '#lib/domain/nickname.js';
+import { isToken } from '#lib/domain/token.js';
 import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
 import { addAdjustment, deleteAdjustment } from '../db/adjustments.js';
 import { recordFirstArrival, setArrival } from '../db/teams.js';
@@ -46,7 +47,12 @@ export async function addTeamAdjustment(
 		};
 	}
 
-	const added = await addAdjustment(db, gameId, teamId, { ...validated.adjustment, createdBy });
+	const requestId = data.get('requestId');
+	const added = await addAdjustment(db, gameId, teamId, {
+		...validated.adjustment,
+		createdBy,
+		requestId: isToken(requestId) ? requestId : null
+	});
 	if (!added) return error(404, TEAM_GONE);
 	return { status: 200, result: { kind: 'adjusted' } };
 }

@@ -5,6 +5,11 @@ export function generateToken(): string {
 	return encodeBase64Url(crypto.getRandomValues(new Uint8Array(TOKEN_BYTES)));
 }
 
+/** Whether value has the exact form generateToken makes: 21 free characters, and 2 bits in the last. */
+export function isToken(value: unknown): value is string {
+	return typeof value === 'string' && /^[A-Za-z0-9_-]{21}[AQgw]$/.test(value);
+}
+
 /** Base64url without padding, safe in URL paths. */
 export function encodeBase64Url(bytes: Uint8Array): string {
 	const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');

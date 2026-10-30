@@ -20,16 +20,24 @@ beforeEach(() => {
 describe('rotateAdminToken', () => {
 	it('replaces the admin token so the old one no longer opens the game', async () => {
 		const game = await createGame(db, 'Canal hunt');
+		const token = 'q7Zt3kV9xW2mN4pL8rB6sA';
 
-		const token = await rotateAdminToken(db, game.id);
+		expect(await rotateAdminToken(db, game.id, token)).toBe(true);
 
-		expect(token).toMatch(/^[A-Za-z0-9_-]{22}$/);
-		expect(token).not.toBe(game.admin_token);
 		expect(await getGameByAdminToken(db, game.admin_token)).toBeNull();
 		expect(await getGameByAdminToken(db, token)).toMatchObject({
 			id: game.id,
 			scoreboard_token: game.scoreboard_token
 		});
+	});
+
+	it('keeps the old token when another game has the new one', async () => {
+		const game = await createGame(db, 'Canal hunt');
+		const other = await createGame(db, 'Other hunt');
+
+		expect(await rotateAdminToken(db, game.id, other.admin_token)).toBe(false);
+
+		expect(await getGameByAdminToken(db, game.admin_token)).toMatchObject({ id: game.id });
 	});
 });
 

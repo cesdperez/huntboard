@@ -1,4 +1,9 @@
-import { rejectClaim, scoreClaim, scoreOpenCell } from '#lib/server/use-cases/judging.js';
+import {
+	checkJudgement,
+	rejectClaim,
+	scoreClaim,
+	scoreOpenCell
+} from '#lib/server/use-cases/judging.js';
 import { adminAction } from './admin-action.js';
 import type { AdminActions } from './types.js';
 
@@ -6,5 +11,6 @@ import type { AdminActions } from './types.js';
 export const judgingActions = {
 	judgeScore: adminAction('judge', scoreClaim),
 	judgeReject: adminAction('judge', rejectClaim),
-	judgeScoreOpen: adminAction('judge', scoreOpenCell)
+	judgeScoreOpen: adminAction('judge', scoreOpenCell),
+	judgeCheck: adminAction('judge', checkJudgement)
 } satisfies AdminActions;

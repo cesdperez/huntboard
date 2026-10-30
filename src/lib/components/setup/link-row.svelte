@@ -2,6 +2,11 @@
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { needsRetry } from '#lib/components/admin/admin-message.js';
+	import { RETRY } from '#lib/components/team/action-message.js';
+	import { toast } from '#lib/components/toast/index.js';
+	import { generateToken } from '#lib/domain/token.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
 	import LinkQrSheet from './link-qr-sheet.svelte';
@@ -33,6 +38,30 @@
 	let rotateButton = $state<HTMLElement | null>(null);
 	let cancelButton = $state<HTMLElement | null>(null);
 	let resetTimer: ReturnType<typeof setTimeout> | undefined;
+
+	// The browser makes the new admin token, so it knows the new link even when the answer is lost.
+	const rotatesAdmin = $derived(action === 'linksRotateAdmin');
+	let newAdminToken: string | null = null;
+
+	const adminSetup = (token: string) => resolve('/a/[token]/setup', { token });
+
+	async function adminLinkWorks(token: string): Promise<boolean> {
+		const response = await fetch(adminSetup(token), { method: 'HEAD', cache: 'no-store' }).catch(
+			() => null
+		);
+		return response?.ok === true;
+	}
+
+	// Replace, so Back does not land on the old link, which is now a 404.
+	function moveTo(location: string) {
+		submitting = false;
+		newAdminToken = null;
+		void setConfirming(false);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the server's redirect and adminSetup both come from resolve()
+		return goto(location, { replace: true, reset: false, state: { adminLinkRotated: true } });
+	}
+
+	const goToAdminLink = (token: string) => moveTo(adminSetup(token));
 
 	const status = $derived(
 		copyState === 'copied'
@@ -85,8 +114,16 @@
 				method="POST"
 				action="?/{action}"
 				class="flex flex-col gap-3"
-				use:enhance={() => {
+				use:enhance={async ({ formData, cancel }) => {
 					submitting = true;
+					if (rotatesAdmin) {
+						if (newAdminToken && (await adminLinkWorks(newAdminToken))) {
+							cancel();
+							return goToAdminLink(newAdminToken);
+						}
+						newAdminToken = generateToken();
+						formData.set('adminToken', newAdminToken);
+					}
 					return async (settled) => {
 						const { result } = settled;
 						submitting = false;
@@ -94,14 +131,14 @@
 						await setConfirming(false);
 						// Only the admin rotate redirects: the new page needs to say its own link changed.
 						if (result.type === 'redirect') {
-							// Replace, so Back does not land on the old link, which is now a 404.
-							// The server built the location with resolve().
-							// eslint-disable-next-line svelte/no-navigation-without-resolve
-							await goto(result.location, {
-								replace: true,
-								reset: false,
-								state: { adminLinkRotated: true }
-							});
+							await moveTo(result.location);
+							return;
+						}
+						// A lost answer may hide a rotation that went through, which leaves this link dead,
+						// so a refresh would land on the dead link page. The next tap checks the new link first.
+						if (newAdminToken && needsRetry(result)) {
+							if (await adminLinkWorks(newAdminToken)) await goToAdminLink(newAdminToken);
+							else toast.show(RETRY);
 							return;
 						}
 						await updateOrRetry(settled);
