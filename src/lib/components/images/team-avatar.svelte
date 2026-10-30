@@ -20,6 +20,7 @@
 		width="256"
 		height="256"
 		decoding="async"
+		loading="lazy"
 		class={cn('shrink-0 rounded-full border object-cover', className)}
 	/>
 {:else}
