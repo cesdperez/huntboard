@@ -106,8 +106,9 @@
 						<!-- Higher ranks paint on top, so a climbing team slides over the rows it passes. -->
 						<li
 							class={cn(
-								'relative flex min-h-touch items-center gap-3 border-b border-l-4 border-l-transparent bg-surface pl-2',
-								row.own && 'border-l-own bg-own-row font-semibold',
+								'relative flex min-h-touch items-center gap-3 border-b bg-surface pl-3',
+								// Only this row has a left border: forced colours would paint a transparent one on every row.
+								row.own && 'border-l-4 border-l-own bg-own-row pl-2 font-semibold',
 								event && 'pr-2'
 							)}
 							animate:flip={{ duration: motionMs(REORDER_MS) }}
