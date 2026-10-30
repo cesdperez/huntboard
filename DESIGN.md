@@ -165,7 +165,7 @@ The grid has team names as columns and a sticky first column of challenge titles
 - The sheet shows the claim's photo or video under the claim's details, the same way the queue does.
 - A tap acts on the state the sheet showed when it opened or after its last answer. If a poll changed the cell in between, the tap gets the conflict message instead of quietly doing something else.
 
-The Teams tab lists teams in their setup order, not by rank, so a row does not move while the judge taps it. Each team shows its rank and total, then the breakdown: scored claims, adjustments, and the late penalty with its minutes.
+The Teams tab lists teams in their setup order, not by rank, so a row does not move while the judge taps it. Here and in the Setup team list, names and members each take up to two lines, so teams that share a long prefix still read apart at 360px. Each team shows its rank and total, then the breakdown: scored claims, adjustments, and the late penalty with its minutes.
 
 - "Record arrival" takes the server's clock. "Correct" and "Enter time" take a time in the viewer's time zone, no later than now. They start at the end time, or at now while the end is still to come. "Clear" confirms first.
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.

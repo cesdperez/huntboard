@@ -132,7 +132,7 @@
 			<h2 id="{id}-name" class="line-clamp-2 font-display type-heading break-words">
 				{team.name}
 			</h2>
-			{#if team.members}<p class="truncate type-secondary">{team.members}</p>{/if}
+			{#if team.members}<p class="line-clamp-2 type-secondary break-words">{team.members}</p>{/if}
 		</div>
 		<Points value={team.total} variant="total" />
 	</div>

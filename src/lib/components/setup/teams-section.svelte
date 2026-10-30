@@ -203,8 +203,10 @@
 								/>
 							{/if}
 							<div class="min-w-0 flex-1">
-								<p class="truncate">{team.name}</p>
-								{#if team.members}<p class="truncate type-secondary">{team.members}</p>{/if}
+								<p class="line-clamp-2 break-words">{team.name}</p>
+								{#if team.members}<p class="line-clamp-2 type-secondary break-words">
+										{team.members}
+									</p>{/if}
 								{#if team.claim_count > 0}
 									<p class="type-secondary tabular-nums">{plural(team.claim_count, 'claim')}</p>
 								{/if}
