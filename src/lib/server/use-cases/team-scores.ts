@@ -81,15 +81,22 @@ export async function recordArrival(
 	}
 }
 
-/** The browser sends the corrected time already converted to UTC ISO. */
+/**
+ * The browser sends the corrected time already converted to UTC ISO. A time still to come is
+ * refused, because the penalty would apply before the team arrives.
+ */
 export async function correctArrival(
 	db: D1Database,
 	gameId: number,
-	data: FormData
+	data: FormData,
+	now: Date
 ): Promise<TeamScoresOutcome> {
 	const teamId = readId(data, 'teamId');
 	const arrivedAt = readUtcTime(data, 'arrivedAt');
 	if (!arrivedAt) return error(400, 'Enter the time the team arrived.');
+	if (Date.parse(arrivedAt) > now.getTime()) {
+		return error(400, 'That time is still to come. Enter the time the team arrived.');
+	}
 	return saveArrival(db, gameId, teamId, arrivedAt);
 }
 

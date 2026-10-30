@@ -14,8 +14,22 @@ function parsed(title: string, overrides: Partial<ParsedChallenge> = {}): Parsed
 	};
 }
 
-function existing(id: number, title: string, claims: ExistingClaim[] = []): ExistingChallenge {
-	return { id, title, claims };
+function existing(
+	id: number,
+	title: string,
+	claims: ExistingClaim[] = [],
+	overrides: Partial<ExistingChallenge> = {}
+): ExistingChallenge {
+	return {
+		id,
+		title,
+		description: null,
+		section: null,
+		min_points: 5,
+		max_points: 20,
+		claims,
+		...overrides
+	};
 }
 
 function scored(id: number, points: number, team_id = 1): ExistingClaim {
@@ -52,9 +66,55 @@ describe('diffReimport', () => {
 
 		const diff = diffReimport([existing(7, 'Swim in a fountain')], [swim]);
 
-		expect(diff.matched).toEqual([{ id: 7, challenge: swim }]);
+		expect(diff.matched).toEqual([{ id: 7, challenge: swim, changed: true }]);
 		expect(diff.added).toEqual([]);
 		expect(diff.deleted).toEqual([]);
+	});
+
+	it('marks a matched challenge unchanged when the pasted one is the same', () => {
+		const swim = parsed('Swim in a fountain', { section: 'Wet', description: 'Any fountain' });
+
+		const diff = diffReimport(
+			[existing(7, 'Swim in a fountain', [], { section: 'Wet', description: 'Any fountain' })],
+			[swim]
+		);
+
+		expect(diff.matched).toEqual([{ id: 7, challenge: swim, changed: false }]);
+	});
+
+	it.each([
+		['section', { section: 'Wet' }],
+		['description', { description: 'Any fountain' }],
+		['min points', { min_points: 1 }],
+		['max points', { max_points: 30 }]
+	])('marks a matched challenge changed when its %s differs', (_, overrides) => {
+		const diff = diffReimport([existing(7, 'Swim')], [parsed('Swim', overrides)]);
+
+		expect(diff.matched[0].changed).toBe(true);
+	});
+
+	it('marks a title that differs only in case or spacing as changed', () => {
+		const diff = diffReimport([existing(7, 'Swim in a Fountain')], [parsed('Swim in a fountain')]);
+
+		expect(diff.matched[0].changed).toBe(true);
+	});
+
+	it('notices when matched challenges change order', () => {
+		const diff = diffReimport(
+			[existing(1, 'A'), existing(2, 'B')],
+			[parsed('B', { position: 0 }), parsed('A', { position: 1 })]
+		);
+
+		expect(diff.reordered).toBe(true);
+	});
+
+	it('keeps the order when new challenges go in between and missing ones drop out', () => {
+		const diff = diffReimport(
+			[existing(1, 'A'), existing(2, 'Gone'), existing(3, 'B')],
+			[parsed('A', { position: 0 }), parsed('New', { position: 1 }), parsed('B', { position: 2 })]
+		);
+
+		expect(diff.reordered).toBe(false);
 	});
 
 	it('matches titles ignoring case, surrounding spaces and repeated spaces', () => {
@@ -62,7 +122,7 @@ describe('diffReimport', () => {
 
 		const diff = diffReimport([existing(7, '  Swim in  a Fountain ')], [swim]);
 
-		expect(diff.matched).toEqual([{ id: 7, challenge: swim }]);
+		expect(diff.matched).toEqual([{ id: 7, challenge: swim, changed: true }]);
 	});
 
 	it('treats a changed title as one deletion and one addition', () => {
@@ -88,7 +148,7 @@ describe('diffReimport', () => {
 			[keep, fresh]
 		);
 
-		expect(diff.matched).toEqual([{ id: 1, challenge: keep }]);
+		expect(diff.matched).toEqual([{ id: 1, challenge: keep, changed: false }]);
 		expect(diff.added).toEqual([fresh]);
 		expect(diff.deleted).toEqual([{ id: 2, title: 'Unclaimed' }]);
 		expect(diff.deletedWithClaims).toEqual([{ id: 3, title: 'Claimed', claimCount: 2 }]);

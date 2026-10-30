@@ -1,6 +1,7 @@
 import {
 	TEAM_MEMBERS_ERROR,
 	TEAM_NAME_ERROR,
+	TEAM_NAME_TAKEN_ERROR,
 	normalizeTeamMembers,
 	normalizeTeamName
 } from '#lib/domain/team-name.js';
@@ -32,7 +33,9 @@ export async function createTeam(
 	if ('error' in team) return failure(400, { error: team.error, ...typed });
 
 	const added = await addTeam(db, gameId, team.name, team.members);
-	return success({ teamId: added.id });
+	if (added.status === 'name-taken')
+		return failure(409, { error: TEAM_NAME_TAKEN_ERROR, ...typed });
+	return success({ teamId: added.team.id });
 }
 
 export async function editTeam(
@@ -46,10 +49,14 @@ export async function editTeam(
 	const team = readTeam(data);
 	if ('error' in team) return failure(400, { error: team.error, ...typed });
 
-	if (!(await updateTeam(db, gameId, teamId, team))) {
-		return failure(404, { error: MISSING_ERROR, teamId });
+	switch (await updateTeam(db, gameId, teamId, team)) {
+		case 'not-found':
+			return failure(404, { error: MISSING_ERROR, teamId });
+		case 'name-taken':
+			return failure(409, { error: TEAM_NAME_TAKEN_ERROR, ...typed });
+		case 'updated':
+			return success({ teamId });
 	}
-	return success({ teamId });
 }
 
 export const moveTeamUp = moveBy(-1);

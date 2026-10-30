@@ -23,6 +23,8 @@ export interface TeamRow {
 	id: number;
 	game_id: number;
 	name: string;
+	/** teamNameKey(name), unique within the game. */
+	name_key: string;
 	members: string;
 	token: string;
 	position: number;
@@ -74,7 +76,8 @@ export interface WithClaimCount {
 	claim_count: number;
 }
 
-export type TeamWithClaimCount = TeamRow & WithClaimCount;
+/** Deleting a team without claims also deletes its adjustments, so Setup names them first. */
+export type SetupTeam = TeamRow & WithClaimCount & { adjustment_count: number };
 
 export type ChallengeWithClaimCount = ChallengeRow & WithClaimCount;
 

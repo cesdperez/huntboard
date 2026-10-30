@@ -8,9 +8,8 @@ export interface ExistingClaim {
 	points: number | null;
 }
 
-export interface ExistingChallenge {
+export interface ExistingChallenge extends Omit<ParsedChallenge, 'position'> {
 	id: number;
-	title: string;
 	claims: ExistingClaim[];
 }
 
@@ -18,6 +17,8 @@ export interface MatchedChallenge {
 	/** Id of the stored challenge that the pasted one updates. */
 	id: number;
 	challenge: ParsedChallenge;
+	/** False when the pasted challenge repeats the stored one exactly, title case included. */
+	changed: boolean;
 }
 
 export interface DeletedChallenge {
@@ -51,6 +52,8 @@ export interface ReimportDiff {
 	deletedWithClaims: DeletedChallengeWithClaims[];
 	/** Scored claims on matched challenges whose points fall outside the new range. */
 	clampedScores: ClampedScore[];
+	/** Whether the matched challenges come in another order than they are stored in. */
+	reordered: boolean;
 }
 
 /**
@@ -68,7 +71,8 @@ export function diffReimport(
 		added: [],
 		deleted: [],
 		deletedWithClaims: [],
-		clampedScores: []
+		clampedScores: [],
+		reordered: false
 	};
 
 	for (const challenge of pasted) {
@@ -76,7 +80,7 @@ export function diffReimport(
 		const stored = unmatched.get(key);
 		if (stored) {
 			unmatched.delete(key);
-			diff.matched.push({ id: stored.id, challenge });
+			diff.matched.push({ id: stored.id, challenge, changed: isChanged(stored, challenge) });
 			diff.clampedScores.push(...clampedScores(stored, challenge));
 		} else {
 			diff.added.push(challenge);
@@ -87,7 +91,19 @@ export function diffReimport(
 	for (const stored of existing) {
 		if (!matchedIds.has(stored.id)) addDeletion(diff, stored);
 	}
+	const storedOrder = existing.filter(({ id }) => matchedIds.has(id));
+	diff.reordered = diff.matched.some(({ id }, index) => storedOrder[index].id !== id);
 	return diff;
+}
+
+function isChanged(stored: ExistingChallenge, challenge: ParsedChallenge): boolean {
+	return (
+		stored.title !== challenge.title ||
+		stored.description !== challenge.description ||
+		stored.section !== challenge.section ||
+		stored.min_points !== challenge.min_points ||
+		stored.max_points !== challenge.max_points
+	);
 }
 
 function assertUniqueTitles(pasted: readonly ParsedChallenge[]): void {

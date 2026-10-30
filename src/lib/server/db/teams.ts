@@ -1,17 +1,17 @@
+import { teamNameKey } from '#lib/domain/team-name.js';
 import { generateToken } from '#lib/domain/token.js';
-import type { TeamRow, TeamWithClaimCount } from './types.js';
+import type { TeamRow, SetupTeam } from './types.js';
 
-export async function listTeamsWithClaimCounts(
-	db: D1Database,
-	gameId: number
-): Promise<TeamWithClaimCount[]> {
+export async function listSetupTeams(db: D1Database, gameId: number): Promise<SetupTeam[]> {
 	const { results } = await db
 		.prepare(
-			`SELECT team.*, (SELECT count(*) FROM claim WHERE claim.team_id = team.id) AS claim_count
+			`SELECT team.*,
+				(SELECT count(*) FROM claim WHERE claim.team_id = team.id) AS claim_count,
+				(SELECT count(*) FROM adjustment WHERE adjustment.team_id = team.id) AS adjustment_count
 			FROM team WHERE game_id = ? ORDER BY position, id`
 		)
 		.bind(gameId)
-		.all<TeamWithClaimCount>();
+		.all<SetupTeam>();
 	return results;
 }
 
@@ -26,37 +26,61 @@ export async function listTeamNames(
 	return results;
 }
 
-/** Adds a team after the last one, with a fresh link token. */
+export type AddTeamResult = { status: 'added'; team: TeamRow } | { status: 'name-taken' };
+
+/** Adds a team after the last one, with a fresh link token, unless another team has its name. */
 export async function addTeam(
 	db: D1Database,
 	gameId: number,
 	name: string,
 	members: string
-): Promise<TeamRow> {
-	const team = await db
-		.prepare(
-			`INSERT INTO team (game_id, name, members, token, position)
-			SELECT ?1, ?2, ?3, ?4, coalesce(max(position) + 1, 0) FROM team WHERE game_id = ?1
-			RETURNING *`
-		)
-		.bind(gameId, name, members, generateToken())
-		.first<TeamRow>();
-	if (!team) throw new Error('Inserting a team returned no row');
-	return team;
+): Promise<AddTeamResult> {
+	try {
+		const team = await db
+			.prepare(
+				`INSERT INTO team (game_id, name, name_key, members, token, position)
+				SELECT ?1, ?2, ?3, ?4, ?5, coalesce(max(position) + 1, 0) FROM team WHERE game_id = ?1
+				RETURNING *`
+			)
+			.bind(gameId, name, teamNameKey(name), members, generateToken())
+			.first<TeamRow>();
+		if (!team) throw new Error('Inserting a team returned no row');
+		return { status: 'added', team };
+	} catch (error) {
+		if (isNameTaken(error)) return { status: 'name-taken' };
+		throw error;
+	}
 }
 
-/** False when the team is not in this game. */
+export type UpdateTeamResult = 'updated' | 'not-found' | 'name-taken';
+
 export async function updateTeam(
 	db: D1Database,
 	gameId: number,
 	teamId: number,
 	{ name, members }: Pick<TeamRow, 'name' | 'members'>
-): Promise<boolean> {
-	const updated = await db
-		.prepare('UPDATE team SET name = ?, members = ? WHERE id = ? AND game_id = ? RETURNING id')
-		.bind(name, members, teamId, gameId)
-		.first<number>('id');
-	return updated !== null;
+): Promise<UpdateTeamResult> {
+	try {
+		const updated = await db
+			.prepare(
+				'UPDATE team SET name = ?, name_key = ?, members = ? WHERE id = ? AND game_id = ? RETURNING id'
+			)
+			.bind(name, teamNameKey(name), members, teamId, gameId)
+			.first<number>('id');
+		return updated === null ? 'not-found' : 'updated';
+	} catch (error) {
+		if (isNameTaken(error)) return 'name-taken';
+		throw error;
+	}
+}
+
+// The unique index on (game_id, name_key) refuses the write, so two judges adding one name at once cannot both pass.
+function isNameTaken(error: unknown): boolean {
+	return (
+		error instanceof Error &&
+		error.message.includes('UNIQUE constraint failed') &&
+		error.message.includes('name_key')
+	);
 }
 
 /** Corrects or (with null) clears when the team reached the meeting point. False when it is not in this game. */

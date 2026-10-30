@@ -33,9 +33,7 @@ export interface ImportSource {
 	teamNames: Map<number, string>;
 }
 
-interface ImportSourceRow {
-	id: number;
-	title: string;
+interface ImportSourceRow extends Omit<ExistingChallenge, 'claims'> {
 	claim_id: number | null;
 	team_id: number | null;
 	team_name: string | null;
@@ -47,7 +45,8 @@ interface ImportSourceRow {
 export async function getImportSource(db: D1Database, gameId: number): Promise<ImportSource> {
 	const { results } = await db
 		.prepare(
-			`SELECT challenge.id, challenge.title, claim.id AS claim_id, claim.team_id,
+			`SELECT challenge.id, challenge.title, challenge.description, challenge.section,
+				challenge.min_points, challenge.max_points, claim.id AS claim_id, claim.team_id,
 				team.name AS team_name, claim.status, claim.points
 			FROM challenge
 			LEFT JOIN claim ON claim.challenge_id = challenge.id
@@ -63,7 +62,8 @@ export async function getImportSource(db: D1Database, gameId: number): Promise<I
 	for (const row of results) {
 		let challenge = byId.get(row.id);
 		if (!challenge) {
-			challenge = { id: row.id, title: row.title, claims: [] };
+			const { id, title, description, section, min_points, max_points } = row;
+			challenge = { id, title, description, section, min_points, max_points, claims: [] };
 			byId.set(row.id, challenge);
 		}
 		if (row.claim_id === null || row.team_id === null || row.status === null) continue;

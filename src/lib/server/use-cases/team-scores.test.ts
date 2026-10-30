@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { listAdjustments } from '../db/adjustments.js';
 import { createGame } from '../db/games.js';
-import { listTeamsWithClaimCounts } from '../db/teams.js';
+import { listSetupTeams } from '../db/teams.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedAdjustment, seedTeam } from '../db/testing/seed.js';
 import type { GameRow, TeamRow } from '../db/types.js';
@@ -32,7 +32,7 @@ function form(fields: Record<string, string>): FormData {
 }
 
 async function arrivedAt() {
-	return (await listTeamsWithClaimCounts(db, game.id))[0].arrived_at;
+	return (await listSetupTeams(db, game.id))[0].arrived_at;
 }
 
 describe('addTeamAdjustment', () => {
@@ -165,11 +165,32 @@ describe('correctArrival', () => {
 		const outcome = await correctArrival(
 			db,
 			game.id,
-			form({ teamId: String(rats.id), arrivedAt: '2026-06-01T20:58:00.000Z' })
+			form({ teamId: String(rats.id), arrivedAt: '2026-06-01T20:58:00.000Z' }),
+			NOW
 		);
 
 		expect(outcome.status).toBe(200);
 		expect(await arrivedAt()).toBe('2026-06-01T20:58:00.000Z');
+	});
+
+	it('refuses a time later than now and keeps the old time', async () => {
+		await recordArrival(db, game.id, form({ teamId: String(rats.id) }), NOW);
+
+		const outcome = await correctArrival(
+			db,
+			game.id,
+			form({ teamId: String(rats.id), arrivedAt: '2026-06-01T21:04:00.000Z' }),
+			NOW
+		);
+
+		expect(outcome).toEqual({
+			status: 400,
+			result: {
+				kind: 'error',
+				message: 'That time is still to come. Enter the time the team arrived.'
+			}
+		});
+		expect(await arrivedAt()).toBe('2026-06-01T21:03:12.345Z');
 	});
 
 	it.each(['', 'nine pm'])('refuses %j and keeps the old time', async (value) => {
@@ -178,7 +199,8 @@ describe('correctArrival', () => {
 		const outcome = await correctArrival(
 			db,
 			game.id,
-			form({ teamId: String(rats.id), arrivedAt: value })
+			form({ teamId: String(rats.id), arrivedAt: value }),
+			NOW
 		);
 
 		expect(outcome).toEqual({

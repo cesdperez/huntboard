@@ -1,4 +1,5 @@
 import { titleKey } from '#lib/domain/challenge-parser.js';
+import { teamNameKey } from '#lib/domain/team-name.js';
 import type { AdjustmentRow, ChallengeRow, ClaimRow, TeamRow } from '../types.js';
 
 /** Raw inserts for test setup, so a test does not depend on the query module it is testing. */
@@ -8,9 +9,11 @@ export async function seedTeam(
 	fields: Partial<Omit<TeamRow, 'id' | 'game_id'>> = {}
 ): Promise<TeamRow> {
 	const position = fields.position ?? (await nextPosition(db, 'team', gameId));
+	const name = fields.name ?? `Team ${position + 1}`;
 	return insert<TeamRow>(db, 'team', {
 		game_id: gameId,
-		name: fields.name ?? `Team ${position + 1}`,
+		name,
+		name_key: fields.name_key ?? teamNameKey(name),
 		members: fields.members ?? '',
 		token: fields.token ?? `team-token-${gameId}-${position}`,
 		position,
