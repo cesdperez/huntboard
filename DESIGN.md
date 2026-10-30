@@ -393,6 +393,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 
 - Visible focus ring: 2px `--ink` outline with 2px offset.
 - All interactive elements reachable by keyboard, in visual order.
+- Every piece of content sits in a landmark: the app bar, the page banner and the game name line in the page's `header`, the rest in `main`. The team strip is a "Your team" region, outside the header so it stays sticky.
 - Live regions announce score changes on the team strip, politely.
 - Points read with their unit: a range as "5 to 20 points", a single value as "25 points".
 - A button repeated in every item ("Score", "Reject", "Record arrival", "Add adjustment") carries the team and challenge in a visually hidden label, so a screen reader list of buttons tells them apart.

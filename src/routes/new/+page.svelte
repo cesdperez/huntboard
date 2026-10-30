@@ -19,8 +19,10 @@
 </svelte:head>
 
 {#if event}
-	<AppBar />
-	<PageBanner title="New game">Name it and start setting it up.</PageBanner>
+	<header>
+		<AppBar />
+		<PageBanner title="New game">Name it and start setting it up.</PageBanner>
+	</header>
 {/if}
 
 <main class="mx-auto flex max-w-content flex-col gap-6 px-gutter {event ? 'py-6' : 'py-10'}">

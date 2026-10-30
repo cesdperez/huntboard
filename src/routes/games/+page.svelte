@@ -19,8 +19,10 @@
 {/snippet}
 
 {#if event}
-	<AppBar />
-	<PageBanner title="My games">{@render signedInAs()}</PageBanner>
+	<header>
+		<AppBar />
+		<PageBanner title="My games">{@render signedInAs()}</PageBanner>
+	</header>
 {/if}
 
 <main class="mx-auto flex max-w-content flex-col gap-10 px-gutter {event ? 'py-6' : 'py-10'}">

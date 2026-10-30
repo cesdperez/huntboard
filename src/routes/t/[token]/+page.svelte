@@ -69,25 +69,27 @@
 </svelte:head>
 
 <div class="min-h-dvh">
-	{#if event}
-		<AppBar><NicknameButton /></AppBar>
-		<EventBanner
-			name={data.game.name}
-			day={clock.startDay}
-			countdown={clock.countdown}
-			image={data.game.image}
-		/>
-	{:else}
-		<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
-			<p class="truncate type-secondary">{data.game.name}</p>
-			<NicknameButton />
-		</div>
-		{#if data.game.image}
-			<div class="mx-auto max-w-content px-gutter pb-2">
-				<GameImageHeader image={data.game.image} />
+	<header>
+		{#if event}
+			<AppBar><NicknameButton /></AppBar>
+			<EventBanner
+				name={data.game.name}
+				day={clock.startDay}
+				countdown={clock.countdown}
+				image={data.game.image}
+			/>
+		{:else}
+			<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
+				<p class="truncate type-secondary">{data.game.name}</p>
+				<NicknameButton />
 			</div>
+			{#if data.game.image}
+				<div class="mx-auto max-w-content px-gutter pb-2">
+					<GameImageHeader image={data.game.image} />
+				</div>
+			{/if}
 		{/if}
-	{/if}
+	</header>
 
 	<TeamStrip
 		teamName={data.team.name}

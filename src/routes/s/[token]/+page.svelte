@@ -51,15 +51,17 @@
 	style:--teams={Math.max(data.standings.length, 3)}
 >
 	{#if layout === 'event'}
-		<AppBar class="scoreboard-app-bar" />
-		<EventBanner
-			heading
-			name={data.game.name}
-			day={clock.startDay}
-			countdown={clock.countdown}
-			image={data.game.image}
-			class="scoreboard-banner"
-		/>
+		<header>
+			<AppBar class="scoreboard-app-bar" />
+			<EventBanner
+				heading
+				name={data.game.name}
+				day={clock.startDay}
+				countdown={clock.countdown}
+				image={data.game.image}
+				class="scoreboard-banner"
+			/>
+		</header>
 	{/if}
 	<main class="scoreboard-main mx-auto flex w-full max-w-content flex-1 flex-col px-gutter py-6">
 		<div class="scoreboard-columns flex">

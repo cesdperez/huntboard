@@ -25,8 +25,10 @@
 {/snippet}
 
 {#if event}
-	<AppBar />
-	<PageBanner title="Huntboard">{@render intro()}</PageBanner>
+	<header>
+		<AppBar />
+		<PageBanner title="Huntboard">{@render intro()}</PageBanner>
+	</header>
 	<main class="mx-auto max-w-content px-gutter py-8">
 		<p class="type-body">Ask your organiser for your team's link.</p>
 		{@render organisers()}

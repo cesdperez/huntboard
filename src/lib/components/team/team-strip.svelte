@@ -33,7 +33,12 @@
 	const event = $derived(pageLayout() === 'event');
 </script>
 
-<header data-sticky-strip class="sticky top-0 z-30 border-b surface-strip shadow-strip">
+<!-- Not in the page's header, where sticky would let go once the header scrolls away. -->
+<section
+	data-sticky-strip
+	aria-label="Your team"
+	class="sticky top-0 z-30 border-b surface-strip shadow-strip"
+>
 	<div class="mx-auto max-w-content">
 		<button
 			type="button"
@@ -130,4 +135,4 @@
 	<p class="sr-only" aria-live="polite">
 		{own ? `${ordinal(own.rank)} place, ${plural(own.total, 'point')}` : ''}
 	</p>
-</header>
+</section>
