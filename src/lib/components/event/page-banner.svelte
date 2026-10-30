@@ -14,7 +14,7 @@
 <!-- The event banner for a page without a game: no image, no clock. -->
 <section class="surface-banner">
 	<div class="page-banner-grid mx-auto max-w-content gap-x-3 gap-y-2 px-gutter py-5">
-		<h1 class="page-banner-title self-end type-banner leading-[0.85] break-words">
+		<h1 class="page-banner-title self-end type-banner leading-(--banner-title-leading) break-words">
 			{title}
 		</h1>
 		{#if children}

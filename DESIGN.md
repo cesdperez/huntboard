@@ -60,6 +60,7 @@ A square, 28px on lists (`--marker-size`, which a theme may raise to 32px) and 4
 - Rejected: 2px `--danger` outline with a thin diagonal cross.
 - Corner radius 3px. Markers are the only square-cornered element with this radius, so they read as objects, not buttons.
 - Every marker has an accessible label: "Pending", "Scored 15 points", and so on.
+- With forced colours on, the pending triangle and the scored fill are drawn in `CanvasText`, with the points in `Canvas`, and the cross in `CanvasText`. Forced colours would otherwise drop the fills and leave a pending marker looking open.
 
 ## Typography
 
@@ -164,7 +165,7 @@ The grid has team names as columns and a sticky first column of challenge titles
 - The sheet shows the claim's photo or video under the claim's details, the same way the queue does.
 - A tap acts on the state the sheet showed when it opened or after its last answer. If a poll changed the cell in between, the tap gets the conflict message instead of quietly doing something else.
 
-The Teams tab lists teams in their setup order, not by rank, so a row does not move while the judge taps it. Each team shows its rank and total, then the breakdown: scored claims, adjustments, and the late penalty with its minutes.
+The Teams tab lists teams in their setup order, not by rank, so a row does not move while the judge taps it. Here and in the Setup team list, names and members each take up to two lines, so teams that share a long prefix still read apart at 360px. Each team shows its rank and total, then the breakdown: scored claims, adjustments, and the late penalty with its minutes.
 
 - "Record arrival" takes the server's clock. "Correct" and "Enter time" take a time in the viewer's time zone, no later than now. They start at the end time, or at now while the end is still to come. "Clear" confirms first.
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
@@ -219,7 +220,7 @@ Built on shadcn-svelte where it saves time (Button, Input, Label, Sheet), restyl
 - Touch targets at least 48px. Rows in lists are at least 56px tall.
 - Radii by hierarchy: sheets 16px on the top corners, buttons and inputs 10px, markers 3px, list rows 0 (rows are divided by `--line`, not boxed in cards).
 - No box shadows except on sheets and the sticky strip, where they show something floats above the page.
-- Native radios take `--action` as their accent colour.
+- Native radios take `--radio` as their accent colour. WebKit fills a checked radio with it and draws no ring, so it keeps 3:1 against `--surface` and `--paper` (WCAG 1.4.11). `theme-contrast.test.ts` checks every theme.
 - Buttons: one primary (filled `--action`, label in `--on-action`) per screen or sheet. Secondary buttons are `--ink` outlines. Destructive buttons are `--danger` outlines and confirm before acting.
 - shadcn's semantic names (`--primary`, `--background` and the rest) map onto the tokens in `app.css`, so generated components follow the theme.
 
@@ -247,6 +248,7 @@ Components use roles, never a theme's own colour names.
 | `--marker`, `--on-marker` | `--flag`, `--on-flag` | Pending triangle and scored fill, the points on it, the Queue badge |
 | `--action`, `--on-action` | `--flag`, `--on-flag` | The primary button and its label |
 | `--action-hover` | `#F26C1D`, dark `#E7702E` | The primary button under the pointer, keeping 4.5:1 with `--on-action` |
+| `--radio` | `--action` | The checked native radio. A theme whose `--action` is under 3:1 on `--surface` or `--paper` points it at `--ink` |
 | `--own` | `--flag` | Bar on the team's own row |
 | `--own-row` | `--strip` | Background of the team's own row |
 | `--strip`, `--on-strip` | `--surface`, `--ink` | The sticky team strip and the admin tab bar, and their text |
@@ -261,6 +263,7 @@ Components use roles, never a theme's own colour names.
 | `--banner`, `--on-banner` | `--flag`, `--on-flag` | Event layout: the event banner and its text |
 | `--banner-art` | none | Event layout: an image drawn in the banner's own column, never behind text |
 | `--banner-title-size`, `--banner-weight`, `--banner-tracking`, `--banner-transform` | `clamp(48px, 17vw, 80px)`, 450, normal, uppercase | Event layout: size, weight, letter spacing and case of the game name in the banner (the admin banner and the page banner take all but the size) |
+| `--banner-title-leading` | 0.85 | Event layout: line height of the game name in the banner. A font whose accents reach the line above needs more |
 | `--banner-title-tail-display`, `--banner-title-tail-style`, `--banner-title-tail-weight` | inline, normal, `--banner-weight` | Event layout: the last word of a game name of two or more words, which a theme may set on its own line or in italic |
 | `--banner-edge`, `--banner-edge-size` | none, 0px | Event layout: a band along the bottom of the banner, in its own padding |
 | `--section-heading-font`, `--section-heading-tracking` | `700 26px/1.25 --font-display`, normal | Event layout: the `font` shorthand and letter spacing of section headings, which take `--on-section` |
@@ -278,8 +281,8 @@ Inside the strip and the admin tab bar, the strip roles stand in for `--surface`
 A theme's registry entry names its layout. Structure changes only through it; the theme CSS changes only tokens. Components read it with `pageLayout()` from `src/lib/themes/page-layout.ts`. Pages without a game get the layout of `DEFAULT_THEME`.
 
 - `plain`: the layout described above. `flag` uses it.
-- `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The banner shows the game name in `--font-banner`, large enough to fill the banner (17vw up to 80px, 40px past 16 characters so long names wrap into a few lines), the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings are 26px `--font-display` with `--section-ornament` before and a 2px `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total, which the big screen scales like the members line. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row of at most two lines, its last word included, with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
-  - Admin pages are worked fast on a phone, so they keep their density and touch sizes and skip the big banner. Under the app bar a one-row banner shows the game name in 32px `--font-banner`, on at most two lines with the full name in its title, and the status line. The tab bar marks the current tab with a 4px bar in the strip's text colour along its top, and its focus ring sits inside the bar.
+- `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The banner shows the game name in `--font-banner`, large enough to fill the banner (17vw up to 80px, 40px past 16 characters and 30px past 40 so long names wrap into a few lines), on at most three lines with the rest cut by an ellipsis and words hyphenated in the page language, the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings are 26px `--font-display` with `--section-ornament` before and a 2px `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total, which the big screen scales like the members line. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row of at most two lines, its last word included, with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
+  - Admin pages are worked fast on a phone, so they keep their density and touch sizes and skip the big banner. Under the app bar a one-row banner shows the game name in 32px `--font-banner`, on at most two lines, and the status line. Both banners keep the full name in the title attribute and the text, so screen readers read all of it. The tab bar marks the current tab with a 4px bar in the strip's text colour along its top, and its focus ring sits inside the bar.
   - The home page and `/new` have no game, so their banner holds the page title in `--font-banner` and one line under it, with `--banner-art` beside. Error pages add only the app bar.
 
 ### What a theme may change
@@ -306,6 +309,7 @@ A theme's registry entry names its layout. Structure changes only through it; th
 | `--ink`, `--muted`, `--line` | `#151515`, `#5E564D`, `#E8DCC8` |
 | `--input-line` | `#958877` (3.4:1 on surface, 3.3:1 on paper) |
 | `--marker`, `--action`, `--own`, `--banner`, `--section-rule` | Orange `#FF741F`, with ink on it (6.8:1; white is 2.7:1 and fails) |
+| `--radio` | Ink, since the orange is 2.7:1 on ivory |
 | `--own-row` | `#FFE8D6` |
 | `--strip`, `--on-strip`, `--strip-score` | Cobalt `#124BCC`, white (7.2:1) |
 | `--on-strip-muted`, `--strip-own-row`, `--strip-danger` | `#D9E3FF` (5.6:1 at 15px), `#0C3A9E`, `#FFD1CC` (5.3:1) |
@@ -335,6 +339,7 @@ Fonts: Fraunces (bold serif) for `--font-display`, Barlow for `--font-sans`, Bar
 | `--danger` | `#A32020` (7.1:1) |
 | `--app-bar`, `--app-bar-base`, `--on-app-bar` | Cream with a `--line` hairline at the bottom, ink text. The browser chrome is `#FFF7E8`. |
 | `--banner`, `--banner-edge` | Cream, edged with alternating blue and terracotta tiles |
+| `--banner-title-leading` | 1.05, so an accented capital clears the descenders above it |
 | `--strip-paper` | `#1B3770` |
 | `--marker-outline` | `#726451` |
 | `--banner-art`, `--section-ornament` | A terracotta 2 × 2 tile in the banner, a small terracotta star after each section rule |

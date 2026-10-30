@@ -6,8 +6,13 @@ describe('normalizeName', () => {
 		expect(normalizeName('  Canal   Rats ', 40)).toBe('Canal Rats');
 	});
 
+	it('drops invisible format characters and composes accents', () => {
+		expect(normalizeName('‮Café​ ', 40)).toBe('Café');
+	});
+
 	it.each([
 		['empty', ''],
+		['only invisible characters', '​﻿'],
 		['only spaces', '   '],
 		['missing', null],
 		['a file upload', new Blob(['Canal Rats'])]

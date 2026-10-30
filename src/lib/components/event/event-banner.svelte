@@ -23,6 +23,7 @@
 
 	// Longer game names take a smaller title, so they wrap into a few lines, not a column of words.
 	const LONG_NAME = 16;
+	const LONGER_NAME = 40;
 
 	// The last word gets its own span, which a theme may set apart, like an italic second line.
 	const title = $derived(splitLastWord(name));
@@ -50,8 +51,10 @@
 		{/if}
 		<svelte:element
 			this={heading ? 'h1' : 'p'}
-			class="event-banner-title self-end type-banner leading-[0.85] break-words"
+			class="event-banner-title banner-glyph-room self-end type-banner break-words hyphens-auto"
 			data-long={name.length > LONG_NAME || undefined}
+			data-longer={name.length > LONGER_NAME || undefined}
+			title={name}
 		>
 			{#if title}
 				{title.head} <span class="event-banner-title-tail">{title.tail}</span>
@@ -109,9 +112,16 @@
 		height: 120px;
 	}
 
+	/* Three lines at most, so a long name leaves the strip and the list on the first screen. */
 	.event-banner-title {
 		grid-area: title;
 		font-size: var(--banner-title-size);
+		line-height: var(--banner-title-leading);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
 	}
 
 	.event-banner-title-tail {
@@ -122,6 +132,10 @@
 
 	.event-banner-title[data-long] {
 		font-size: 40px;
+	}
+
+	.event-banner-title[data-longer] {
+		font-size: 30px;
 	}
 
 	.event-banner-meta {

@@ -50,7 +50,7 @@
 					class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-3 px-gutter py-2"
 				>
 					<p
-						class="line-clamp-2 min-w-0 type-banner text-[32px] leading-none break-words"
+						class="banner-glyph-room line-clamp-2 min-w-0 type-banner text-[32px] leading-[max(1,var(--banner-title-leading))] break-words hyphens-auto"
 						title={data.game.name}
 					>
 						{data.game.name}
