@@ -117,4 +117,23 @@
 	.marker-cross path {
 		vector-effect: non-scaling-stroke;
 	}
+
+	/* Forced colours drop backgrounds, which would leave a pending marker looking open. */
+	@media (forced-colors: active) {
+		.marker[data-state='pending']::after {
+			forced-color-adjust: none;
+			background: CanvasText;
+		}
+
+		.marker[data-state='scored'] {
+			forced-color-adjust: none;
+			border-color: CanvasText;
+			background: CanvasText;
+			color: Canvas;
+		}
+
+		.marker-cross {
+			stroke: CanvasText;
+		}
+	}
 </style>

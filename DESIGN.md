@@ -60,6 +60,7 @@ A square, 28px on lists (`--marker-size`, which a theme may raise to 32px) and 4
 - Rejected: 2px `--danger` outline with a thin diagonal cross.
 - Corner radius 3px. Markers are the only square-cornered element with this radius, so they read as objects, not buttons.
 - Every marker has an accessible label: "Pending", "Scored 15 points", and so on.
+- With forced colours on, the pending triangle and the scored fill are drawn in `CanvasText`, with the points in `Canvas`, and the cross in `CanvasText`. Forced colours would otherwise drop the fills and leave a pending marker looking open.
 
 ## Typography
 
