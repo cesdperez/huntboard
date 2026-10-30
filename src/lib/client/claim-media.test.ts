@@ -5,6 +5,8 @@ import {
 	ORIGINAL_VIDEO_TOO_LARGE,
 	canPassThrough,
 	classifyMedia,
+	compressedOrOriginal,
+	COMPRESSED_VIDEO_TOO_LARGE,
 	isTooLong,
 	originalVideo,
 	videoTargetSize,
@@ -95,6 +97,38 @@ describe('canPassThrough', () => {
 	it('re-encodes a file above the size limit', () => {
 		const big = file('clip.mp4', 'video/mp4', VIDEO_MAX_BYTES + 1);
 		expect(canPassThrough(big, { ...ready, seconds: 120 })).toBe(false);
+	});
+});
+
+describe('compressedOrOriginal', () => {
+	const mov = file('clip.mov', 'video/quicktime', 3000);
+
+	it('sends the compressed MP4 when it is smaller', () => {
+		const result = compressedOrOriginal(mov, new ArrayBuffer(2000));
+		expect(result).toMatchObject({ ok: true, type: 'video/mp4' });
+		expect(result.ok && result.file.size).toBe(2000);
+	});
+
+	it('sends the original when compressing did not make it smaller', () => {
+		const result = compressedOrOriginal(mov, new ArrayBuffer(4000));
+		expect(result).toMatchObject({ ok: true, type: 'video/quicktime' });
+		expect(result.ok && result.file).toBe(mov);
+	});
+
+	it('sends the compressed MP4 when the server would not take the original', () => {
+		const avi = file('clip.avi', 'video/x-msvideo', 3000);
+		expect(compressedOrOriginal(avi, new ArrayBuffer(4000))).toMatchObject({
+			ok: true,
+			type: 'video/mp4'
+		});
+	});
+
+	it('refuses a compressed video over the limit when the original is no smaller', () => {
+		const huge = file('clip.avi', 'video/x-msvideo', VIDEO_MAX_BYTES);
+		expect(compressedOrOriginal(huge, new ArrayBuffer(VIDEO_MAX_BYTES + 1))).toEqual({
+			ok: false,
+			message: COMPRESSED_VIDEO_TOO_LARGE
+		});
 	});
 });
 

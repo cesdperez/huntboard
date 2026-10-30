@@ -346,7 +346,7 @@ A team picture is a circle, so it never reads as a marker. Without a picture a t
 ### Claim media
 
 - Photos are shrunk in the browser to 1600px on their long edge, like the game image, and stay under 512 KB.
-- Videos are re-encoded in the browser to 720p H.264 at about 2 Mbps, at most 60 seconds long. A video that already fits that budget goes as it is. A phone that cannot re-encode sends the original MP4, MOV or WebM, up to 80 MB.
+- Videos are re-encoded in the browser to 720p H.264 at about 2 Mbps, at most 60 seconds long. A video that already fits that budget goes as it is. So does an MP4, MOV or WebM up to 80 MB that re-encoding would not make smaller. A phone that cannot re-encode sends the original MP4, MOV or WebM, up to 80 MB.
 - The phone uploads straight to storage, never through the app, so a slow upload never blocks other requests.
 
 ## Motion
