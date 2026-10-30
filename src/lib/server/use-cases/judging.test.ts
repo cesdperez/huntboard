@@ -5,7 +5,7 @@ import { createGame } from '../db/games.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from '../db/types.js';
-import { rejectClaim, scoreClaim, scoreOpenCell } from './judging.js';
+import { checkJudgement, rejectClaim, scoreClaim, scoreOpenCell } from './judging.js';
 
 let db: D1Database;
 let game: GameRow;
@@ -294,5 +294,132 @@ describe('scoreOpenCell', () => {
 				message: 'That team or challenge is not in this game any more. Reload the page.'
 			}
 		});
+	});
+});
+
+describe('checkJudgement', () => {
+	const check = (fields: Record<string, string>) =>
+		checkJudgement(db, game.id, form({ nickname: 'Alex', ...fields }));
+
+	it('answers a score that went through as scored', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id, {
+			status: 'scored',
+			points: 20,
+			judged_by: 'Alex'
+		});
+
+		const outcome = await check({
+			verdict: 'scored',
+			claimId: String(claim.id),
+			from: 'pending',
+			points: '99'
+		});
+
+		expect(outcome).toEqual({ status: 200, result: { kind: 'scored', points: 20 } });
+	});
+
+	it('answers a rejection that went through as rejected', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id, { status: 'rejected', judged_by: 'Alex' });
+
+		const outcome = await check({
+			verdict: 'rejected',
+			claimId: String(claim.id),
+			from: 'pending'
+		});
+
+		expect(outcome).toEqual({ status: 200, result: { kind: 'rejected' } });
+	});
+
+	it('says a claim still as the judge saw it is unchanged', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id);
+
+		const outcome = await check({
+			verdict: 'scored',
+			claimId: String(claim.id),
+			from: 'pending',
+			points: '12'
+		});
+
+		expect(outcome).toEqual({ status: 200, result: { kind: 'unchanged' } });
+	});
+
+	it('names the judge who got there first', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id, {
+			status: 'scored',
+			points: 15,
+			judged_by: 'Sam'
+		});
+
+		const outcome = await check({
+			verdict: 'scored',
+			claimId: String(claim.id),
+			from: 'pending',
+			points: '12'
+		});
+
+		expect(outcome).toEqual({
+			status: 409,
+			result: { kind: 'error', message: 'Sam already scored this: 15 points.' }
+		});
+	});
+
+	it('names this judge when the claim got another verdict of theirs', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id, {
+			status: 'scored',
+			points: 15,
+			judged_by: 'Alex'
+		});
+
+		const outcome = await check({
+			verdict: 'scored',
+			claimId: String(claim.id),
+			from: 'pending',
+			points: '12'
+		});
+
+		expect(outcome.result).toEqual({
+			kind: 'error',
+			message: 'Alex already scored this: 15 points.'
+		});
+	});
+
+	it('says a claim that is gone left the game', async () => {
+		const outcome = await check({ verdict: 'rejected', claimId: '9999', from: 'pending' });
+
+		expect(outcome.status).toBe(404);
+	});
+
+	it('answers an open cell this judge scored as scored', async () => {
+		await seedClaim(db, rats.id, swim.id, { status: 'scored', points: 5, judged_by: 'Alex' });
+
+		const outcome = await check({
+			verdict: 'scored',
+			teamId: String(rats.id),
+			challengeId: String(swim.id),
+			points: '1'
+		});
+
+		expect(outcome).toEqual({ status: 200, result: { kind: 'scored', points: 5 } });
+	});
+
+	it('says an open cell still open is unchanged', async () => {
+		await seedClaim(db, rats.id, swim.id, { status: 'rejected', judged_by: 'Sam' });
+
+		const outcome = await check({
+			verdict: 'scored',
+			teamId: String(rats.id),
+			challengeId: String(swim.id),
+			points: '8'
+		});
+
+		expect(outcome.result).toEqual({ kind: 'unchanged' });
+	});
+
+	it('changes nothing', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id);
+
+		await check({ verdict: 'scored', claimId: String(claim.id), from: 'pending', points: '12' });
+
+		expect((await listTeamClaims(db, rats.id))[0]).toMatchObject({ status: 'pending' });
 	});
 });

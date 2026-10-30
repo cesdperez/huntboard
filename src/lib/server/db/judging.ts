@@ -125,6 +125,42 @@ export async function judgeClaim(
 		: { status: 'not-found' };
 }
 
+/** A claim with the point range of its challenge. */
+export interface RangedClaimRow extends ClaimRow {
+	min_points: number;
+	max_points: number;
+}
+
+const RANGED_CLAIM = `SELECT claim.*, challenge.min_points, challenge.max_points
+	FROM claim JOIN team ON team.id = claim.team_id JOIN challenge ON challenge.id = claim.challenge_id`;
+
+export function getRangedClaim(
+	db: D1Database,
+	gameId: number,
+	claimId: number
+): Promise<RangedClaimRow | null> {
+	return db
+		.prepare(`${RANGED_CLAIM} WHERE claim.id = ? AND team.game_id = ?`)
+		.bind(claimId, gameId)
+		.first<RangedClaimRow>();
+}
+
+/** The pending or scored claim of the team on the challenge, if any. */
+export function getActiveRangedClaim(
+	db: D1Database,
+	gameId: number,
+	teamId: number,
+	challengeId: number
+): Promise<RangedClaimRow | null> {
+	return db
+		.prepare(
+			`${RANGED_CLAIM} WHERE claim.team_id = ? AND claim.challenge_id = ? AND team.game_id = ?
+				AND claim.status IN ('pending', 'scored')`
+		)
+		.bind(teamId, challengeId, gameId)
+		.first<RangedClaimRow>();
+}
+
 export interface DirectScore {
 	teamId: number;
 	challengeId: number;
