@@ -11,18 +11,19 @@
 	const CLAIM = {
 		team: 'Lost & Found',
 		challenge: 'Find the oldest door on the street',
-		points: 40
+		points: 40,
+		totalBefore: 210
 	};
 	const JUDGE_DELAY_MS = 1600;
 
 	let scored = $state(false);
-	const claimTotal = new Tween(210, { duration: 700 });
+	const claimTotal = new Tween(CLAIM.totalBefore, { duration: 700 });
 
 	const teams = $derived(
 		[
 			{ name: 'Harbour Gulls', total: 240 },
 			{ name: 'Night Owls', total: 225 },
-			{ name: CLAIM.team, total: scored ? 210 + CLAIM.points : 210 },
+			{ name: CLAIM.team, total: scored ? CLAIM.totalBefore + CLAIM.points : CLAIM.totalBefore },
 			{ name: 'The Detours', total: 180 }
 		].sort((a, b) => b.total - a.total)
 	);
@@ -30,7 +31,9 @@
 	onMount(() => {
 		const timer = setTimeout(() => {
 			scored = true;
-			claimTotal.set(210 + CLAIM.points, { duration: prefersReducedMotion.current ? 0 : 700 });
+			claimTotal.set(CLAIM.totalBefore + CLAIM.points, {
+				duration: prefersReducedMotion.current ? 0 : 700
+			});
 		}, JUDGE_DELAY_MS);
 		return () => clearTimeout(timer);
 	});
@@ -112,7 +115,7 @@
 {/snippet}
 
 <header>
-	<AppBar class="max-w-[1120px]! lg:px-10!">
+	<AppBar class="max-w-landing! lg:px-10!">
 		<a
 			href={resolve('/games')}
 			class="inline-flex min-h-touch items-center text-[17px] font-semibold underline-offset-4 hover:underline"
@@ -164,11 +167,9 @@
 								data-own={team.name === CLAIM.team || undefined}
 								animate:flip={{ duration: prefersReducedMotion.current ? 0 : 600 }}
 							>
-								<span class="w-8 font-display text-[20px] font-extrabold tabular-nums"
-									>{index + 1}</span
-								>
+								<span class="w-8 type-rank text-[20px]">{index + 1}</span>
 								<span class="flex-1 truncate font-semibold">{team.name}</span>
-								<span class="demo-total"
+								<span class="type-score text-[30px] text-score"
 									>{team.name === CLAIM.team ? Math.round(claimTotal.current) : team.total}</span
 								>
 							</li>
@@ -241,7 +242,7 @@
 <style>
 	.wide {
 		margin-inline: auto;
-		max-width: 1120px;
+		max-width: var(--container-landing);
 		padding-inline: var(--spacing-gutter);
 	}
 
@@ -324,15 +325,6 @@
 	.demo-row[data-own] {
 		border-left-color: var(--own);
 		background: var(--own-row);
-	}
-
-	.demo-total {
-		font-family: var(--font-score);
-		font-size: 30px;
-		line-height: 1;
-		font-weight: 800;
-		font-variant-numeric: tabular-nums;
-		color: var(--score);
 	}
 
 	.section-title {
