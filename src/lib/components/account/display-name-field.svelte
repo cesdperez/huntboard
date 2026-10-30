@@ -19,9 +19,12 @@
 		autocomplete="name"
 		maxlength={DISPLAY_NAME_MAX_LENGTH}
 		aria-invalid={error ? true : undefined}
-		aria-describedby="display-name-hint"
+		aria-describedby={error ? 'display-name-hint display-name-error' : 'display-name-hint'}
 	/>
 	<p id="display-name-hint" class="type-secondary">
 		This email is new here, so this creates your account. Players do not see your name.
 	</p>
+	{#if error}
+		<p id="display-name-error" class="text-[15px] text-danger" role="alert">{error}</p>
+	{/if}
 </div>

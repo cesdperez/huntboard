@@ -109,7 +109,8 @@ async function finishSignIn(
 			...kept,
 			needsName: false,
 			needsNewEmail: result.needsNewEmail,
-			error: result.message
+			error: result.message,
+			nameError: null
 		});
 	}
 	// Asking for the name is not an error until the form has sent one.
@@ -117,6 +118,7 @@ async function finishSignIn(
 		...kept,
 		needsName: true,
 		needsNewEmail: false,
-		error: data.has('displayName') ? NAME_ERROR : null
+		error: null,
+		nameError: data.has('displayName') ? NAME_ERROR : null
 	});
 }

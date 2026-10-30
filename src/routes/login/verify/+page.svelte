@@ -32,7 +32,7 @@
 		<form method="POST" class="flex flex-col gap-4" use:enhance>
 			<input type="hidden" name="token" value={data.token} />
 			{#if data.link.isNew}
-				<DisplayNameField {error} />
+				<DisplayNameField error={form?.nameError ?? null} />
 			{/if}
 			{#if error}
 				<p class="text-[15px] text-danger" role="alert">{error}</p>
