@@ -6,6 +6,8 @@
 	--ink: #14213d;
 	--muted: #5b6578;
 	--line: #dde2ea;
+	/* 3:1 against --surface and --paper, which --line is too faint for. */
+	--input-line: #808a9b;
 	--flag: #f25c05;
 	--on-flag: #14213d;
 	--danger: #c42847;
@@ -71,6 +73,7 @@
 		--ink: #eef1f6;
 		--muted: #9aa4b8;
 		--line: #26324d;
+		--input-line: #66738f;
 		--flag: #ff7a2e;
 		--on-flag: #14213d;
 		--danger: #ff6b85;

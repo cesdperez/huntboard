@@ -20,7 +20,8 @@ Defined as CSS custom properties in `src/lib/themes/flag.css`, with the dark set
 | `--surface` | `#FFFFFF` | `#17233D` | Sheets, rows, inputs |
 | `--ink` | `#14213D` | `#EEF1F6` | Text, outlines, icons |
 | `--muted` | `#5B6578` | `#9AA4B8` | Secondary text, open markers |
-| `--line` | `#DDE2EA` | `#26324D` | Dividers, input borders |
+| `--line` | `#DDE2EA` | `#26324D` | Dividers |
+| `--input-line` | `#808A9B` | `#66738F` | Input borders |
 | `--flag` | `#F25C05` | `#FF7A2E` | The orange behind `--marker`, `--action` and `--own` |
 | `--on-flag` | `#14213D` | `#14213D` | Text on flag orange |
 | `--danger` | `#C42847` | `#FF6B85` | Reject, penalties, destructive actions |
@@ -33,6 +34,7 @@ Rules:
 - `--marker`, `--action` and `--own` mean "this is ours, it counts". Use them for markers, the primary action on a screen, and the team's own row. Nowhere else. In `flag` all three are orange.
 - No gradients, no tinted washes, no decorative colour.
 - Every pair used for text meets WCAG AA. Check each role with its `--on-` pair at the sizes used before changing either.
+- Input borders use `--input-line`, which keeps 3:1 against both `--surface` and `--paper` (WCAG 1.4.11): 3.5:1 and 3.3:1 in light, 3.3:1 and 3.7:1 in dark. `--line` is about 1.3:1, which is right for dividers and too faint to show where a field is.
 - `--on-flag` is navy in both modes. White on `#F25C05` is 3.3:1 and fails AA for marker numbers and button labels; navy is 4.8:1.
 - State is never told by colour alone. The marker shape carries it.
 
@@ -54,7 +56,7 @@ A square, 28px on lists (`--marker-size`, which a theme may raise to 32px) and 4
 
 - Open: 2px `--marker-outline` outline, empty. `flag` uses `--muted`.
 - Pending: `--ink` outline, the lower-right triangle filled with `--marker`. This is the control flag itself.
-- Scored: fully filled `--marker`, awarded points centred in `--on-marker`, tabular figures.
+- Scored: fully filled `--marker`, awarded points centred in `--on-marker`, tabular figures. Past two digits the points shrink with their digit count, so six digits still fit.
 - Rejected: 2px `--danger` outline with a thin diagonal cross.
 - Corner radius 3px. Markers are the only square-cornered element with this radius, so they read as objects, not buttons.
 - Every marker has an accessible label: "Pending", "Scored 15 points", and so on.
@@ -156,7 +158,7 @@ The points picker buttons are at least 56px tall. Tapping a quick value scores a
 
 The grid has team names as columns and a sticky first column of challenge titles, so it scrolls horizontally on a phone and fits on a laptop. Each cell is a marker. Tapping a cell opens the same judging panel as the queue, in a sheet.
 
-- The grid is the one admin screen wider than the content column. It scrolls inside its own box, so the header row and the challenge column both stay in view.
+- The grid is the one admin screen wider than the content column. It scrolls inside its own box, so the header row and the challenge column both stay in view. The box ends above the tab bar. On a short landscape screen it takes most of the height and the page scrolls the header away. On a wide screen the team columns grow to fit their names.
 - The sheet says what a tap does in each state: score an open or rejected cell without a team claim, judge a pending one, fix or reject a scored one.
 - A conflict shows under the refreshed state of the cell, the same way the team sheet does.
 - The sheet shows the claim's photo or video under the claim's details, the same way the queue does.
@@ -204,7 +206,8 @@ A ranked list. Rank and total in display type, the total in `--score`, team name
 
 - Under the game name, one status line: "Starts in 0:42:10", "Ends in 1:42:10" or "Ended at 21:00". With a day or more to go, the days come first: "Starts in 3 days 1:42:10". The scoreboard keeps updating after the end, because judging goes on at the meeting point.
 - Tied teams show the same rank and keep their setup order.
-- On the big screen every size follows one total size: 55% of the viewport height shared by the teams, counting at least 3, between 40px and 8vw. The 8vw cap keeps a name in view beside a four-digit total on a narrow or portrait screen, and the 3-team floor stops one or two teams from filling the screen with digits. Ranks are 0.6 of it, names 0.45, the title 0.45 and the status line 0.25, so 4 teams and 7 teams both fill a 1080px screen.
+- On the big screen every size follows one total size: 55% of the viewport height shared by the teams, counting at least 3, between 40px and 8vw. The 8vw cap keeps a name in view beside a four-digit total on a narrow or portrait screen, and the 3-team floor stops one or two teams from filling the screen with digits. Ranks are 0.6 of it, names 0.45, the title 0.45, the status line and the empty message 0.25, and members 0.3 but never under 2% of the screen height, so 4 teams and 7 teams both fill a 1080px screen. Names keep one line there.
+- On a phone a long team name wraps to two lines rather than shrinking to a few characters beside a large total.
 - With no teams yet: "No teams yet. They show up here once the organiser adds them."
 - With a game image, the event header from the team page sits under the status line. On the big screen its thumbnail is 0.7 of the total size and its label 0.25, so it never pushes the list off a 800px screen.
 - Team pictures sit between rank and name: 40px on a phone, 0.9 of the total size on the big screen.
@@ -216,6 +219,7 @@ Built on shadcn-svelte where it saves time (Button, Input, Label, Sheet), restyl
 - Touch targets at least 48px. Rows in lists are at least 56px tall.
 - Radii by hierarchy: sheets 16px on the top corners, buttons and inputs 10px, markers 3px, list rows 0 (rows are divided by `--line`, not boxed in cards).
 - No box shadows except on sheets and the sticky strip, where they show something floats above the page.
+- Native radios take `--action` as their accent colour.
 - Buttons: one primary (filled `--action`, label in `--on-action`) per screen or sheet. Secondary buttons are `--ink` outlines. Destructive buttons are `--danger` outlines and confirm before acting.
 - shadcn's semantic names (`--primary`, `--background` and the rest) map onto the tokens in `app.css`, so generated components follow the theme.
 
@@ -239,7 +243,7 @@ Components use roles, never a theme's own colour names.
 
 | Role | In `flag` | Use |
 |---|---|---|
-| `--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--danger`, `--scrim` | See [Color](#color) | The base palette |
+| `--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--input-line`, `--danger`, `--scrim` | See [Color](#color) | The base palette |
 | `--marker`, `--on-marker` | `--flag`, `--on-flag` | Pending triangle and scored fill, the points on it, the Queue badge |
 | `--action`, `--on-action` | `--flag`, `--on-flag` | The primary button and its label |
 | `--own` | `--flag` | Bar on the team's own row |
@@ -273,8 +277,8 @@ Inside the strip and the admin tab bar, the strip roles stand in for `--surface`
 A theme's registry entry names its layout. Structure changes only through it; the theme CSS changes only tokens. Components read it with `pageLayout()` from `src/lib/themes/page-layout.ts`. Pages without a game get the layout of `DEFAULT_THEME`.
 
 - `plain`: the layout described above. `flag` uses it.
-- `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The banner shows the game name in `--font-banner`, large enough to fill the banner (17vw up to 80px, 40px past 16 characters so long names wrap into a few lines), the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings are 26px `--font-display` with `--section-ornament` before and a 2px `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row, its last word included, with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
-  - Admin pages are worked fast on a phone, so they keep their density and touch sizes and skip the big banner. Under the app bar a one-row banner shows the game name in 32px `--font-banner` and the status line. The tab bar marks the current tab with a 4px bar in the strip's text colour along its top, and its focus ring sits inside the bar.
+- `event`: a slim app bar ("Huntboard" and the nickname button) and an event banner replace the game name line and the game image header. The banner shows the game name in `--font-banner`, large enough to fill the banner (17vw up to 80px, 40px past 16 characters so long names wrap into a few lines), the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings are 26px `--font-display` with `--section-ornament` before and a 2px `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total, which the big screen scales like the members line. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row of at most two lines, its last word included, with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
+  - Admin pages are worked fast on a phone, so they keep their density and touch sizes and skip the big banner. Under the app bar a one-row banner shows the game name in 32px `--font-banner`, on at most two lines with the full name in its title, and the status line. The tab bar marks the current tab with a 4px bar in the strip's text colour along its top, and its focus ring sits inside the bar.
   - The home page and `/new` have no game, so their banner holds the page title in `--font-banner` and one line under it, with `--banner-art` beside. Error pages add only the app bar.
 
 ### What a theme may change
@@ -288,6 +292,7 @@ A theme's registry entry names its layout. Structure changes only through it; th
 - Marker shapes: the outline, the lower-right triangle, the full square and the diagonal cross. Only their colours change.
 - Spacing, radii and touch sizes. Layout changes only through the registered [layouts](#layouts).
 - WCAG AA for every text pair, checked in each mode the theme supports. That includes each `--on-` pair, `--waiting` on `--paper` and `--on-strip-muted` on `--strip` at 15px.
+- 3:1 for `--input-line` against `--surface` and `--paper` in each mode. `src/lib/themes/input-line.test.ts` checks it.
 - State told by shape and words, not colour alone. The own row keeps its bar and its semibold name.
 
 ### Highland Bru
@@ -298,6 +303,7 @@ A theme's registry entry names its layout. Structure changes only through it; th
 |---|---|
 | `--paper`, `--surface` | Ivory `#FFF9EF`, `#FFFDF8` |
 | `--ink`, `--muted`, `--line` | `#151515`, `#5E564D`, `#E8DCC8` |
+| `--input-line` | `#958877` (3.4:1 on surface, 3.3:1 on paper) |
 | `--marker`, `--action`, `--own`, `--banner`, `--section-rule` | Orange `#FF741F`, with ink on it (6.8:1; white is 2.7:1 and fails) |
 | `--own-row` | `#FFE8D6` |
 | `--strip`, `--on-strip`, `--strip-score` | Cobalt `#124BCC`, white (7.2:1) |
@@ -319,6 +325,7 @@ Fonts: Fraunces (bold serif) for `--font-display`, Barlow for `--font-sans`, Bar
 |---|---|
 | `--paper`, `--surface` | Cream `#FFF7E8`, `#FFFAF0` |
 | `--ink`, `--muted`, `--line` | `#283950` (11:1), `#726451` (5.4:1), `#DED3BE` |
+| `--input-line` | `#968770` (3.4:1 on surface, 3.3:1 on paper) |
 | `--marker`, `--action`, `--own`, `--section-rule`, `--on-section`, `--waiting` | Terracotta `#B8412D` (5.1:1 on cream), with cream `#FFFAF0` on it (5.3:1) |
 | `--own-row` | `#F5DFCC` |
 | `--strip`, `--on-strip`, `--strip-score` | Ceramic blue `#24468C`, cream (8.5:1) |
@@ -368,6 +375,7 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. When the browser comes back online, polls run again at once, and pages that do not poll check the server.
 - A page that cannot load at all says so plainly. Offline: "You are offline" with "This page loads again once you reconnect." Otherwise: "This page did not load" with "It tries again by itself. If it keeps happening, reload the page or tell your organiser." Both reload by themselves on the polling schedule once the server answers.
 - A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
+- Every error page ends with a "Go to the home page" link.
 - An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast. The only other toasts that are not a confirmation tell a team about a judgement.
 - A file the browser cannot open: "This file is not an image this browser can read. Choose a JPEG, PNG or WebP image." A file that stays too large after shrinking: "This image stays too large even when shrunk. Choose another one." Both show in place before anything is sent.
 - Claim media errors show in place in the sheet, under the status row:

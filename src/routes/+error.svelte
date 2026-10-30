@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { checkConnection, connection, retryPage } from '#lib/components/connection/index.js';
 	import { AppBar } from '#lib/components/event/index.js';
@@ -47,4 +48,11 @@
 			It tries again by itself. If it keeps happening, reload the page or tell your organiser.
 		</p>
 	{/if}
+	<p>
+		<a
+			href={resolve('/')}
+			class="inline-flex min-h-touch items-center font-semibold text-ink underline"
+			>Go to the home page</a
+		>
+	</p>
 </main>

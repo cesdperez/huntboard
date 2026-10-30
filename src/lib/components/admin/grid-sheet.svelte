@@ -4,6 +4,7 @@
 	import { Points } from '#lib/components/points/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { formatClockTime } from '#lib/format/clock-time.js';
+	import { earlierRejectionsText } from '#lib/format/earlier-rejections.js';
 	import type { GridRow, GridTeam } from '#lib/domain/judging-grid.js';
 	import JudgePanel, { type JudgeTarget } from './judge-panel.svelte';
 
@@ -18,7 +19,8 @@
 
 	let content = $state<HTMLElement | null>(null);
 
-	const claim = $derived(row?.cells.find((cell) => cell.teamId === team?.id)?.claim ?? null);
+	const cell = $derived(row?.cells.find((each) => each.teamId === team?.id) ?? null);
+	const claim = $derived(cell?.claim ?? null);
 	// One target for every state, so the panel and its error survive a claim changing under it.
 	const target = $derived<JudgeTarget | null>(
 		row && team
@@ -63,7 +65,7 @@
 			</Sheet.Header>
 
 			{#if row.description}
-				<Sheet.Description class="line-clamp-4 type-secondary whitespace-pre-line">
+				<Sheet.Description class="line-clamp-4 type-secondary break-words whitespace-pre-line">
 					{row.description}
 				</Sheet.Description>
 			{/if}
@@ -78,6 +80,11 @@
 						{/if}
 						{#if claim.note}
 							<p class="type-secondary break-words">Note: {claim.note}</p>
+						{/if}
+						{#if cell?.earlierRejections}
+							<p class="type-secondary break-words text-danger!">
+								{earlierRejectionsText(cell.earlierRejections)}
+							</p>
 						{/if}
 						<p class="type-secondary">
 							Marked done by {claim.markedBy} at {formatTime(claim.markedAt)}.

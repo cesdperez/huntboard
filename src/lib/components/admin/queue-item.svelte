@@ -3,6 +3,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { ClaimMediaView } from '#lib/components/media/index.js';
 	import type { QueueClaim } from '#lib/server/pages/judging-pages.js';
+	import { earlierRejectionsText } from '#lib/format/earlier-rejections.js';
 	import { timeAgo } from '#lib/format/time-ago.js';
 	import JudgePanel from './judge-panel.svelte';
 
@@ -39,11 +40,10 @@
 		</p>
 		{#if claim.rejected_count > 0}
 			<p class="type-secondary text-danger!">
-				{claim.rejected_count === 1
-					? 'Rejected once before'
-					: `Rejected ${claim.rejected_count} times before`}{claim.last_rejection_note
-					? `: ${claim.last_rejection_note}`
-					: '.'}
+				{earlierRejectionsText({
+					count: claim.rejected_count,
+					lastNote: claim.last_rejection_note
+				})}
 			</p>
 		{/if}
 	</div>

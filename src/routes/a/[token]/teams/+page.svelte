@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/env';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { formatClockTime } from '#lib/format/clock-time.js';
 	import TeamScoresItem from '#lib/components/admin/team-scores-item.svelte';
 	import { refreshGameData } from '#lib/components/connection/index.js';
@@ -26,7 +28,13 @@
 <p class="mt-1 type-secondary">{penaltyLine}</p>
 
 {#if data.teams.length === 0}
-	<p class="mt-6 type-secondary">No teams yet. Add them in Setup.</p>
+	<p class="mt-6 type-secondary">
+		No teams yet. Add them in
+		<a
+			class="font-semibold text-ink underline"
+			href={resolve('/a/[token]/setup', { token: page.params.token ?? '' })}>Setup</a
+		>.
+	</p>
 {:else}
 	<ol class="mt-4 flex flex-col border-t" aria-label="Teams">
 		{#each data.teams as team (team.id)}

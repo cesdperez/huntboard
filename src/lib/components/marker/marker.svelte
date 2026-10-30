@@ -26,7 +26,11 @@
 	{...restProps}
 >
 	{#if showPoints}
-		<span class="marker-points" data-long={String(points).length > 2 || undefined}>{points}</span>
+		<span
+			class="marker-points"
+			data-long={String(points).length > 2 || undefined}
+			style:--digits={String(points).length}>{points}</span
+		>
 	{:else if state === 'rejected'}
 		<svg class="marker-cross" viewBox="0 0 10 10" preserveAspectRatio="none" aria-hidden="true">
 			<path d="M0 0 L10 10 M10 0 L0 10" />
@@ -48,6 +52,7 @@
 		border-radius: var(--radius-marker);
 		background: transparent;
 		overflow: hidden;
+		container-type: inline-size;
 		transition:
 			background-color 150ms ease-out,
 			border-color 150ms ease-out;
@@ -81,8 +86,11 @@
 		border-color: var(--danger);
 	}
 
+	/* Each digit gets an equal share of the inside, so up to six digits fit. A tabular digit is at
+	   most 0.55em wide in every theme's sans, Barlow being the widest. */
 	.marker-points {
-		font-size: var(--marker-points-size);
+		--points-size: var(--marker-points-size);
+		font-size: min(var(--points-size), calc((100cqi - 2px) / var(--digits) / 0.55));
 		line-height: 1;
 		font-weight: 700;
 		font-stretch: var(--stretch-condensed);
@@ -90,7 +98,7 @@
 	}
 
 	.marker[data-size='grid'] .marker-points {
-		font-size: 16px;
+		--points-size: 16px;
 	}
 
 	.marker-points[data-long] {

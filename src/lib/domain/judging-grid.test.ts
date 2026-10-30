@@ -107,10 +107,40 @@ describe('judgingGrid', () => {
 		expect(row.cells[0].claim).toMatchObject({ id: 9, status: 'pending' });
 	});
 
+	it('counts the rejections before the claim a cell shows, with the latest reason', () => {
+		const [row] = judgingGrid(
+			[challenge(1)],
+			[rats, owls],
+			[
+				claim(5, rats.id, 1, { status: 'rejected', judge_note: 'blurry' }),
+				claim(7, rats.id, 1, { status: 'rejected', judge_note: 'no proof' }),
+				claim(8, owls.id, 1, { status: 'rejected', judge_note: 'other team' }),
+				claim(9, rats.id, 1)
+			]
+		);
+
+		expect(row.cells[0].earlierRejections).toEqual({ count: 2, lastNote: 'no proof' });
+	});
+
+	it('leaves the rejection a cell shows out of its earlier rejections', () => {
+		const [row] = judgingGrid(
+			[challenge(1)],
+			[rats, owls],
+			[
+				claim(5, rats.id, 1, { status: 'rejected', judge_note: 'blurry' }),
+				claim(7, rats.id, 1, { status: 'rejected', judge_note: 'no proof' }),
+				claim(8, owls.id, 1, { status: 'rejected' })
+			]
+		);
+
+		expect(row.cells[0].earlierRejections).toEqual({ count: 1, lastNote: 'blurry' });
+		expect(row.cells[1].earlierRejections).toBeNull();
+	});
+
 	it('ignores claims of teams and challenges not in the grid', () => {
 		const grid = judgingGrid([challenge(1)], [rats], [claim(7, 99, 1), claim(8, rats.id, 99)]);
 
-		expect(grid[0].cells).toEqual([{ teamId: rats.id, claim: null }]);
+		expect(grid[0].cells).toEqual([{ teamId: rats.id, claim: null, earlierRejections: null }]);
 	});
 
 	it('has no rows without challenges and no cells without teams', () => {

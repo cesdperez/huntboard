@@ -34,7 +34,7 @@
 	--muted-foreground: var(--muted);
 	--destructive: var(--danger);
 	--border: var(--line);
-	--input: var(--line);
+	--input: var(--input-line);
 	--ring: var(--ink);
 	--radius: 10px;
 }
@@ -53,6 +53,7 @@
 	--color-ink: var(--ink);
 	--color-muted: var(--muted);
 	--color-line: var(--line);
+	--color-input-line: var(--input-line);
 	--color-danger: var(--danger);
 	--color-scrim: var(--scrim);
 	--color-marker: var(--marker);
@@ -208,6 +209,8 @@
 	html {
 		@apply font-sans;
 		-webkit-text-size-adjust: 100%;
+		/* Native radios take the theme's action colour, not the browser's blue. */
+		accent-color: var(--action);
 	}
 	body {
 		@apply bg-paper type-body text-ink;
