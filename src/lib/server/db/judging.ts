@@ -67,7 +67,8 @@ export type Verdict =
 	{ status: 'scored'; points: number } | { status: 'rejected'; reason: string | null };
 
 export interface Judgement {
-	claimId: number;
+	/** As the judge saw it. A claim that now has another team or challenge is not found. */
+	claim: Pick<ClaimRow, 'id' | 'team_id' | 'challenge_id'>;
 	/**
 	 * The state the judge saw. A pending claim is judged only while still pending, so the first
 	 * judge wins. A scored claim can be fixed or rejected while still scored, last write wins.
@@ -89,26 +90,29 @@ const CLAMPED_POINTS = `(SELECT MAX(min_points, MIN(max_points, ?)) FROM challen
 export async function judgeClaim(
 	db: D1Database,
 	gameId: number,
-	{ claimId, from, verdict, judgedBy }: Judgement
+	{ claim, from, verdict, judgedBy }: Judgement
 ): Promise<JudgeResult> {
+	const seen = `id = ? AND team_id = ? AND challenge_id = ? AND status = ?
+		AND team_id IN (SELECT id FROM team WHERE game_id = ?)`;
+	const seenValues = [claim.id, claim.team_id, claim.challenge_id, from, gameId];
 	const update =
 		verdict.status === 'scored'
 			? db
 					.prepare(
 						`UPDATE claim SET status = 'scored', points = ${CLAMPED_POINTS}, judge_note = NULL,
 							judged_by = ?, judged_at = ${NOW}
-						WHERE id = ? AND status = ? AND team_id IN (SELECT id FROM team WHERE game_id = ?)
+						WHERE ${seen}
 						RETURNING *`
 					)
-					.bind(verdict.points, judgedBy, claimId, from, gameId)
+					.bind(verdict.points, judgedBy, ...seenValues)
 			: db
 					.prepare(
 						`UPDATE claim SET status = 'rejected', points = NULL, judge_note = ?,
 							judged_by = ?, judged_at = ${NOW}
-						WHERE id = ? AND status = ? AND team_id IN (SELECT id FROM team WHERE game_id = ?)
+						WHERE ${seen}
 						RETURNING *`
 					)
-					.bind(verdict.reason, judgedBy, claimId, from, gameId);
+					.bind(verdict.reason, judgedBy, ...seenValues);
 
 	// One batch is one transaction: the SELECT sees the claim exactly as the UPDATE found it.
 	const [judged, current] = await db.batch<ClaimRow>([
@@ -116,9 +120,9 @@ export async function judgeClaim(
 		db
 			.prepare(
 				`SELECT claim.* FROM claim JOIN team ON team.id = claim.team_id
-				WHERE claim.id = ? AND team.game_id = ?`
+				WHERE claim.id = ? AND claim.team_id = ? AND claim.challenge_id = ? AND team.game_id = ?`
 			)
-			.bind(claimId, gameId)
+			.bind(claim.id, claim.team_id, claim.challenge_id, gameId)
 	]);
 	if (judged.results[0]) return { status: 'judged', claim: judged.results[0] };
 	return current.results[0]

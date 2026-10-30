@@ -4,7 +4,7 @@ import { listTeamClaims } from '../db/claims.js';
 import { createGame } from '../db/games.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
-import type { ChallengeRow, GameRow, TeamRow } from '../db/types.js';
+import type { ChallengeRow, ClaimRow, GameRow, TeamRow } from '../db/types.js';
 import { rejectClaim, scoreClaim, scoreOpenCell } from './judging.js';
 
 let db: D1Database;
@@ -19,6 +19,15 @@ beforeEach(async () => {
 	swim = await seedChallenge(db, game.id, { min_points: 5, max_points: 20 });
 });
 
+/** The claim fields a judging form carries: the claim as the judge saw it. */
+function seen(claim: ClaimRow): Record<string, string> {
+	return {
+		claimId: String(claim.id),
+		teamId: String(claim.team_id),
+		challengeId: String(claim.challenge_id)
+	};
+}
+
 function form(fields: Record<string, string>): FormData {
 	const data = new FormData();
 	for (const [key, value] of Object.entries(fields)) data.set(key, value);
@@ -32,7 +41,7 @@ describe('scoreClaim', () => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'pending', points: '12', nickname: 'Alex' })
+			form({ ...seen(claim), from: 'pending', points: '12', nickname: 'Alex' })
 		);
 
 		expect(outcome).toEqual({ status: 200, result: { kind: 'scored', points: 12 } });
@@ -49,7 +58,7 @@ describe('scoreClaim', () => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'pending', points: '99', nickname: 'Alex' })
+			form({ ...seen(claim), from: 'pending', points: '99', nickname: 'Alex' })
 		);
 
 		expect(outcome.result).toEqual({ kind: 'scored', points: 20 });
@@ -65,7 +74,7 @@ describe('scoreClaim', () => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'pending', points: '12', nickname: 'Alex' })
+			form({ ...seen(claim), from: 'pending', points: '12', nickname: 'Alex' })
 		);
 
 		expect(outcome).toEqual({
@@ -84,7 +93,7 @@ describe('scoreClaim', () => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'scored', points: '8', nickname: 'Alex' })
+			form({ ...seen(claim), from: 'scored', points: '8', nickname: 'Alex' })
 		);
 
 		expect(outcome.result).toEqual({ kind: 'scored', points: 8 });
@@ -96,17 +105,50 @@ describe('scoreClaim', () => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'whatever', points: '8', nickname: 'Alex' })
+			form({ ...seen(claim), from: 'whatever', points: '8', nickname: 'Alex' })
 		);
 
 		expect(outcome.status).toBe(409);
+	});
+
+	it('says a claim that now belongs to another team left the game, and leaves it alone', async () => {
+		const owls = await seedTeam(db, game.id, { name: 'Night Owls' });
+		const claim = await seedClaim(db, owls.id, swim.id);
+
+		const outcome = await scoreClaim(
+			db,
+			game.id,
+			form({
+				...seen(claim),
+				teamId: String(rats.id),
+				from: 'pending',
+				points: '8',
+				nickname: 'Alex'
+			})
+		);
+
+		expect(outcome).toEqual({
+			status: 404,
+			result: {
+				kind: 'error',
+				message: 'This claim is not in this game any more. Reload the page.'
+			}
+		});
+		expect((await listTeamClaims(db, owls.id))[0].status).toBe('pending');
 	});
 
 	it.each(['pending', 'scored'])('says a %s claim that is gone left the game', async (from) => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: '9999', from, points: '8', nickname: 'Alex' })
+			form({
+				claimId: '9999',
+				teamId: String(rats.id),
+				challengeId: String(swim.id),
+				from,
+				points: '8',
+				nickname: 'Alex'
+			})
 		);
 
 		expect(outcome).toEqual({
@@ -124,7 +166,7 @@ describe('scoreClaim', () => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'pending', points: '8', nickname: ' ' })
+			form({ ...seen(claim), from: 'pending', points: '8', nickname: ' ' })
 		);
 
 		expect(outcome).toEqual({
@@ -143,7 +185,7 @@ describe('scoreClaim', () => {
 		const outcome = await scoreClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'pending', points, nickname: 'Alex' })
+			form({ ...seen(claim), from: 'pending', points, nickname: 'Alex' })
 		);
 
 		expect(outcome).toEqual({
@@ -160,7 +202,7 @@ describe('rejectClaim', () => {
 		const outcome = await rejectClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'pending', reason: ' No proof ', nickname: 'Alex' })
+			form({ ...seen(claim), from: 'pending', reason: ' No proof ', nickname: 'Alex' })
 		);
 
 		expect(outcome).toEqual({ status: 200, result: { kind: 'rejected' } });
@@ -178,7 +220,7 @@ describe('rejectClaim', () => {
 			db,
 			game.id,
 			form({
-				claimId: String(claim.id),
+				...seen(claim),
 				from: 'pending',
 				reason: 'No   proof\nseen',
 				nickname: 'Alex'
@@ -194,7 +236,7 @@ describe('rejectClaim', () => {
 		await rejectClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'pending', reason: '  ', nickname: 'Alex' })
+			form({ ...seen(claim), from: 'pending', reason: '  ', nickname: 'Alex' })
 		);
 
 		expect((await listTeamClaims(db, rats.id))[0].judge_note).toBeNull();
@@ -207,7 +249,7 @@ describe('rejectClaim', () => {
 			db,
 			game.id,
 			form({
-				claimId: String(claim.id),
+				...seen(claim),
 				from: 'pending',
 				reason: 'x'.repeat(REASON_MAX_LENGTH + 1),
 				nickname: 'Alex'
@@ -229,7 +271,7 @@ describe('rejectClaim', () => {
 		const outcome = await rejectClaim(
 			db,
 			game.id,
-			form({ claimId: String(claim.id), from: 'pending', reason: '', nickname: 'Alex' })
+			form({ ...seen(claim), from: 'pending', reason: '', nickname: 'Alex' })
 		);
 
 		expect(outcome).toEqual({

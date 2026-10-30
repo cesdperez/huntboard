@@ -45,6 +45,7 @@ interface TeamChallenge {
 interface PendingClaim {
 	id: number;
 	team_id: number;
+	challenge_id: number;
 	min_points: number;
 	max_points: number;
 }
@@ -182,6 +183,8 @@ export async function playHunt(
 		if (random() < SHAPE.rejectShare) {
 			await client.action('admin:reject', `${admin}/queue`, 'judgeReject', {
 				claimId: claim.id,
+				teamId: claim.team_id,
+				challengeId: claim.challenge_id,
 				nickname,
 				reason: 'Not in the photo',
 				from
@@ -194,6 +197,8 @@ export async function playHunt(
 			'judgeScore',
 			{
 				claimId: claim.id,
+				teamId: claim.team_id,
+				challengeId: claim.challenge_id,
 				nickname,
 				points: between(claim.min_points, claim.max_points, random),
 				from
