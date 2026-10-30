@@ -66,7 +66,7 @@
 
 <li class="flex flex-col gap-3 border-b border-line py-4">
 	<div class="flex flex-col gap-1">
-		<label for={id} class="font-semibold">{label}</label>
+		<label for={id} class="font-semibold break-words">{label}</label>
 		<p class="type-secondary">{hint}</p>
 	</div>
 

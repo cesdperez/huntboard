@@ -142,7 +142,10 @@
 		{/if}
 
 		{#if preview.deleted.length > 0}
-			<p class="type-secondary">Not in the new list, deleted: {preview.deleted.join(', ')}.</p>
+			<p class="type-secondary break-words">
+				Not in the new list, deleted: {#each preview.deleted as title, index (index)}{#if index > 0},
+					{/if}<bdi>{title}</bdi>{/each}.
+			</p>
 		{/if}
 
 		{#if preview.deletedWithClaims.length > 0}
@@ -155,8 +158,10 @@
 				</p>
 				<ul class="flex flex-col gap-1">
 					{#each preview.deletedWithClaims as deleted (deleted.id)}
-						<li class="text-[15px]">
-							{deleted.title}<span class="text-muted">, {plural(deleted.claimCount, 'claim')}</span>
+						<li class="text-[15px] break-words">
+							<bdi>{deleted.title}</bdi><span class="text-muted"
+								>, {plural(deleted.claimCount, 'claim')}</span
+							>
 						</li>
 					{/each}
 				</ul>
@@ -169,8 +174,8 @@
 				<p class="text-[15px]">These scores move into the new range:</p>
 				<ul class="flex flex-col gap-1">
 					{#each preview.clampedScores as clamped, index (index)}
-						<li class="text-[15px]">
-							{clamped.teamName}, {clamped.title}:
+						<li class="text-[15px] break-words">
+							<bdi>{clamped.teamName}</bdi>, <bdi>{clamped.title}</bdi>:
 							<span class="tabular">{clamped.from} to {clamped.to}</span>
 						</li>
 					{/each}
@@ -197,7 +202,7 @@
 						{/if}
 						{#each group.items as row (row.title)}
 							<tr class="border-t">
-								<td class="py-3 pr-3 align-top">
+								<td class="py-3 pr-3 align-top wrap-anywhere">
 									<span class="block">{row.title}</span>
 									<span class="block type-secondary">
 										{CHANGE_LABELS[row.change]}
