@@ -357,6 +357,7 @@
 			<MediaThumb kind="video" class="size-8" />
 			<MediaThumb kind="photo" src={sampleImage.src} class="size-10" />
 			<MediaThumb kind="video" class="size-10" />
+			<MediaThumb kind="photo" class="size-10" />
 			<span class="type-secondary">Thumbnails on a team row and in its sheet</span>
 		</div>
 		<ClaimMediaView
