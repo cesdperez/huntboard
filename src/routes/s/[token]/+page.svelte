@@ -83,7 +83,7 @@
 				{/if}
 
 				{#if data.standings.length === 0}
-					<p class="mt-6 type-secondary">
+					<p class="scoreboard-empty mt-6 type-secondary">
 						No teams yet. They show up here once the organiser adds them.
 					</p>
 				{:else}
@@ -114,7 +114,7 @@
 								<span class="min-w-0 flex-1">
 									<span
 										class={[
-											'scoreboard-name block truncate',
+											'scoreboard-name line-clamp-2 break-words',
 											layout === 'event' && 'font-semibold'
 										]}>{row.name}</span
 									>
@@ -262,7 +262,13 @@
 			font-size: min(16dvh, 9vw);
 		}
 
+		/* Two lines at most, so a long name leaves room for 7 teams. */
 		.scoreboard :global(.scoreboard-banner .event-banner-title[data-long]) {
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+			overflow: hidden;
 			font-size: min(9dvh, 5vw);
 		}
 
@@ -296,13 +302,20 @@
 			align-self: stretch;
 		}
 
+		/* One line beside the total, which the wide screen has room for. */
 		.scoreboard-name {
+			-webkit-line-clamp: 1;
+			line-clamp: 1;
 			font-size: calc(var(--score-size) * 0.45);
 			font-weight: 600;
 		}
 
-		.scoreboard-members {
+		.scoreboard-empty {
 			font-size: calc(var(--score-size) * 0.25);
+		}
+
+		.scoreboard-members {
+			font-size: max(2dvh, calc(var(--score-size) * 0.3));
 		}
 
 		.scoreboard :global(.scoreboard-total) {
@@ -310,7 +323,7 @@
 		}
 
 		.scoreboard-unit {
-			font-size: max(15px, calc(var(--score-size) * 0.24));
+			font-size: max(2dvh, calc(var(--score-size) * 0.3));
 		}
 	}
 </style>
