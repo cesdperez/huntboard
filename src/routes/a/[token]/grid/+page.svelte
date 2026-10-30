@@ -17,7 +17,31 @@
 	const selectedRow = $derived(data.rows.find((row) => row.id === selected?.challengeId) ?? null);
 	const selectedTeam = $derived(data.teams.find((team) => team.id === selected?.teamId) ?? null);
 
-	onMount(() => startPolling(refreshGameData));
+	let box = $state<HTMLElement | null>(null);
+	let boxTop = $state(0);
+
+	function measureBox() {
+		if (box) boxTop = box.getBoundingClientRect().top + window.scrollY;
+	}
+
+	onMount(() => {
+		// The header above settles after fonts and the nickname load, and the page is min-h-dvh,
+		// so the body resizes whenever the box's top or the viewport changes.
+		const observer = new ResizeObserver(measureBox);
+		observer.observe(document.body);
+		const stopPolling = startPolling(refreshGameData);
+		return () => {
+			observer.disconnect();
+			stopPolling();
+		};
+	});
+
+	// Browsers skip the focus scroll while a sliver of the cell shows, which leaves it under the edge.
+	function revealFocused(event: FocusEvent) {
+		if (event.target instanceof HTMLElement) {
+			event.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		}
+	}
 
 	function select(teamId: number, challengeId: number) {
 		selected = { teamId, challengeId };
@@ -42,23 +66,26 @@
 	</p>
 {:else}
 	<div
-		class="-mx-gutter mt-4 max-h-[calc(100dvh-13rem)] scroll-pt-16 scroll-pl-40 overflow-auto overscroll-x-contain border-y sm:scroll-pl-64 lg:mx-auto lg:w-fit lg:max-w-full lg:border-x"
+		bind:this={box}
+		onfocusin={revealFocused}
+		style:--grid-top="{boxTop}px"
+		class="grid-box -mx-gutter mt-4 scroll-pt-16 scroll-pl-40 overflow-auto overscroll-x-contain border-y pr-[env(safe-area-inset-right)] sm:scroll-pl-64 lg:mx-auto lg:w-fit lg:max-w-full lg:border-x"
 	>
 		<table class="border-separate border-spacing-0">
 			<thead>
 				<tr>
 					<th
 						scope="col"
-						class="sticky top-0 left-0 z-20 border-b bg-paper px-gutter py-2 text-left type-secondary font-semibold"
+						class="sticky top-0 left-0 z-20 border-b bg-paper py-2 pr-gutter pl-[max(var(--spacing-gutter),env(safe-area-inset-left))] text-left type-secondary font-semibold"
 					>
 						Challenge
 					</th>
 					{#each data.teams as team (team.id)}
 						<th
 							scope="col"
-							class="sticky top-0 z-10 w-18 max-w-18 min-w-18 border-b bg-paper px-1 py-2 align-bottom text-[15px] leading-tight font-semibold break-words"
+							class="sticky top-0 z-10 w-18 max-w-18 min-w-18 border-b bg-paper px-1 py-2 align-bottom text-[15px] leading-tight font-semibold break-words lg:w-auto lg:max-w-none"
 						>
-							<span class="line-clamp-2" title={team.name}>{team.name}</span>
+							<span class="line-clamp-2 lg:max-w-32" title={team.name}>{team.name}</span>
 						</th>
 					{/each}
 				</tr>
@@ -68,7 +95,8 @@
 					{#if group.section}
 						<tr>
 							<th colspan={data.teams.length + 1} class="border-b px-0 pt-4 pb-1 text-left">
-								<span class="sticky left-0 px-gutter font-display type-heading"
+								<span
+									class="sticky left-0 pr-gutter pl-[max(var(--spacing-gutter),env(safe-area-inset-left))] font-display type-heading"
 									>{group.section}</span
 								>
 							</th>
@@ -78,7 +106,7 @@
 						<tr>
 							<th
 								scope="row"
-								class="sticky left-0 z-10 w-40 max-w-40 min-w-40 border-b bg-paper py-1 pr-2 pl-gutter text-left font-normal sm:w-64 sm:max-w-64 sm:min-w-64"
+								class="sticky left-0 z-10 w-40 max-w-40 min-w-40 border-b bg-paper py-1 pr-2 pl-[max(var(--spacing-gutter),env(safe-area-inset-left))] text-left font-normal sm:w-64 sm:max-w-64 sm:min-w-64"
 							>
 								<span class="line-clamp-2 text-[15px] leading-snug break-words">{row.title}</span>
 								<Points class="text-muted" min={row.minPoints} max={row.maxPoints} />
@@ -112,3 +140,15 @@
 	open={sheetOpen}
 	onclose={() => (sheetOpen = false)}
 />
+
+<style>
+	/* Fits between its own top and the tab bar. A short landscape screen keeps most of its height
+	   for the grid instead, and the page scrolls the header away. */
+	.grid-box {
+		--below: calc(var(--spacing-row) + env(safe-area-inset-bottom) + 1rem);
+		max-height: max(
+			calc(100dvh - var(--grid-top) - var(--below)),
+			min(20rem, calc(100dvh - var(--below)))
+		);
+	}
+</style>
