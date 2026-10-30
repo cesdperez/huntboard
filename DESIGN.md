@@ -166,7 +166,7 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 
 - "Record arrival" takes the server's clock. "Correct" and "Enter time" take a time in the viewer's time zone. "Clear" confirms first.
 - The first "Record arrival" wins. A judge whose page still shows the button gets "The arrival was already recorded" under the recorded time, never a later time in its place.
-- Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. Removing one confirms first.
+- Adding an adjustment asks for Bonus or Penalty and a number, because phone number pads have no minus key. The choice sets the sign: a penalty typed with a minus counts the same, and a bonus typed with one says "A bonus adds points. Choose Penalty to take points off." Removing one confirms first.
 
 A game made before accounts opens Setup with a "My games" section: "Add to My games" for a signed-in visitor, or "Sign in to add it to your games", which returns to Setup after sign-in. A game with an owner has no such section.
 

@@ -33,7 +33,11 @@ export async function addTeamAdjustment(
 		return error(400, 'Set your nickname first, so everyone knows who added this.');
 	}
 
-	const values = { points: readString(data, 'points'), reason: readString(data, 'reason') };
+	const values = {
+		sign: readString(data, 'sign'),
+		points: readString(data, 'points'),
+		reason: readString(data, 'reason')
+	};
 	const validated = validateAdjustment(values);
 	if (!validated.ok) {
 		return {

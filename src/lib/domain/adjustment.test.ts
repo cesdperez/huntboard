@@ -2,51 +2,79 @@ import { describe, expect, it } from 'vitest';
 import { REASON_MAX_LENGTH } from './reason.js';
 import { ADJUSTMENT_MAX_POINTS, validateAdjustment } from './adjustment.js';
 
+const POINTS_ERROR = 'Enter a whole number of points above 0, like 10.';
+
 describe('validateAdjustment', () => {
 	it('accepts a bonus with a reason, collapsing spaces', () => {
-		expect(validateAdjustment({ points: ' 10 ', reason: '  Best  costume ' })).toEqual({
+		expect(
+			validateAdjustment({ sign: 'bonus', points: ' 10 ', reason: '  Best  costume ' })
+		).toEqual({
 			ok: true,
 			adjustment: { points: 10, reason: 'Best costume' }
 		});
 	});
 
-	it('accepts a penalty', () => {
-		expect(validateAdjustment({ points: '-25', reason: 'Never showed up' })).toEqual({
+	it('takes points off for a penalty', () => {
+		expect(validateAdjustment({ sign: 'penalty', points: '25', reason: 'Never showed up' })).toEqual(
+			{
+				ok: true,
+				adjustment: { points: -25, reason: 'Never showed up' }
+			}
+		);
+	});
+
+	it.each(['-5', ' -5', '−5'])('accepts a penalty typed with a minus, %j', (points) => {
+		expect(validateAdjustment({ sign: 'penalty', points, reason: 'Late' })).toEqual({
 			ok: true,
-			adjustment: { points: -25, reason: 'Never showed up' }
+			adjustment: { points: -5, reason: 'Late' }
 		});
 	});
 
-	it.each(['', 'ten', '2.5', '0', '-0'])('refuses %j points', (points) => {
-		expect(validateAdjustment({ points, reason: 'Bonus' })).toEqual({
+	it.each(['-5', '−5'])('refuses a bonus typed with a minus, %j, and says why', (points) => {
+		expect(validateAdjustment({ sign: 'bonus', points, reason: 'Late' })).toEqual({
 			ok: false,
-			errors: { points: 'Enter a whole number of points, like 10 or -5. Not 0.' }
+			errors: { points: 'A bonus adds points. Choose Penalty to take points off.' }
 		});
 	});
 
-	it.each([ADJUSTMENT_MAX_POINTS, -ADJUSTMENT_MAX_POINTS])('accepts %i, the limit', (points) => {
-		expect(validateAdjustment({ points: String(points), reason: 'Bonus' })).toEqual({
+	it.each(['', 'ten', '2.5', '0', '-0', '--5', '+5'])('refuses %j points', (points) => {
+		expect(validateAdjustment({ sign: 'penalty', points, reason: 'Bonus' })).toEqual({
+			ok: false,
+			errors: { points: POINTS_ERROR }
+		});
+	});
+
+	it('reads anything but penalty as a bonus', () => {
+		expect(validateAdjustment({ sign: '', points: '5', reason: 'Bonus' })).toEqual({
 			ok: true,
-			adjustment: { points, reason: 'Bonus' }
+			adjustment: { points: 5, reason: 'Bonus' }
 		});
 	});
 
-	it('refuses points beyond the limit either way', () => {
-		const tooMuch = String(ADJUSTMENT_MAX_POINTS + 1);
-		const message = `Keep it within ${ADJUSTMENT_MAX_POINTS} points either way.`;
-
-		expect(validateAdjustment({ points: tooMuch, reason: 'Bonus' })).toEqual({
-			ok: false,
-			errors: { points: message }
+	it.each(['bonus', 'penalty'])('accepts the limit for a %s', (sign) => {
+		const result = validateAdjustment({
+			sign,
+			points: String(ADJUSTMENT_MAX_POINTS),
+			reason: 'Bonus'
 		});
-		expect(validateAdjustment({ points: `-${tooMuch}`, reason: 'Bonus' })).toEqual({
+		expect(result.ok && Math.abs(result.adjustment.points)).toBe(ADJUSTMENT_MAX_POINTS);
+	});
+
+	it('refuses points beyond the limit', () => {
+		expect(
+			validateAdjustment({
+				sign: 'penalty',
+				points: String(ADJUSTMENT_MAX_POINTS + 1),
+				reason: 'Bonus'
+			})
+		).toEqual({
 			ok: false,
-			errors: { points: message }
+			errors: { points: `Keep it within ${ADJUSTMENT_MAX_POINTS} points.` }
 		});
 	});
 
 	it('asks for a reason', () => {
-		expect(validateAdjustment({ points: '5', reason: '   ' })).toEqual({
+		expect(validateAdjustment({ sign: 'bonus', points: '5', reason: '   ' })).toEqual({
 			ok: false,
 			errors: { reason: 'Say why, so other judges know what it was for.' }
 		});
@@ -55,21 +83,23 @@ describe('validateAdjustment', () => {
 	it('accepts a reason of exactly the longest length', () => {
 		const reason = 'x'.repeat(REASON_MAX_LENGTH);
 
-		expect(validateAdjustment({ points: '5', reason })).toEqual({
+		expect(validateAdjustment({ sign: 'bonus', points: '5', reason })).toEqual({
 			ok: true,
 			adjustment: { points: 5, reason }
 		});
 	});
 
 	it('refuses a reason that is too long', () => {
-		expect(validateAdjustment({ points: '5', reason: 'x'.repeat(REASON_MAX_LENGTH + 1) })).toEqual({
+		expect(
+			validateAdjustment({ sign: 'bonus', points: '5', reason: 'x'.repeat(REASON_MAX_LENGTH + 1) })
+		).toEqual({
 			ok: false,
 			errors: { reason: `Keep the reason to at most ${REASON_MAX_LENGTH} characters.` }
 		});
 	});
 
 	it('reports both fields at once', () => {
-		const result = validateAdjustment({ points: '', reason: '' });
+		const result = validateAdjustment({ sign: 'bonus', points: '', reason: '' });
 
 		expect(result.ok).toBe(false);
 		expect(!result.ok && Object.keys(result.errors)).toEqual(['points', 'reason']);
