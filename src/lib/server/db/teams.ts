@@ -118,14 +118,14 @@ export async function recordFirstArrival(
 	return team.results.length > 0 ? 'already-recorded' : 'not-found';
 }
 
-/** Moves a team one place up (-1) or down (1). False when it is not in this game or already at that end. */
+/** Moves a team one place up (-1) or down (1), unless it is already at that end. */
 export async function moveTeam(
 	db: D1Database,
 	gameId: number,
 	teamId: number,
 	offset: -1 | 1
-): Promise<boolean> {
-	const [, swapped] = await db.batch([
+): Promise<'moved' | 'at-end' | 'not-found'> {
+	const [, swapped, team] = await db.batch([
 		renumberTeams(db, gameId),
 		// The join finds no neighbour past either end, so nothing moves there.
 		db
@@ -136,9 +136,11 @@ export async function moveTeam(
 					ON neighbour.game_id = moved.game_id AND neighbour.position = moved.position + ?
 				WHERE moved.id = ? AND moved.game_id = ? AND team.id IN (moved.id, neighbour.id)`
 			)
-			.bind(offset, teamId, gameId)
+			.bind(offset, teamId, gameId),
+		db.prepare('SELECT 1 AS found FROM team WHERE id = ? AND game_id = ?').bind(teamId, gameId)
 	]);
-	return swapped.meta.changes === 2;
+	if (swapped.meta.changes === 2) return 'moved';
+	return team.results.length > 0 ? 'at-end' : 'not-found';
 }
 
 export type DeleteTeamResult =

@@ -104,7 +104,9 @@ function moveBy(offset: -1 | 1) {
 		const teamId = readId(data, 'teamId');
 		if (teamId === null) return failure(400, { error: MISSING_ERROR });
 		// Already at the end is a no-op, not an error: the button is disabled there anyway.
-		await moveTeam(db, gameId, teamId, offset);
+		if ((await moveTeam(db, gameId, teamId, offset)) === 'not-found') {
+			return failure(404, { error: MISSING_ERROR, teamId });
+		}
 		return success({ teamId });
 	};
 }
