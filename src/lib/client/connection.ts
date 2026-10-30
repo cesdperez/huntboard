@@ -116,7 +116,10 @@ function requestUrl(input: RequestInfo | URL): string {
 async function isPassingFailure(response: Response): Promise<boolean> {
 	if (response.status === 404) return false;
 	if (!response.ok) return true;
-	if (!response.headers.get('content-type')?.includes('application/json')) return false;
+	const type = response.headers.get('content-type') ?? '';
+	if (type.includes('text/sveltekit-data')) return false;
+	// A proxy or captive portal can answer 200 with its own page, which SvelteKit cannot read.
+	if (!type.includes('application/json')) return true;
 	const body = (await response
 		.clone()
 		.json()

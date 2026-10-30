@@ -55,25 +55,92 @@ describe('rotateAdminLink', () => {
 	});
 });
 
+const NEW_LINK = 'Hk3pW9sZ2vB7qL4mT8xN1A';
+
 describe('rotateScoreboardLink', () => {
-	it('replaces the scoreboard token', async () => {
-		const outcome = await rotateScoreboardLink(db, game.id);
+	it('moves the scoreboard to the token the browser made', async () => {
+		const outcome = await rotateScoreboardLink(db, game.id, form({ token: NEW_LINK }));
 
 		expect(outcome).toEqual({ status: 200, result: { rotated: 'scoreboard' } });
+		expect(await getGameByScoreboardToken(db, NEW_LINK)).toMatchObject({ id: game.id });
 		expect(await getGameByScoreboardToken(db, game.scoreboard_token)).toBeNull();
+	});
+
+	it('takes the same token again, so a retry after a lost answer does not rotate twice', async () => {
+		await rotateScoreboardLink(db, game.id, form({ token: NEW_LINK }));
+
+		const outcome = await rotateScoreboardLink(db, game.id, form({ token: NEW_LINK }));
+
+		expect(outcome).toEqual({ status: 200, result: { rotated: 'scoreboard' } });
+		expect(await getGameByScoreboardToken(db, NEW_LINK)).toMatchObject({ id: game.id });
+	});
+
+	it.each(['', 'short', 'Hk3pW9sZ2vB7qL4mT8xN1B'])('refuses the token %j', async (token) => {
+		const outcome = await rotateScoreboardLink(db, game.id, form({ token }));
+
+		expect(outcome).toMatchObject({ status: 400 });
+		expect(await getGameByScoreboardToken(db, game.scoreboard_token)).toMatchObject({
+			id: game.id
+		});
+	});
+
+	it('refuses a token another game has', async () => {
+		const other = await createGame(db, 'Other hunt');
+
+		const outcome = await rotateScoreboardLink(
+			db,
+			game.id,
+			form({ token: other.scoreboard_token })
+		);
+
+		expect(outcome).toMatchObject({ status: 409 });
+		expect(await getGameByScoreboardToken(db, game.scoreboard_token)).toMatchObject({
+			id: game.id
+		});
 	});
 });
 
 describe('rotateTeamLink', () => {
-	it('replaces the team token', async () => {
-		const outcome = await rotateTeamLink(db, game.id, form({ teamId: String(rats.id) }));
+	const rotate = (gameId: number, teamId: string, token = NEW_LINK) =>
+		rotateTeamLink(db, gameId, form({ teamId, token }));
+
+	it('moves the team to the token the browser made', async () => {
+		const outcome = await rotate(game.id, String(rats.id));
 
 		expect(outcome).toEqual({ status: 200, result: { rotated: `team-${rats.id}` } });
+		expect(await getTeamByToken(db, NEW_LINK)).toMatchObject({ id: rats.id });
 		expect(await getTeamByToken(db, rats.token)).toBeNull();
 	});
 
+	it('takes the same token again, so a retry after a lost answer does not rotate twice', async () => {
+		await rotate(game.id, String(rats.id));
+
+		const outcome = await rotate(game.id, String(rats.id));
+
+		expect(outcome).toEqual({ status: 200, result: { rotated: `team-${rats.id}` } });
+		expect(await getTeamByToken(db, NEW_LINK)).toMatchObject({ id: rats.id });
+	});
+
+	it('refuses a token that is not made like generateToken', async () => {
+		const outcome = await rotate(game.id, String(rats.id), 'short');
+
+		expect(outcome).toMatchObject({ status: 400 });
+		expect(await getTeamByToken(db, rats.token)).toMatchObject({ id: rats.id });
+	});
+
+	it('refuses a token another team has', async () => {
+		const otherGame = await createGame(db, 'Pier hunt');
+		const gulls = await seedTeam(db, otherGame.id, { name: 'Gulls' });
+		await rotate(otherGame.id, String(gulls.id));
+
+		const outcome = await rotate(game.id, String(rats.id));
+
+		expect(outcome).toMatchObject({ status: 409 });
+		expect(await getTeamByToken(db, rats.token)).toMatchObject({ id: rats.id });
+	});
+
 	it.each(['', 'abc', '0', '-1'])('answers 404 for team id %j', async (teamId) => {
-		const outcome = await rotateTeamLink(db, game.id, form({ teamId }));
+		const outcome = await rotate(game.id, teamId);
 
 		expect(outcome).toEqual({ status: 404, result: { error: MISSING } });
 		expect(await getTeamByToken(db, rats.token)).toMatchObject({ id: rats.id });
@@ -82,7 +149,7 @@ describe('rotateTeamLink', () => {
 	it('answers 404 for a team in another game', async () => {
 		const other = await createGame(db, 'Pier hunt');
 
-		const outcome = await rotateTeamLink(db, other.id, form({ teamId: String(rats.id) }));
+		const outcome = await rotate(other.id, String(rats.id));
 
 		expect(outcome).toEqual({ status: 404, result: { error: MISSING } });
 		expect(await getTeamByToken(db, rats.token)).toMatchObject({ id: rats.id });

@@ -10,6 +10,8 @@
 	import { groupBySection } from '#lib/format/group-by-section.js';
 	import { importSummary } from '#lib/format/import-summary.js';
 	import type { ImportPreviewRow } from '#lib/domain/challenge-import.js';
+	import type { ChallengeWithClaimCount } from '#lib/server/db/types.js';
+	import { challengesImported } from './setup-checks.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	const EXAMPLE = `# Around town
@@ -33,7 +35,10 @@
 
 	const IMPORTED_ID = 'challenges-imported';
 
-	let { hasChallenges }: { hasChallenges: boolean } = $props();
+	let {
+		hasChallenges,
+		challenges
+	}: { hasChallenges: boolean; challenges: ChallengeWithClaimCount[] } = $props();
 
 	const result = $derived(resultUnder(page.form, 'challenges'));
 	const previewResult = $derived(result?.kind === 'preview' ? result : null);
@@ -55,14 +60,22 @@
 		preview !== null && preview.errors.length === 0 && preview.rows.length > 0 && !stale
 	);
 
-	const submit: SubmitFunction = () => {
+	// A preview changes nothing, so only an import is checked after a lost answer.
+	const submit: SubmitFunction = ({ formData, action }) => {
 		pending = true;
+		const importing = action.search.includes('challengesImport');
+		const tookEffect = () =>
+			challengesImported(challenges, formData) && {
+				challenges: { kind: 'imported', count: challenges.length }
+			};
 		return async (settled) => {
-			const { result } = settled;
-			await updateOrRetry(settled, { reset: false });
+			const result = await updateOrRetry(settled, {
+				reset: false,
+				tookEffect: importing ? tookEffect : undefined
+			});
 			pending = false;
-			const challenges = result.type === 'success' ? resultUnder(result.data, 'challenges') : null;
-			if (challenges?.kind === 'imported') {
+			const answer = result.type === 'success' ? resultUnder(result.data, 'challenges') : null;
+			if (answer?.kind === 'imported') {
 				text = '';
 				// The Import button left with the preview. A first import also remounts this component.
 				await tick();

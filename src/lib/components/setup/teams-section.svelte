@@ -17,6 +17,13 @@
 	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
 	import { suggestTeamName } from '#lib/domain/team-name-suggestion.js';
 	import { deleteTeamQuestion } from './delete-team-question.js';
+	import {
+		teamAdded,
+		teamDeleted,
+		teamMoved,
+		teamPictureRemoved,
+		teamSaved
+	} from './setup-checks.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { game, teams }: { game: GameRow; teams: SetupTeam[] } = $props();
@@ -65,13 +72,19 @@
 		if (newName === '') suggestNewName();
 	});
 
+	// tookEffect gets the teams shown when the request left, and reads the refreshed ones itself.
 	const submitThen =
-		(onSuccess?: () => void): SubmitFunction =>
-		() => {
+		(
+			tookEffect: (before: SetupTeam[], data: FormData) => boolean,
+			onSuccess?: () => void
+		): SubmitFunction =>
+		({ formData }) => {
 			pending = true;
+			const before = teams;
 			return async (settled) => {
-				const { result } = settled;
-				await updateOrRetry(settled);
+				const result = await updateOrRetry(settled, {
+					tookEffect: () => tookEffect(before, formData)
+				});
 				pending = false;
 				if (result.type === 'success') {
 					void stopEditing();
@@ -80,13 +93,21 @@
 			};
 		};
 
-	const submit = submitThen();
+	const submitRename = submitThen((_, data) => teamSaved(teams, data));
+	const submitDelete = submitThen((_, data) => teamDeleted(teams, data));
+	const submitRemoveAvatar = submitThen((_, data) => teamPictureRemoved(teams, data));
 	const submitMove = (teamId: number, direction: 'up' | 'down') =>
-		submitThen(() => void refocusMoved(teamId, direction));
-	const submitAdd = submitThen(() => {
-		suggestNewName();
-		newMembers = '';
-	});
+		submitThen(
+			(before, data) => teamMoved(before, teams, data, direction === 'up' ? -1 : 1),
+			() => void refocusMoved(teamId, direction)
+		);
+	const submitAdd = submitThen(
+		(before, data) => teamAdded(before, teams, data),
+		() => {
+			suggestNewName();
+			newMembers = '';
+		}
+	);
 
 	function confirmDelete(team: SetupTeam): SubmitFunction {
 		return (input) => {
@@ -94,7 +115,7 @@
 				input.cancel();
 				return;
 			}
-			return submit(input);
+			return submitDelete(input);
 		};
 	}
 
@@ -104,7 +125,7 @@
 				input.cancel();
 				return;
 			}
-			return submit(input);
+			return submitRemoveAvatar(input);
 		};
 	}
 
@@ -136,7 +157,7 @@
 							tabindex="-1"
 							aria-label="Edit {team.name}"
 							class="flex flex-col gap-3 pt-2 outline-none"
-							use:enhance={submit}
+							use:enhance={submitRename}
 						>
 							<input type="hidden" name="teamId" value={team.id} />
 							<Label for="team-name-{team.id}">Name</Label>

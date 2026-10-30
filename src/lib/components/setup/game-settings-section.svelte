@@ -10,6 +10,7 @@
 	import { THEMES, resolveTheme, supportedModes, type Theme } from '#lib/themes/index.js';
 	import { GAME_NAME_MAX_LENGTH, LATE_PENALTY_MAX } from '#lib/domain/game-settings.js';
 	import type { GameRow } from '#lib/server/db/types.js';
+	import { gameSettingsSaved } from './setup-checks.js';
 	import { updateOrRetry } from './update-or-retry.js';
 
 	let { game }: { game: GameRow } = $props();
@@ -55,10 +56,13 @@
 		method="POST"
 		action="?/gameSettingsSave"
 		class="flex flex-col gap-5"
-		use:enhance={() => {
+		use:enhance={({ formData }) => {
 			submitting = true;
 			return async (settled) => {
-				await updateOrRetry(settled, { reset: false });
+				await updateOrRetry(settled, {
+					reset: false,
+					tookEffect: () => gameSettingsSaved(game, formData)
+				});
 				submitting = false;
 			};
 		}}
