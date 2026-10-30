@@ -22,7 +22,8 @@
 
 	const upload: SubmitFunction = async (submission) => {
 		const file = submission.formData.get('avatar');
-		if (!(file instanceof File) || file.size === 0) return submission.cancel();
+		// An empty file goes on, so resizing it says the browser cannot read it.
+		if (!(file instanceof File)) return submission.cancel();
 
 		action.clearError();
 		action.busy = true;
