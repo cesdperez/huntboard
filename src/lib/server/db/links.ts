@@ -1,4 +1,3 @@
-import { generateToken } from '#lib/domain/token.js';
 import { getGameById } from './games.js';
 import type { GameRow, TeamRow } from './types.js';
 
@@ -25,23 +24,47 @@ export async function rotateAdminToken(
 	return moved !== null;
 }
 
-/** Gives the game a new scoreboard token. The old scoreboard link stops working at once. */
-export async function rotateScoreboardToken(db: D1Database, gameId: number): Promise<string> {
-	const token = generateToken();
-	await db.prepare('UPDATE game SET scoreboard_token = ? WHERE id = ?').bind(token, gameId).run();
-	return token;
+/**
+ * Moves the scoreboard to token. The old scoreboard link stops working at once. The token the game
+ * already has counts as moved, so a retry after a lost answer changes nothing. False when another
+ * game has it.
+ */
+export async function rotateScoreboardToken(
+	db: D1Database,
+	gameId: number,
+	token: string
+): Promise<boolean> {
+	const moved = await db
+		.prepare(
+			`UPDATE game SET scoreboard_token = ?1
+			WHERE id = ?2 AND NOT EXISTS (SELECT 1 FROM game WHERE scoreboard_token = ?1 AND id <> ?2)
+			RETURNING id`
+		)
+		.bind(token, gameId)
+		.first<number>('id');
+	return moved !== null;
 }
 
-/** Gives the team a new token, or returns null when the team is not in this game. */
+/** Moves the team to token, like rotateScoreboardToken. */
 export async function rotateTeamToken(
 	db: D1Database,
 	gameId: number,
-	teamId: number
-): Promise<string | null> {
-	return db
-		.prepare('UPDATE team SET token = ? WHERE id = ? AND game_id = ? RETURNING token')
-		.bind(generateToken(), teamId, gameId)
-		.first<string>('token');
+	teamId: number,
+	token: string
+): Promise<'rotated' | 'taken' | 'not-found'> {
+	const [taken, moved] = await db.batch<{ id: number }>([
+		db.prepare('SELECT id FROM team WHERE token = ?1 AND id <> ?2').bind(token, teamId),
+		db
+			.prepare(
+				`UPDATE team SET token = ?1
+				WHERE id = ?2 AND game_id = ?3
+					AND NOT EXISTS (SELECT 1 FROM team WHERE token = ?1 AND id <> ?2)
+				RETURNING id`
+			)
+			.bind(token, teamId, gameId)
+	]);
+	if (moved.results.length > 0) return 'rotated';
+	return taken.results.length > 0 ? 'taken' : 'not-found';
 }
 
 export function getGameByScoreboardToken(db: D1Database, token: string): Promise<GameRow | null> {

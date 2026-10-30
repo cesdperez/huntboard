@@ -14,6 +14,16 @@ export interface LinksFormResult {
 
 type LinksOutcome = ActionOutcome<LinksFormResult>;
 
+const NOT_MADE_RIGHT: LinksOutcome = {
+	status: 400,
+	result: { error: 'The new link was not made right. Reload the page.' }
+};
+const TEAM_MISSING: LinksOutcome = {
+	status: 404,
+	result: { error: 'That team is no longer in this game. Reload the page.' }
+};
+const TAKEN: LinksOutcome = { status: 409, result: { error: 'That link is taken. Rotate again.' } };
+
 /** The new admin token on success, for the caller to move the organiser to, as the old link stops working. */
 export type RotateAdminOutcome = { token: string } | LinksOutcome;
 
@@ -27,32 +37,39 @@ export async function rotateAdminLink(
 	data: FormData
 ): Promise<RotateAdminOutcome> {
 	const token = data.get('adminToken');
-	if (!isToken(token)) {
-		return { status: 400, result: { error: 'The new link was not made right. Reload the page.' } };
-	}
-	if (!(await rotateAdminToken(db, gameId, token))) {
-		return { status: 409, result: { error: 'That link is taken. Rotate again.' } };
-	}
+	if (!isToken(token)) return NOT_MADE_RIGHT;
+	if (!(await rotateAdminToken(db, gameId, token))) return TAKEN;
 	return { token };
 }
 
-export async function rotateScoreboardLink(db: D1Database, gameId: number): Promise<LinksOutcome> {
-	await rotateScoreboardToken(db, gameId);
+/** Moves the scoreboard to the token the browser made, so a retry after a lost answer sends it again. */
+export async function rotateScoreboardLink(
+	db: D1Database,
+	gameId: number,
+	data: FormData
+): Promise<LinksOutcome> {
+	const token = data.get('token');
+	if (!isToken(token)) return NOT_MADE_RIGHT;
+	if (!(await rotateScoreboardToken(db, gameId, token))) return TAKEN;
 	return { status: 200, result: { rotated: 'scoreboard' } };
 }
 
+/** Moves the team to the token the browser made, like rotateScoreboardLink. */
 export async function rotateTeamLink(
 	db: D1Database,
 	gameId: number,
 	data: FormData
 ): Promise<LinksOutcome> {
 	const teamId = readId(data, 'teamId');
-	const token = teamId === null ? null : await rotateTeamToken(db, gameId, teamId);
-	if (teamId === null || !token) {
-		return {
-			status: 404,
-			result: { error: 'That team is no longer in this game. Reload the page.' }
-		};
+	if (teamId === null) return TEAM_MISSING;
+	const token = data.get('token');
+	if (!isToken(token)) return NOT_MADE_RIGHT;
+	switch (await rotateTeamToken(db, gameId, teamId, token)) {
+		case 'not-found':
+			return TEAM_MISSING;
+		case 'taken':
+			return TAKEN;
+		case 'rotated':
+			return { status: 200, result: { rotated: `team-${teamId}` } };
 	}
-	return { status: 200, result: { rotated: `team-${teamId}` } };
 }

@@ -20,10 +20,7 @@ export const linksActions = {
 		redirect(303, resolve('/a/[token]/setup', { token: outcome.token }));
 	},
 
-	linksRotateScoreboard: async ({ params }) => {
-		const game = await requireAdminGame(params.token);
-		return respond('links', await rotateScoreboardLink(env.DB, game.id));
-	},
+	linksRotateScoreboard: adminAction('links', rotateScoreboardLink),
 
 	linksRotateTeam: adminAction('links', rotateTeamLink)
 } satisfies AdminActions;

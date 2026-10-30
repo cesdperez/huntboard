@@ -8,6 +8,7 @@
 	import { toast } from '#lib/components/toast/index.js';
 	import { generateToken } from '#lib/domain/token.js';
 	import { Button } from '#lib/components/ui/button/index.js';
+	import type { RotatedLink } from '#lib/server/use-cases/links.js';
 	import { cn } from '#lib/utils.js';
 	import LinkQrSheet from './link-qr-sheet.svelte';
 	import { updateOrRetry } from './update-or-retry.js';
@@ -42,6 +43,9 @@
 	// The browser makes the new admin token, so it knows the new link even when the answer is lost.
 	const rotatesAdmin = $derived(action === 'linksRotateAdmin');
 	let newAdminToken: string | null = null;
+	// Kept until an answer comes, so a retry after a lost answer sends it again and rotates once.
+	let newToken: string | null = null;
+	const rotatedLink = $derived<RotatedLink>(teamId === undefined ? 'scoreboard' : `team-${teamId}`);
 
 	const adminSetup = (token: string) => resolve('/a/[token]/setup', { token });
 
@@ -123,7 +127,11 @@
 						}
 						newAdminToken = generateToken();
 						formData.set('adminToken', newAdminToken);
+					} else {
+						newToken ??= generateToken();
+						formData.set('token', newToken);
 					}
+					const sent = newToken;
 					return async (settled) => {
 						const { result } = settled;
 						submitting = false;
@@ -141,7 +149,10 @@
 							else toast.show(RETRY);
 							return;
 						}
-						await updateOrRetry(settled);
+						const answer = await updateOrRetry(settled, {
+							tookEffect: () => url.endsWith(`/${sent}`) && { links: { rotated: rotatedLink } }
+						});
+						if (!needsRetry(answer)) newToken = null;
 					};
 				}}
 			>
