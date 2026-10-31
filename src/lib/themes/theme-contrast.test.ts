@@ -1,12 +1,15 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { THEMES } from './index.js';
 
 // WCAG 1.4.11: the border is what shows where an input is, so it needs 3:1 against what is
 // inside it and what is around it.
 const NON_TEXT_CONTRAST = 3;
 // WCAG 1.4.3 for the 17px semibold button label.
 const TEXT_CONTRAST = 4.5;
+// Phone cameras lose contrast to glare and dim screens, so the modules keep AAA text contrast.
+const QR_INK_CONTRAST = 7;
 
 function css(theme: string): string {
 	return readFileSync(path.join(import.meta.dirname, `${theme}.css`), 'utf8');
@@ -81,5 +84,12 @@ describe('--action-hover', () => {
 		expect(contrast(token(block, 'action-hover'), token(block, 'on-flag'))).toBeGreaterThanOrEqual(
 			TEXT_CONTRAST
 		);
+	});
+});
+
+describe('QR code colours', () => {
+	it.each(THEMES)('stay dark on white in $id, so a phone can scan the code', (theme) => {
+		expect(contrast(theme.qr.ink, '#ffffff')).toBeGreaterThanOrEqual(QR_INK_CONTRAST);
+		expect(contrast(theme.qr.eye, '#ffffff')).toBeGreaterThanOrEqual(TEXT_CONTRAST);
 	});
 });
