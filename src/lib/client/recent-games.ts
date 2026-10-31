@@ -1,7 +1,7 @@
 // Players have no account, so this browser remembers the game links it opened, to find them again
 // from the home page or a dead link page. It keeps only what those pages already show.
 
-type BrowserStorage = Pick<Storage, 'getItem' | 'setItem'>;
+import { browserStorage, type BrowserStorage } from './browser-storage.js';
 
 export type RecentGameKind = 'team' | 'admin' | 'scoreboard';
 
@@ -19,14 +19,6 @@ export interface RecentGame extends RecentGameLink {
 const STORAGE_KEY = 'huntboard.recent-games';
 const LIMIT = 10;
 const KINDS: readonly string[] = ['team', 'admin', 'scoreboard'] satisfies RecentGameKind[];
-
-function browserStorage(): BrowserStorage | null {
-	try {
-		return localStorage;
-	} catch {
-		return null;
-	}
-}
 
 /** The game links this browser opened, newest first. */
 export function recentGames(storage = browserStorage()): RecentGame[] {

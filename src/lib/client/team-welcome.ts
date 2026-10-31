@@ -1,14 +1,6 @@
-type BrowserStorage = Pick<Storage, 'getItem' | 'setItem'>;
+import { browserStorage } from './browser-storage.js';
 
 const key = (teamToken: string) => `huntboard.team-welcome-dismissed.${teamToken}`;
-
-function browserStorage(): BrowserStorage | null {
-	try {
-		return localStorage;
-	} catch {
-		return null;
-	}
-}
 
 export function teamWelcomeDismissed(teamToken: string, storage = browserStorage()): boolean {
 	try {
