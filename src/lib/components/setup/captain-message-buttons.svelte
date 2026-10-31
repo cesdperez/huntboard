@@ -7,6 +7,7 @@
 	import type { GameRow, SetupTeam } from '#lib/server/db/types.js';
 	import { cn } from '#lib/utils.js';
 	import { captainMessage, whatsAppLink } from './captain-message.js';
+	import { ClipboardCopy } from './clipboard-copy.svelte.js';
 
 	let { game, team }: { game: GameRow; team: SetupTeam } = $props();
 
@@ -32,25 +33,12 @@
 		);
 	});
 
-	let copyState = $state<'idle' | 'copied' | 'blocked'>('idle');
-	let resetTimer: ReturnType<typeof setTimeout> | undefined;
-
-	async function copy() {
-		if (!message) return;
-		clearTimeout(resetTimer);
-		try {
-			await navigator.clipboard.writeText(message);
-			copyState = 'copied';
-			resetTimer = setTimeout(() => (copyState = 'idle'), 2000);
-		} catch {
-			copyState = 'blocked';
-		}
-	}
+	const clipboard = new ClipboardCopy();
 
 	const status = $derived(
-		copyState === 'copied'
+		clipboard.state === 'copied'
 			? 'Message copied.'
-			: copyState === 'blocked'
+			: clipboard.state === 'blocked'
 				? 'Copying is blocked here. Use "Send on WhatsApp", or open the page in another browser.'
 				: ''
 	);
@@ -67,8 +55,8 @@
 		>
 			Send on WhatsApp<span class="sr-only"> to the captain of {team.name}</span>
 		</Button>
-		<Button disabled={!message} onclick={copy}>
-			{copyState === 'copied' ? 'Copied' : 'Copy'}<span class="sr-only">
+		<Button disabled={!message} onclick={() => message && clipboard.copy(message)}>
+			{clipboard.state === 'copied' ? 'Copied' : 'Copy'}<span class="sr-only">
 				message for the captain of {team.name}</span
 			>
 		</Button>
