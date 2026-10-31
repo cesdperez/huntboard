@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { joinCodeOf } from '#lib/domain/join-code.js';
+import { generateToken } from '#lib/domain/token.js';
 import { createGame, getGameByAdminToken } from './games.js';
 import {
 	findTeamLink,
+	findTeamTokenByJoinCode,
 	getGameByScoreboardToken,
 	getTeamByToken,
 	rotateAdminToken,
@@ -133,5 +136,41 @@ describe('findTeamLink', () => {
 
 	it('returns null for an unknown token', async () => {
 		expect(await findTeamLink(db, 'nope')).toBeNull();
+	});
+});
+
+describe('findTeamTokenByJoinCode', () => {
+	it('finds the team token whose join code it is', async () => {
+		const game = await createGame(db, 'Canal hunt');
+		const team = await seedTeam(db, game.id, { token: generateToken() });
+		await seedTeam(db, game.id, { token: generateToken() });
+
+		expect(await findTeamTokenByJoinCode(db, joinCodeOf(team.token))).toBe(team.token);
+	});
+
+	it('tells apart tokens that share all but the last bits of the code', async () => {
+		const game = await createGame(db, 'Canal hunt');
+		await seedTeam(db, game.id, { token: 'K7q4m2AAAAAAAAAAAAAAAA' });
+		const team = await seedTeam(db, game.id, { token: 'K7q4m2EAAAAAAAAAAAAAAA' });
+
+		expect(await findTeamTokenByJoinCode(db, joinCodeOf(team.token))).toBe(team.token);
+	});
+
+	it('finds nothing once the link is rotated', async () => {
+		const game = await createGame(db, 'Canal hunt');
+		const team = await seedTeam(db, game.id, { token: generateToken() });
+		const code = joinCodeOf(team.token);
+
+		await rotateTeamToken(db, game.id, team.id, generateToken());
+
+		expect(await findTeamTokenByJoinCode(db, code)).toBeNull();
+	});
+
+	it('finds nothing when two teams share a code', async () => {
+		const game = await createGame(db, 'Canal hunt');
+		await seedTeam(db, game.id, { token: 'K7q4m2AAAAAAAAAAAAAAAA' });
+		await seedTeam(db, game.id, { token: 'K7q4m2AAAAAAAAAAAAAAAQ' });
+
+		expect(await findTeamTokenByJoinCode(db, joinCodeOf('K7q4m2AAAAAAAAAAAAAAAA'))).toBeNull();
 	});
 });
