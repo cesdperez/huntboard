@@ -73,10 +73,19 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		await openChallenge(rats, PHOTO_CHALLENGE);
 		const sheet = rats.getByRole('dialog');
 		const oldSrc = await sheet.locator('img').first().getAttribute('src');
+		expect(oldSrc).not.toBeNull();
+
 		await sheet.getByRole('button', { name: 'Edit claim' }).click();
+		await sheet.getByRole('button', { name: 'Remove photo' }).click();
+		await expect(sheet.getByRole('button', { name: 'Add photo or video' })).toBeVisible();
+		await sheet.getByRole('button', { name: 'Cancel' }).click();
+		await sheet.getByRole('button', { name: 'Edit claim' }).click();
+		await expect(sheet.getByRole('button', { name: 'Replace photo' })).toBeVisible();
+
 		await expect(sheet.getByLabel('Note')).toHaveValue('in the big fountain');
 		await sheet.getByLabel('Note').fill('the bigger fountain');
-		await pick(rats, await png(rats, 900, 1200), 'Replace photo');
+		await sheet.getByRole('button', { name: 'Remove photo' }).click();
+		await pick(rats, await png(rats, 1800, 2400));
 		await expect(rats.getByText('Photo attached')).toBeVisible();
 		await sheet.getByRole('button', { name: 'Save changes' }).click();
 		await expect(toast(rats)).toHaveText('Claim updated');
@@ -100,7 +109,7 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		);
 		await expect
 			.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalHeight))
-			.toBe(1200);
+			.toBe(1600);
 		const clip = queueItem(admin, VIDEO_CHALLENGE).locator('video');
 		await expect(clip).toHaveAttribute('aria-label', `Video from ${TEAM}, ${VIDEO_CHALLENGE}`);
 		await expect(clip).toHaveAttribute('preload', 'none');
