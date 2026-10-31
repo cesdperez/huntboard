@@ -36,6 +36,7 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		await expect(admin.getByText('Imported 2 challenges.')).toBeVisible();
 	});
 
+	await admin.getByRole('link', { name: 'Share', exact: true }).click();
 	const teamUrl = await admin.getByLabel(TEAM, { exact: true }).inputValue();
 	const rats = await open(browser, 'Rat player');
 	await rats.goto(teamUrl);
@@ -69,7 +70,7 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 	});
 
 	await test.step('the judge sees the photo and plays the video in the queue', async () => {
-		await admin.getByRole('link', { name: 'Queue' }).click();
+		await admin.getByRole('link', { name: 'Judge' }).click();
 		const photo = queueItem(admin, PHOTO_CHALLENGE).getByRole('img', {
 			name: `Photo from ${TEAM}, ${PHOTO_CHALLENGE}`
 		});
@@ -107,7 +108,7 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 
 	let photoSrc: string | null = null;
 	await test.step('Setup counts the media and downloads it as one zip', async () => {
-		await admin.getByRole('link', { name: 'Queue' }).click();
+		await admin.getByRole('link', { name: 'Judge' }).click();
 		photoSrc = await queueItem(admin, PHOTO_CHALLENGE).getByRole('img').getAttribute('src');
 		await admin.getByRole('link', { name: 'Setup' }).click();
 		const section = admin.getByRole('region', { name: 'Claim media' });

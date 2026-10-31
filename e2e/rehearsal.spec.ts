@@ -86,6 +86,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await expect(admin.getByText('Imported 10 challenges.')).toBeVisible();
 	});
 
+	await admin.getByRole('link', { name: 'Share', exact: true }).click();
 	const scoreboardUrl = await admin.getByLabel('Scoreboard', { exact: true }).inputValue();
 	const teamUrls = new Map<TeamName, string>();
 	for (const name of TEAMS) {
@@ -98,6 +99,21 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await expect(sheet.getByRole('img', { name: `QR code of the ${TEAMS[0]} link` })).toBeVisible();
 		await expect(sheet).toContainText(teamUrls.get(TEAMS[0])!);
 		await sheet.getByRole('button', { name: 'Close' }).click();
+	});
+
+	await test.step('a player types a join code at /join and lands on that team page', async () => {
+		const name = TEAMS[1];
+		const row = admin
+			.getByRole('listitem')
+			.filter({ has: admin.getByLabel(name, { exact: true }) });
+		const code = await row.getByText(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/).textContent();
+		const player = await openAs(browser, `${name} player`);
+		await player.goto('/join');
+		await player.getByLabel('Join code').fill(code!);
+		await player.getByRole('button', { name: 'Join' }).click();
+		await expect(player).toHaveURL(teamUrls.get(name)!);
+		await expect(player.getByRole('region', { name: 'Your team' })).toContainText(name);
+		await player.context().close();
 	});
 
 	const scoreboard = await openAs(browser, null, { width: 1920, height: 1080 });
@@ -146,8 +162,8 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 	});
 
 	await test.step('the admin judges the queue oldest first', async () => {
-		await admin.getByRole('link', { name: /^Queue/ }).click();
-		await expect(admin.getByRole('heading', { name: 'Queue' })).toBeVisible();
+		await admin.getByRole('link', { name: /^Judge/ }).click();
+		await expect(admin.getByRole('heading', { name: 'Judge' })).toBeVisible();
 		await expect(queueItems(admin)).toHaveCount(8);
 		await expect(queueItems(admin).first()).toHaveAccessibleName(
 			'Canal Rats, Make a birthday card'

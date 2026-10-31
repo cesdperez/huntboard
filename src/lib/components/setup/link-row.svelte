@@ -13,6 +13,7 @@
 	import type { RotatedLink } from '#lib/server/use-cases/links.js';
 	import { cn } from '#lib/utils.js';
 	import { AdminLinkRotation } from './admin-link-rotation.svelte.js';
+	import JoinCode from './join-code.svelte';
 	import LinkQrSheet from './link-qr-sheet.svelte';
 	import { updateOrRetry } from './update-or-retry.js';
 
@@ -23,6 +24,7 @@
 		url,
 		action,
 		teamId,
+		joinToken,
 		rotated = false
 	}: {
 		id: string;
@@ -31,6 +33,8 @@
 		url: string;
 		action: string;
 		teamId?: number;
+		/** A team link's token, to show the code players can type instead. */
+		joinToken?: string;
 		rotated?: boolean;
 	} = $props();
 
@@ -51,10 +55,10 @@
 	let newToken: string | null = null;
 	const rotatedLink = $derived<RotatedLink>(teamId === undefined ? 'scoreboard' : `team-${teamId}`);
 
-	const adminSetup = (token: string) => resolve('/a/[token]/setup', { token });
+	const adminShare = (token: string) => resolve('/a/[token]/share', { token });
 
 	async function adminLinkWorks(token: string): Promise<boolean> {
-		const response = await fetch(adminSetup(token), { method: 'HEAD', cache: 'no-store' }).catch(
+		const response = await fetch(adminShare(token), { method: 'HEAD', cache: 'no-store' }).catch(
 			() => null
 		);
 		return response?.ok === true;
@@ -65,7 +69,7 @@
 		submitting = false;
 		rotating = false;
 		void setConfirming(false);
-		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the server's redirect and adminSetup both come from resolve()
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the server's redirect and adminShare both come from resolve()
 		return goto(location, { replace: true, reset: false, state: { adminLinkRotated: true } });
 	}
 
@@ -73,7 +77,7 @@
 	const rotation = new AdminLinkRotation(
 		() => page.params.token ?? '',
 		adminLinkWorks,
-		(token) => moveTo(adminSetup(token))
+		(token) => moveTo(adminShare(token))
 	);
 
 	// Again on every admin link this row shows, as moving to the new link keeps the component.
@@ -125,6 +129,9 @@
 	<div class="flex flex-col gap-1">
 		<label for={id} class="font-semibold break-words">{label}</label>
 		<p class="type-secondary">{hint}</p>
+		{#if joinToken}
+			<JoinCode token={joinToken} />
+		{/if}
 	</div>
 
 	<input
@@ -152,7 +159,7 @@
 				class="min-h-touch w-full min-w-0 truncate rounded-control border-2 border-input-line bg-surface px-3 text-ink focus-visible:border-ink"
 			/>
 			<div class="flex gap-3">
-				<Button href={adminSetup(rotation.pending)} data-sveltekit-replacestate>
+				<Button href={adminShare(rotation.pending)} data-sveltekit-replacestate>
 					Open new link
 				</Button>
 				<Button onclick={() => copy(newAdminUrl, newAdminField)}>Copy new link</Button>

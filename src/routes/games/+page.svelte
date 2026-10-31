@@ -18,12 +18,12 @@
 	Signed in as {data.displayName} ({data.email}).
 {/snippet}
 
-{#if event}
-	<header>
-		<AppBar />
+<header>
+	<AppBar />
+	{#if event}
 		<PageBanner title="My games">{@render signedInAs()}</PageBanner>
-	</header>
-{/if}
+	{/if}
+</header>
 
 <main class="mx-auto flex max-w-content flex-col gap-10 px-gutter {event ? 'py-6' : 'py-10'}">
 	<section aria-labelledby="games-heading" class="flex flex-col gap-4">

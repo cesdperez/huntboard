@@ -12,6 +12,7 @@
 	import { QrCode } from '#lib/components/qr/index.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
 	import { startPolling } from '#lib/client/live-updates.js';
+	import { trackRecentGame } from '#lib/client/recent-games.svelte.js';
 	import { ordinal } from '#lib/format/ordinal.js';
 	import { REORDER_MS, motionMs } from '#lib/client/score-motion.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
@@ -30,6 +31,12 @@
 	const scoreboardLink = $derived(
 		absoluteLink(resolve('/s/[token]', { token: page.params.token ?? '' }), page.url.href)
 	);
+
+	trackRecentGame(() => ({
+		kind: 'scoreboard',
+		path: resolve('/s/[token]', { token: page.params.token ?? '' }),
+		gameName: data.game.name
+	}));
 
 	onMount(() => {
 		const stopClock = clock.start();
@@ -51,9 +58,9 @@
 	data-layout={layout}
 	style:--teams={Math.max(data.standings.length, 3)}
 >
-	{#if layout === 'event'}
-		<header>
-			<AppBar class="scoreboard-app-bar" />
+	<header>
+		<AppBar class="scoreboard-app-bar" />
+		{#if layout === 'event'}
 			<EventBanner
 				heading
 				name={data.game.name}
@@ -62,8 +69,8 @@
 				image={data.game.image}
 				class="scoreboard-banner"
 			/>
-		</header>
-	{/if}
+		{/if}
+	</header>
 	<main class="scoreboard-main mx-auto flex w-full max-w-content flex-1 flex-col px-gutter py-6">
 		<div class="scoreboard-columns flex">
 			<div class="flex min-w-0 flex-1 flex-col">

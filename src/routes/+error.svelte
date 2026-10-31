@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { checkConnection, connection, retryPage } from '#lib/components/connection/index.js';
-	import { AppBar } from '#lib/components/event/index.js';
+	import { AccountLink, AppBar } from '#lib/components/event/index.js';
 	import { startPolling } from '#lib/client/live-updates.js';
 	import { newAdminToken } from '#lib/client/new-admin-link.js';
-	import { pageLayout } from '#lib/themes/page-layout.js';
+	import { forgetDeadLink } from '#lib/client/recent-games.js';
+	import { RecentGames } from '#lib/components/recent-games/index.js';
 
 	const notFound = $derived(page.status === 404);
 	const heading = $derived(
@@ -17,19 +18,28 @@
 				: 'You are offline'
 	);
 
-	const event = $derived(pageLayout() === 'event');
-
 	// This tab rotated the admin link and lost the answer, so the link it is on may be the old one.
 	let newToken = $state<string | null>(null);
+	// The list shows only once this path is forgotten, so it never offers the dead link again.
+	let forgottenPath = $state<string | null>(null);
 
-	onMount(() => {
+	// Keyed on the path, not onMount: SvelteKit reuses this component from one error page to the next.
+	$effect(() => {
+		const pathname = page.url.pathname;
 		const token = page.route.id?.startsWith('/a/[token]') ? page.params.token : undefined;
-		if (notFound && token) newToken = newAdminToken(token);
-		if (notFound) return;
-		void checkConnection();
-		// Only on the polling schedule: retrying at once would loop on an error that persists.
-		// A full reload, because the browser keeps failing a page script it could not fetch offline.
-		return startPolling(() => retryPage(async () => location.reload()));
+		newToken = notFound && token ? newAdminToken(token) : null;
+		if (notFound) {
+			// A path that matched no route was never a game link, so no stored link died.
+			if (page.route.id) forgetDeadLink(pathname);
+			forgottenPath = pathname;
+			return;
+		}
+		return untrack(() => {
+			void checkConnection();
+			// Only on the polling schedule: retrying at once would loop on an error that persists.
+			// A full reload, because the browser keeps failing a page script it could not fetch offline.
+			return startPolling(() => retryPage(async () => location.reload()));
+		});
 	});
 </script>
 
@@ -37,9 +47,7 @@
 	<title>{heading} · Huntboard</title>
 </svelte:head>
 
-{#if event}
-	<header><AppBar /></header>
-{/if}
+<header><AppBar><AccountLink /></AppBar></header>
 
 <main class="mx-auto flex max-w-content flex-col gap-3 px-gutter py-10">
 	<h1 class="type-title">{heading}</h1>
@@ -65,6 +73,11 @@
 		<p class="type-secondary">
 			It tries again by itself. If it keeps happening, reload the page or tell your organiser.
 		</p>
+	{/if}
+	{#if forgottenPath === page.url.pathname}
+		{#key forgottenPath}
+			<RecentGames class="mt-3" />
+		{/key}
 	{/if}
 	<p>
 		<a

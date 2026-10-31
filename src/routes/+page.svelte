@@ -3,8 +3,9 @@
 	import { flip } from 'svelte/animate';
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
 	import { resolve } from '$app/paths';
-	import { AppBar } from '#lib/components/event/index.js';
+	import { AccountLink, AppBar } from '#lib/components/event/index.js';
 	import { Marker } from '#lib/components/marker/index.js';
+	import { RecentGames } from '#lib/components/recent-games/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 
 	// The example claim the hero judges once, so the leaderboard shows what a scored claim does.
@@ -116,11 +117,7 @@
 
 <header>
 	<AppBar class="max-w-landing! lg:px-10!">
-		<a
-			href={resolve('/games')}
-			class="inline-flex min-h-touch items-center text-[17px] font-semibold underline-offset-4 hover:underline"
-			>Sign in</a
-		>
+		<AccountLink offerSignIn />
 	</AppBar>
 </header>
 
@@ -134,17 +131,16 @@
 					Everyone follows the same leaderboard as it changes.
 				</p>
 				<div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-					<Button href={resolve('/new')} variant="primary" size="lg">Create a hunt</Button>
-					<a
-						href={resolve('/games')}
-						class="inline-flex min-h-touch items-center font-semibold underline underline-offset-4"
-						>Open my hunts</a
-					>
+					<Button href={resolve('/new')} variant="primary" size="lg">Create a game</Button>
 				</div>
 				<p class="mt-8 max-w-[40ch] text-[15px] leading-snug">
 					Playing in a hunt? Open the team link your organiser sent you. There is nothing to
 					install.
+					<a href={resolve('/join')} class="font-semibold underline underline-offset-4"
+						>Have a join code? Enter it</a
+					>
 				</p>
+				<RecentGames class="mt-4 max-w-[40ch]" />
 			</div>
 
 			<figure class="demo">
@@ -233,7 +229,7 @@
 				</p>
 			</div>
 			<Button href={resolve('/new')} variant="primary" size="lg" class="self-start lg:self-end"
-				>Create a hunt</Button
+				>Create a game</Button
 			>
 		</div>
 	</section>

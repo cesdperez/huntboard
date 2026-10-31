@@ -1,5 +1,7 @@
 <script lang="ts">
 	import ClockIcon from '@lucide/svelte/icons/clock';
+	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
+	import TrophyIcon from '@lucide/svelte/icons/trophy';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -7,7 +9,9 @@
 	import { AppBar } from '#lib/components/event/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import { Toast } from '#lib/components/toast/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { GameClock, setGameClock } from '#lib/client/game-clock.svelte.js';
+	import { trackRecentGame } from '#lib/client/recent-games.svelte.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
 	import { isolate } from '#lib/format/text.js';
@@ -17,9 +21,10 @@
 
 	const token = $derived(data.game.admin_token);
 	const tabs = $derived([
-		{ label: 'Queue', routeId: '/a/[token]/queue', href: resolve('/a/[token]/queue', { token }) },
+		{ label: 'Judge', routeId: '/a/[token]/queue', href: resolve('/a/[token]/queue', { token }) },
 		{ label: 'Grid', routeId: '/a/[token]/grid', href: resolve('/a/[token]/grid', { token }) },
 		{ label: 'Teams', routeId: '/a/[token]/teams', href: resolve('/a/[token]/teams', { token }) },
+		{ label: 'Share', routeId: '/a/[token]/share', href: resolve('/a/[token]/share', { token }) },
 		{ label: 'Setup', routeId: '/a/[token]/setup', href: resolve('/a/[token]/setup', { token }) }
 	]);
 	// The grid is the one admin screen wider than the content column.
@@ -33,6 +38,11 @@
 		}))
 	);
 	onMount(() => clock.start());
+	trackRecentGame(() => ({
+		kind: 'admin',
+		path: resolve('/a/[token]', { token }),
+		gameName: data.game.name
+	}));
 </script>
 
 <svelte:head>
@@ -40,39 +50,65 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
+<!-- Beside the game name rather than in the app bar, where a partner wordmark leaves no room. -->
+{#snippet gameLinks()}
+	<nav aria-label="Game" class="flex shrink-0">
+		<Button
+			href={resolve('/s/[token]', { token: data.game.scoreboard_token })}
+			target="_blank"
+			variant="ghost"
+			size="icon"
+			aria-label="Scoreboard (opens in a new tab)"
+			title="Scoreboard"
+		>
+			<TrophyIcon aria-hidden="true" />
+		</Button>
+		{#if data.signedIn}
+			<Button
+				href={resolve('/games')}
+				variant="ghost"
+				size="icon"
+				aria-label="My games"
+				title="My games"
+			>
+				<LayoutGridIcon aria-hidden="true" />
+			</Button>
+		{/if}
+	</nav>
+{/snippet}
+
 <div class="flex min-h-dvh flex-col">
-	{#if event}
-		<!-- Judging is fast work on a phone, so the event banner shrinks to one row here. -->
-		<header>
-			<AppBar><NicknameButton /></AppBar>
+	<header>
+		<AppBar><NicknameButton /></AppBar>
+		{#if event}
+			<!-- Judging is fast work on a phone, so the event banner shrinks to one row here. -->
 			<div class="surface-banner">
-				<div
-					class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-3 px-gutter py-2"
-				>
-					<p
-						class="banner-glyph-room line-clamp-2 min-w-0 type-banner text-[32px] leading-[max(1,var(--banner-title-leading))] break-words hyphens-auto"
-						title={data.game.name}
-					>
-						{data.game.name}
-					</p>
-					<p class="flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">
-						<ClockIcon aria-hidden="true" class="size-4 shrink-0" />
-						{clock.countdown ?? ' '}
-					</p>
+				<div class="mx-auto flex max-w-content items-center gap-2 px-gutter py-2">
+					<div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3">
+						<p
+							class="banner-glyph-room line-clamp-2 min-w-0 type-banner text-[32px] leading-[max(1,var(--banner-title-leading))] break-words hyphens-auto"
+							title={data.game.name}
+						>
+							{data.game.name}
+						</p>
+						<p class="flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">
+							<ClockIcon aria-hidden="true" class="size-4 shrink-0" />
+							{clock.countdown ?? ' '}
+						</p>
+					</div>
+					{@render gameLinks()}
 				</div>
 			</div>
-		</header>
-	{:else}
-		<header
-			class="mx-auto flex w-full max-w-content items-center justify-between gap-3 px-gutter pt-4"
-		>
-			<div class="flex min-w-0 flex-col">
-				<p class="truncate type-secondary">{data.game.name}</p>
-				<p class="type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
+		{:else}
+			<div class="mx-auto flex max-w-content items-center gap-2 px-gutter pt-2">
+				<div class="flex min-w-0 flex-1 flex-col">
+					<p class="truncate type-secondary">{data.game.name}</p>
+					<p class="type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
+				</div>
+				{@render gameLinks()}
 			</div>
-			<NicknameButton />
-		</header>
-	{/if}
+		{/if}
+	</header>
 	<OfflineNotice class="mx-auto w-full max-w-content px-gutter pt-2" />
 
 	<main class={cn('mx-auto w-full flex-1 px-gutter pt-4 pb-28', !wide && 'max-w-content')}>
@@ -99,7 +135,7 @@
 						)}
 					>
 						{tab.label}
-						{#if tab.label === 'Queue' && data.pendingCount > 0}
+						{#if tab.routeId === '/a/[token]/queue' && data.pendingCount > 0}
 							<span
 								class="min-w-6 rounded-full bg-marker px-1.5 text-center text-[13px] leading-6 text-on-marker tabular-nums"
 							>

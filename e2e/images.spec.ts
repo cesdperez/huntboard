@@ -43,8 +43,10 @@ test('images: game image and team pictures, from upload to reset', async ({ brow
 		expect(response.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
 	});
 
+	await admin.getByRole('link', { name: 'Share', exact: true }).click();
 	const scoreboardUrl = await admin.getByLabel('Scoreboard', { exact: true }).inputValue();
 	const ratsUrl = await admin.getByLabel('Canal Rats', { exact: true }).inputValue();
+	await admin.getByRole('link', { name: 'Setup', exact: true }).click();
 	const rats = await open(browser, 'Rat player');
 	await rats.goto(ratsUrl);
 

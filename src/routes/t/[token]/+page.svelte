@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { refreshGameData } from '#lib/components/connection/index.js';
 	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { GameImageHeader } from '#lib/components/images/index.js';
@@ -10,12 +12,14 @@
 	import RenameSheet from '#lib/components/team/rename-sheet.svelte';
 	import SectionHeading from '#lib/components/team/section-heading.svelte';
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
+	import TeamWelcome from '#lib/components/team/team-welcome.svelte';
 	import { Toast, toast } from '#lib/components/toast/index.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
 	import { judgedClaimMessages } from '#lib/domain/judged-claims.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import { groupBySection } from '#lib/format/group-by-section.js';
 	import { startPolling } from '#lib/client/live-updates.js';
+	import { trackRecentGame } from '#lib/client/recent-games.svelte.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { isolate } from '#lib/format/text.js';
 	import type { PageProps } from './$types';
@@ -42,6 +46,16 @@
 		}
 		shownChallenges = challenges;
 	});
+
+	const token = $derived(page.params.token ?? '');
+	let heading = $state<HTMLElement | null>(null);
+
+	trackRecentGame(() => ({
+		kind: 'team',
+		path: resolve('/t/[token]', { token }),
+		gameName: data.game.name,
+		teamName: data.team.name
+	}));
 
 	onMount(() => {
 		const stopClock = clock.start();
@@ -71,8 +85,8 @@
 
 <div class="min-h-dvh">
 	<header>
+		<AppBar><NicknameButton /></AppBar>
 		{#if event}
-			<AppBar><NicknameButton /></AppBar>
 			<EventBanner
 				name={data.game.name}
 				day={clock.startDay}
@@ -80,10 +94,7 @@
 				image={data.game.image}
 			/>
 		{:else}
-			<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
-				<p class="truncate type-secondary">{data.game.name}</p>
-				<NicknameButton />
-			</div>
+			<p class="mx-auto max-w-content truncate px-gutter pt-2 type-secondary">{data.game.name}</p>
 			{#if data.game.image}
 				<div class="mx-auto max-w-content px-gutter pb-2">
 					<GameImageHeader image={data.game.image} />
@@ -103,7 +114,13 @@
 	</TeamStrip>
 
 	<main class="mx-auto max-w-content px-gutter pt-2 pb-24">
-		<h1 class="sr-only">{data.team.name} challenges</h1>
+		<h1 bind:this={heading} tabindex="-1" class="sr-only">{data.team.name} challenges</h1>
+		<TeamWelcome
+			teamToken={token}
+			teamName={data.team.name}
+			gameName={data.game.name}
+			ondismiss={() => heading?.focus()}
+		/>
 		{#if data.challenges.length === 0}
 			<p class="py-6 type-secondary">Challenges show up here once the game is ready.</p>
 		{:else}

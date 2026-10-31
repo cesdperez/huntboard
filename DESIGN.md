@@ -124,15 +124,16 @@ Tapping a row opens a bottom sheet with the description, the note field, "Add ph
 - While the media is on its way, "Mark done" stays disabled and reads "Waiting for the upload". Once attached, "Mark done" sends it with the note. A claim needs no media, so the team can still send proof in the group chat or show it in person.
 - "Remove" or marking done stops any step still running and forgets the file. Closing the sheet stops a step still running, but a finished upload stays with the challenge's note, so opening the sheet again spends no second upload. An error shows in place under the status row, and "Remove" clears it so the team can pick another file. Outside the game window the button is hidden.
 - A claim with media shows its thumbnail on the row, 32px between the title and the points, and in the sheet, 40px beside "Photo sent" or "Video sent". A video shows the play tile, so a list never loads videos. Thumbnails have 8px corners, so they never read as a 3px marker.
+- After the nickname prompt, a first visit shows a card at the top of the list: "You are on **Canal Rats** in **Birthday hunt**.", then three short lines: tap a challenge to open it, tap "Mark done" and add a photo or video if there is one, a judge scores it and the rank and total show at the top. "Hide" dismisses it for that team link in this browser, and focus moves to the list heading. It is a `--surface` box with a `--line` border, so it reads the same in every theme and layout.
 - When a poll shows that a judge scored or rejected a claim, a toast says so: "Scored 8 for Swim in a fountain", or "Rejected Free dessert: no proof received. You can mark it done again." Once claims are closed, a rejection no longer offers to mark it done again, in the toast, the row or the sheet. Several judgements show one after another, and the phone vibrates briefly where the browser allows it. Opening the page and the team's own marks and undos stay quiet.
 
 ### Admin
 
-A bottom tab bar with four tabs: Queue, Grid, Teams, Setup. The Queue tab shows a count badge of pending claims.
+A bottom tab bar with five tabs: Judge, Grid, Teams, Share, Setup. The Judge tab shows a count badge of pending claims. Its route stays `/a/<token>/queue`.
 
 ```
 +--------------------------------+
-| Queue                     3    |
+| Judge                     3    |
 +--------------------------------+
 | Canal Rats, 4 min ago          |
 | Make a birthday card    5-20   |
@@ -141,16 +142,17 @@ A bottom tab bar with four tabs: Queue, Grid, Teams, Setup. The Queue tab shows 
 | [ 5 ] [ 12 ] [ 20 ]  [ __ ]    |
 | [ Reject ]          [ Score ]  |
 +--------------------------------+
-| Queue | Grid | Teams | Setup   |
+| Judge|Grid|Teams|Share|Setup |
 +--------------------------------+
 ```
 
 The points picker buttons are at least 56px tall. Tapping a quick value scores at once. The number field needs "Score" to confirm. A typed value outside the range moves to the nearest end when the field loses focus, so the judge sees what will be scored.
 
-- The admin link opens on Queue once the game has teams and challenges, and on Setup before that.
+- The admin link opens on Judge once the game has teams and challenges, and on Setup before that.
 - The header shows the game name with the same status line as the scoreboard, so every tab says whether the game has started or ended.
+- Beside the game name sit two icon buttons: "Scoreboard", which opens the scoreboard in a new tab, and "My games" for a signed-in creator. They sit there and not in the app bar, so a partner wordmark and the nickname still fit a 390px phone.
 - The empty queue follows the game: "Nothing to judge yet. Claims show up here once the game starts." before, "Nothing to judge. New claims show up here." while it runs, "Nothing left to judge. The game has ended, so no new claims come in." after.
-- The Queue badge is `--marker` with `--on-marker` text: pending claims are what counts next.
+- The Judge badge is `--marker` with `--on-marker` text: pending claims are what counts next.
 - Queue items have no primary button. Every item carries the same actions, so a column of primary buttons would say nothing. Score is the primary action in the grid sheet.
 - "Reject" opens an optional reason field and a "Reject claim" button. That second tap is the confirmation.
 - A claim judged or undone elsewhere stays in the queue where it was, showing the conflict ("Sam already scored this: 15 points.") and an "OK" button, until the judge dismisses it. It never just vanishes under a thumb.
@@ -175,7 +177,15 @@ A game made before accounts opens Setup with a "My games" section: "Add to My ga
 
 The game settings end with the theme, one option per registered theme, saved with the rest of the form.
 
-Each row in the Setup links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
+Setup opens with a checklist, the first thing an admin sees after "Create game": "Get the game ready", or "The game is ready" once it has both times, a challenge and a team. Under the heading, the game state and the header's countdown: "Not started. Starts in 0:42:10", "Live. Ends in 1:42:10" or "Ended at 21:00". Each check shows a check mark and what is in place ("2 challenges"), or a link to its Setup section that says what to do ("Add teams"). "Share the links" always links to Share.
+
+The Share tab holds every link a game has: the teams first, since getting them in is the point, then the scoreboard under "Spectators", then the admin link under "Judges", last because it is the one to keep to organisers. Rotating the admin link moves to Share on the new link. Without teams, Share says so and links to the Teams section in Setup.
+
+Each row in the Share links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
+
+"Print team QR codes" on Share opens a print page outside the tab bar: a card per team and one for the scoreboard, each with the game name, the team name, a large QR code, "Scan to join your team. No app or account needed.", and under it "No camera? Go to <host>/join and type" with the join code large. The scoreboard card spells out its link instead. It is black on white in every theme and mode, prints two cards to an A4 page with dashed lines to cut along, and has a "Print" button on screen.
+
+A team's row also shows its join code under the hint, in `--font-score` at 22px, as `K7Q4-M2XD`: two groups of four from Crockford base32, which has no I, L, O or U. The line names the page players type it at, without `https://`, so it can be read out. Rotating the link changes the code.
 
 QR codes are black on white with a 4-module white margin in every theme and mode, because phone scanners misread inverted or low-contrast codes. They are drawn as SVG in the browser.
 
@@ -199,6 +209,13 @@ These pages belong to no game, so they wear the default theme.
 - The email wears Contour, light and dark, in a 560px card: the app bar with "Huntboard", the banner with "Sign in" in `--font-banner` after a magenta control ring and the address under it, a "Sign in" button in `--action`, then the code in `--font-score` in a bordered box. How long both work and the link spelled out close it in `--muted`. A plain-text part carries the same words.
 - My games: "New game" as the primary button, then the games, newest first, each opening its admin link. "Sign out" comes last, as a ghost button.
 - Sign-in errors show in place, above the button they are about.
+
+### Join
+
+`/join` belongs to no game, so it wears the default theme, like `/new`. It has one field, "Join code", and "Join", which opens the team page. It takes the code in any case, with or without spaces and dashes, and reads O as 0 and I or L as 1. The landing page links to it from the line for players: "Have a join code? Enter it".
+
+- A code that opens nothing: "No team has this code. Check it with your organiser." It says nothing more, so guessing learns nothing.
+- Input that cannot be a code: "A join code has 8 letters and digits, like K7Q4-M2XD." An empty field: "Type the join code your organiser gave you."
 
 ### Scoreboard
 
@@ -230,7 +247,7 @@ The admin picks a theme for the game in Setup. It changes every page of that gam
 
 A theme is two things:
 
-- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), and optionally a `wordmark`: an image and its alt text that the event app bar shows in place of "Huntboard".
+- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), and optionally a `wordmark`: a partner's image and its alt text, which the app bar shows after "Huntboard ×". No theme removes the Huntboard name.
 - A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
 - Images in `static/themes/<id>/`: `icon.svg` for the browser tab, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. The two PNGs are rendered by a script (see the [README](README.md#local-development)). A theme's wordmark lives here too.
 
@@ -245,7 +262,7 @@ Components use roles, never a theme's own colour names.
 | Role | In `flag` | Use |
 |---|---|---|
 | `--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--input-line`, `--danger`, `--scrim` | See [Color](#color) | The base palette |
-| `--marker`, `--on-marker` | `--flag`, `--on-flag` | Pending triangle and scored fill, the points on it, the Queue badge |
+| `--marker`, `--on-marker` | `--flag`, `--on-flag` | Pending triangle and scored fill, the points on it, the Judge badge |
 | `--action`, `--on-action` | `--flag`, `--on-flag` | The primary button and its label |
 | `--action-hover` | `#F26C1D`, dark `#E7702E` | The primary button under the pointer, keeping 4.5:1 with `--on-action` |
 | `--radio` | `--action` | The checked native radio. A theme whose `--action` is under 3:1 on `--surface` or `--paper` points it at `--ink` |
@@ -280,11 +297,17 @@ Inside the strip and the admin tab bar, the strip roles stand in for `--surface`
 
 A theme's registry entry names its layout. Structure changes only through it; the theme CSS changes only tokens. Components read it with `pageLayout()` from `src/lib/themes/page-layout.ts`. Pages without a game get the layout of `DEFAULT_THEME`.
 
-- `plain`: the layout described above. `flag` uses it.
-- `event`: a slim app bar (the wordmark, and the nickname button on team and admin pages) and an event banner replace the game name line and the game image header. The wordmark links to the home page, except on the home page itself. The banner shows the game name in `--font-banner`, large enough to fill the banner (`--banner-title-size`, by default 17vw up to 80px, 40px past 16 characters and 30px past 40 so long names wrap into a few lines), on at most three lines with the rest cut by an ellipsis and words hyphenated in the page language, the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings take `--section-heading-font` with `--section-ornament` and a `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total, which the big screen scales like the members line. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row of at most two lines, its last word included, with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
+Every page has an app bar, in both layouts:
+
+- The wordmark leads to the home of the visitor's role: the team page on a team page, the scoreboard on the scoreboard, My games on admin pages for a signed-in creator and the game's admin link otherwise. Pages outside a game and error pages lead to the home page. On the page it leads to, the wordmark is plain text.
+- With a theme `wordmark`, the app bar shows "Huntboard × <partner>", the partner image at 0.7 of the text size, so the lockup and the nickname button fit a 390px phone. Screen readers hear "Huntboard with <alt>".
+- The nickname button sits at the right end on team and admin pages. The home page shows "Sign in", or "My games" once signed in. `/new`, `/join` and the error pages show "My games" to a signed-in creator and nothing to anyone else, because players land on them.
+
+- `plain`: the layout described above. `flag` uses it. Its app bar is 44px on `--paper` with `--ink` text and a `--line` border at the bottom, the wordmark in 17px bold sans, so it reads as part of the page and not as a coloured bar.
+- `event`: a slim app bar in `--app-bar` with the wordmark in 20px `--font-display`, and an event banner, which replaces the game name line and the game image header. The banner shows the game name in `--font-banner`, large enough to fill the banner (`--banner-title-size`, by default 17vw up to 80px, 40px past 16 characters and 30px past 40 so long names wrap into a few lines), on at most three lines with the rest cut by an ellipsis and words hyphenated in the page language, the start day in the viewer's locale once the game has a start time, the status line, and with a game image its thumbnail and "View <label>", which open the same sheet as the event header. Only the button is a control for keyboards and screen readers; the thumbnail is a larger target for thumbs. On the team page the strip shows the rank, a divider, the team name in 20px `--font-display` on up to two lines with the countdown under it, the total and the chevron; members show in the expanded list. The countdown is hidden from the strip button's name, which would otherwise change every second, and repeated outside it for screen readers. The focus ring sits inside the strip. Section headings take `--section-heading-font` with `--section-ornament` and a `--section-rule` border to the right edge. Rows lose the top border and add the description clamped to two lines, a 15px "points" unit under a 17px range with thin spaces around the dash, and a chevron. The scoreboard puts a "Leaderboard" heading over a 2px `--score` rule, team names in semibold, team pictures at 48px, and a 15px "points" under each total, which the big screen scales like the members line. On the big screen the app bar and banner sizes follow the screen height instead of the total size, and the banner puts the game name in one wide row of at most two lines, its last word included, with the details beside it, and the teams share 34% of the height instead of 55%, so 4 to 7 teams still fit 1280 × 800 and 1920 × 1080.
   - Admin pages are worked fast on a phone, so they keep their density and touch sizes and skip the big banner. Under the app bar a one-row banner shows the game name in 32px `--font-banner`, on at most two lines, and the status line. Both banners keep the full name in the title attribute and the text, so screen readers read all of it. The tab bar marks the current tab with a 4px bar in the strip's text colour along its top, and its focus ring sits inside the bar.
-  - Pages without a game (`/new`, sign-in and My games) put the page title in the banner in `--font-banner` with one line under it, and `--banner-art` beside. Error pages add only the app bar.
-  - The home page is the landing page for organisers, built from the theme's tokens in a 1120px column: an app bar with "Sign in"; a hero in the banner colours with the title in `--font-banner` and an example leaderboard over contour lines, where one claim is scored once on load and its team climbs to first; "How a hunt runs" as an orienteering course in `--marker` (start triangle, numbered control circles, finish double circle, joined by the course line, down on a phone and across from 1024px); four facts; and a closing band in the app bar colours. "Create a hunt" goes to `/new`, which asks for sign-in first, and "Open my hunts" beside it goes to My games. With reduced motion the claim is scored with no movement.
+  - Pages without a game (`/new`, sign-in and My games) put the page title in the banner in `--font-banner` with one line under it, and `--banner-art` beside. Error pages show only the app bar.
+  - The home page is the landing page for organisers, built from the theme's tokens in a 1120px column: an app bar with "Sign in", or "My games" for a signed-in visitor; a hero in the banner colours with the title in `--font-banner` and an example leaderboard over contour lines, where one claim is scored once on load and its team climbs to first; "How a hunt runs" as an orienteering course in `--marker` (start triangle, numbered control circles, finish double circle, joined by the course line, down on a phone and across from 1024px); four facts; and a closing band in the app bar colours. "Create a game" goes to `/new`, which asks for sign-in first. My games is reached from the app bar only, so a signed-in creator never sees it twice. With reduced motion the claim is scored with no movement. Under "Playing in a hunt?", once the page is in the browser, "Continue where you left off" lists the team, admin and scoreboard links this browser opened, newest first: the game name, then "Team Canal Rats", "Admin" or "Scoreboard", each with a "Forget" button (an X). With none, it shows nothing.
 
 ### What a theme may change
 
@@ -345,7 +368,7 @@ Fonts: Fraunces (bold serif) for `--font-display`, Barlow for `--font-sans`, Bar
 
 ### Lightmile Azulejo
 
-`azulejo`, light only, `event` layout. Made for the Lightmile club trip to Málaga: ceramic blue and terracotta on warm cream, like a printed travel journal with tile details. The app bar shows the Lightmile wordmark from `static/themes/azulejo/wordmark.svg`, the club's own artwork, in place of "Huntboard".
+`azulejo`, light only, `event` layout. Made for the Lightmile club trip to Málaga: ceramic blue and terracotta on warm cream, like a printed travel journal with tile details. The app bar shows "Huntboard ×" and the Lightmile wordmark from `static/themes/azulejo/wordmark.svg`, the club's own artwork.
 
 | Role | Value |
 |---|---|
@@ -395,12 +418,13 @@ Responses to the user's own actions are welcome and short (under 200ms): sheets 
 - Empty states invite the next action, like the empty queue in [Admin](#admin).
 - Conflicts name the person who acted first, like a judged claim in the queue.
 - Times show in the viewer's time zone, in 24-hour format when the browser locale uses it.
+- Controls and labels say "game": "Create a game", "My games". Prose may still call the activity a scavenger hunt.
 
 ### Offline and errors
 
 - When a poll cannot reach the server, the page keeps what it last showed and a notice appears under the status line: "You are offline. This page updates again once you reconnect." It goes once a poll gets through. When the server answers a poll with an error, the page also keeps what it showed, open sheets and typed notes included, and the notice reads "This page did not update. It tries again by itself." A dead link still shows the dead link page. When the browser comes back online, polls run again at once, and pages that do not poll check the server.
 - A page that cannot load at all says so plainly. Offline: "You are offline" with "This page loads again once you reconnect." Otherwise: "This page did not load" with "It tries again by itself. If it keeps happening, reload the page or tell your organiser." Both reload by themselves on the polling schedule once the server answers.
-- A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one.
+- A dead link: "This link does not work". It may have been replaced, so ask the organiser for the current one. The page forgets that link from this browser's recent games and lists the others, as on the home page, so a player can get back to their team.
 - Every error page ends with a "Go to the home page" link.
 - An action that gets no answer says "This did not go through. Check your connection and try again." Team sheets and judging show it in place. Setup forms keep what was typed and show it as a toast. Before saying so, the page refreshes and looks for the action's change. When it finds it, the action shows as done.
 - A rotated admin link whose answer got lost and whose new link cannot be checked stays on Setup: "Rotating got no answer, so it may have gone through." with the new admin link, "Open new link" and "Copy new link", until a check on focus or on the polling schedule settles it. The dead link page of that tab offers "Open the new admin link". The only other toasts that are not a confirmation tell a team about a judgement.
