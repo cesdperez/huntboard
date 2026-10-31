@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gameReadiness, gameStateLabel } from './game-readiness.js';
+import { gameReadiness, gameStateLine } from './game-readiness.js';
 
 const scheduled = { startsAt: '2026-06-01T16:00:00.000Z', endsAt: '2026-06-01T21:00:00.000Z' };
 const unscheduled = { startsAt: null, endsAt: null };
@@ -43,12 +43,13 @@ describe('gameReadiness', () => {
 	});
 });
 
-describe('gameStateLabel', () => {
+describe('gameStateLine', () => {
 	it.each([
-		['before', 'Not started'],
-		['during', 'Live'],
-		['after', 'Ended']
-	] as const)('names the %s phase', (phase, label) => {
-		expect(gameStateLabel(phase)).toBe(label);
+		['before', 'Starts in 0:42:10', 'Not started. Starts in 0:42:10'],
+		['before', 'Start time not set yet', 'Not started. Start time not set yet'],
+		['during', 'Ends in 1:42:10', 'Live. Ends in 1:42:10'],
+		['after', 'Ended at 21:00', 'Ended at 21:00']
+	] as const)('puts the %s state before "%s"', (phase, countdown, line) => {
+		expect(gameStateLine(phase, countdown)).toBe(line);
 	});
 });

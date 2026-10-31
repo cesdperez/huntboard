@@ -37,12 +37,15 @@ export function gameReadiness(
 	return { ready: checks.every((check) => check.met), checks };
 }
 
-const STATE_LABELS: Record<GamePhase, string> = {
-	before: 'Not started',
-	during: 'Live',
-	after: 'Ended'
-};
-
-export function gameStateLabel(phase: GamePhase): string {
-	return STATE_LABELS[phase];
+/** The game state ahead of its countdown line, like "Live. Ends in 1:42:10". */
+export function gameStateLine(phase: GamePhase, countdown: string): string {
+	switch (phase) {
+		case 'before':
+			return `Not started. ${countdown}`;
+		case 'during':
+			return `Live. ${countdown}`;
+		// "Ended at 21:00" already says it.
+		case 'after':
+			return countdown;
+	}
 }
