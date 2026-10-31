@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { checkConnection, connection, retryPage } from '#lib/components/connection/index.js';
@@ -20,22 +20,26 @@
 
 	// This tab rotated the admin link and lost the answer, so the link it is on may be the old one.
 	let newToken = $state<string | null>(null);
-	// Shown only once the dead link is forgotten, so the list never offers it again.
-	let showRecent = $state(false);
+	// The list shows only once this path is forgotten, so it never offers the dead link again.
+	let forgottenPath = $state<string | null>(null);
 
-	onMount(() => {
+	// Keyed on the path, not onMount: SvelteKit reuses this component from one error page to the next.
+	$effect(() => {
+		const pathname = page.url.pathname;
 		const token = page.route.id?.startsWith('/a/[token]') ? page.params.token : undefined;
-		if (notFound && token) newToken = newAdminToken(token);
+		newToken = notFound && token ? newAdminToken(token) : null;
 		if (notFound) {
 			// A path that matched no route was never a game link, so no stored link died.
-			if (page.route.id) forgetDeadLink(page.url.pathname);
-			showRecent = true;
+			if (page.route.id) forgetDeadLink(pathname);
+			forgottenPath = pathname;
 			return;
 		}
-		void checkConnection();
-		// Only on the polling schedule: retrying at once would loop on an error that persists.
-		// A full reload, because the browser keeps failing a page script it could not fetch offline.
-		return startPolling(() => retryPage(async () => location.reload()));
+		return untrack(() => {
+			void checkConnection();
+			// Only on the polling schedule: retrying at once would loop on an error that persists.
+			// A full reload, because the browser keeps failing a page script it could not fetch offline.
+			return startPolling(() => retryPage(async () => location.reload()));
+		});
 	});
 </script>
 
@@ -70,8 +74,10 @@
 			It tries again by itself. If it keeps happening, reload the page or tell your organiser.
 		</p>
 	{/if}
-	{#if showRecent}
-		<RecentGames class="mt-3" />
+	{#if forgottenPath === page.url.pathname}
+		{#key forgottenPath}
+			<RecentGames class="mt-3" />
+		{/key}
 	{/if}
 	<p>
 		<a
