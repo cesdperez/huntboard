@@ -18,7 +18,7 @@ describe('session cookies', () => {
 
 		await signIn(db, cookies, userId);
 		expect(jar.get('session')).toMatch(/^[\w-]{22}$/);
-		expect(await getSignedInUser(db, cookies)).toMatchObject({ id: userId });
+		expect(await getSignedInUser(db, { cookies, locals: {} })).toMatchObject({ id: userId });
 
 		await signOut(db, cookies);
 		expect(jar.has('session')).toBe(false);
@@ -27,7 +27,7 @@ describe('session cookies', () => {
 	it('drops a cookie whose session is unknown', async () => {
 		const { cookies, jar } = memoryCookies({ session: 'not-a-session' });
 
-		expect(await getSignedInUser(db, cookies)).toBeNull();
+		expect(await getSignedInUser(db, { cookies, locals: {} })).toBeNull();
 		expect(jar.has('session')).toBe(false);
 	});
 
@@ -37,7 +37,20 @@ describe('session cookies', () => {
 		const token = jar.get('session') ?? '';
 		await signOut(db, cookies);
 
-		expect(await getSignedInUser(db, memoryCookies({ session: token }).cookies)).toBeNull();
+		expect(
+			await getSignedInUser(db, { ...memoryCookies({ session: token }), locals: {} })
+		).toBeNull();
+	});
+
+	it('validates the session once per request', async () => {
+		const { cookies } = memoryCookies();
+		await signIn(db, cookies, userId);
+		const request = { cookies, locals: {} };
+
+		const first = getSignedInUser(db, request);
+
+		expect(getSignedInUser(db, request)).toBe(first);
+		expect(await first).toMatchObject({ id: userId });
 	});
 });
 
@@ -45,7 +58,9 @@ describe('requireUser', () => {
 	it('sends a visitor to sign in and back to the page with its query', async () => {
 		const url = new URL('https://huntboard.example/a/abc/setup?tab=links');
 
-		await expect(requireUser(db, { cookies: memoryCookies().cookies, url })).rejects.toMatchObject({
+		await expect(
+			requireUser(db, { cookies: memoryCookies().cookies, locals: {}, url })
+		).rejects.toMatchObject({
 			status: 303,
 			location: '/login?next=%2Fa%2Fabc%2Fsetup%3Ftab%3Dlinks'
 		});
@@ -56,7 +71,7 @@ describe('requireUser', () => {
 		await signIn(db, cookies, userId);
 
 		expect(
-			await requireUser(db, { cookies, url: new URL('https://huntboard.example/new') })
+			await requireUser(db, { cookies, locals: {}, url: new URL('https://huntboard.example/new') })
 		).toMatchObject({ id: userId });
 	});
 });

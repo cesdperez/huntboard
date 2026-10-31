@@ -1,3 +1,4 @@
+import type { UserRow } from '#lib/server/db/types.js';
 import type { ColorMode } from '#lib/themes/index.js';
 
 // Cloudflare bindings (env.DB) come from `import { env } from 'cloudflare:workers'`, typed by
@@ -8,6 +9,8 @@ declare global {
 		interface Locals {
 			gameTheme?: string;
 			colorMode?: ColorMode;
+			/** The session lookup, shared by every load and action of one request. */
+			signedInUser?: Promise<UserRow | null>;
 		}
 		/** The same values, for the root layout to apply after client-side navigation. */
 		interface PageData {

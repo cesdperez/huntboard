@@ -6,9 +6,10 @@ import { emailSignInActions, pendingEmail } from '#lib/server/actions/email-sign
 import { getSignedInUser } from '#lib/server/http/session.js';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ cookies, url }) => {
+export const load: PageServerLoad = async (event) => {
+	const { cookies, url } = event;
 	const next = nextPath(url.searchParams.get('next'));
-	if (await getSignedInUser(cookies)) redirect(303, next);
+	if (await getSignedInUser(event)) redirect(303, next);
 	return { pendingEmail: await pendingEmail(env, cookies) };
 };
 

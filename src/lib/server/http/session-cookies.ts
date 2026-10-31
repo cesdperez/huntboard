@@ -5,26 +5,30 @@ import { endSession, startSession, validateSession } from '../use-cases/sessions
 
 const SESSION_COOKIE = 'session';
 
-/** The signed-in user, or null. Renews the cookie when the session was renewed. */
-export async function getSignedInUser(db: D1Database, cookies: Cookies): Promise<UserRow | null> {
-	const token = cookies.get(SESSION_COOKIE);
-	if (!token) return null;
-	const valid = await validateSession(db, token);
-	if (!valid) {
-		cookies.delete(SESSION_COOKIE, { path: '/' });
-		return null;
-	}
-	if (valid.renewedUntil) setSessionCookie(cookies, token, valid.renewedUntil);
-	return valid.user;
+/** The cookies and per-request locals of a SvelteKit request. */
+export interface SessionRequest {
+	cookies: Cookies;
+	locals: App.Locals;
+}
+
+/**
+ * The signed-in user, or null. Renews the cookie when the session was renewed. Validates once per
+ * request, so the root layout and a page that needs the user share one D1 lookup.
+ */
+export function getSignedInUser(
+	db: D1Database,
+	{ cookies, locals }: SessionRequest
+): Promise<UserRow | null> {
+	return (locals.signedInUser ??= validateSessionCookie(db, cookies));
 }
 
 /** The signed-in user. Without one, redirects to sign-in and back to this page afterwards. */
 export async function requireUser(
 	db: D1Database,
-	{ cookies, url }: { cookies: Cookies; url: URL }
+	request: SessionRequest & { url: URL }
 ): Promise<UserRow> {
-	const user = await getSignedInUser(db, cookies);
-	if (!user) redirect(303, signInPath(url.pathname + url.search));
+	const user = await getSignedInUser(db, request);
+	if (!user) redirect(303, signInPath(request.url.pathname + request.url.search));
 	return user;
 }
 
@@ -37,6 +41,18 @@ export async function signOut(db: D1Database, cookies: Cookies): Promise<void> {
 	const token = cookies.get(SESSION_COOKIE);
 	if (token) await endSession(db, token);
 	cookies.delete(SESSION_COOKIE, { path: '/' });
+}
+
+async function validateSessionCookie(db: D1Database, cookies: Cookies): Promise<UserRow | null> {
+	const token = cookies.get(SESSION_COOKIE);
+	if (!token) return null;
+	const valid = await validateSession(db, token);
+	if (!valid) {
+		cookies.delete(SESSION_COOKIE, { path: '/' });
+		return null;
+	}
+	if (valid.renewedUntil) setSessionCookie(cookies, token, valid.renewedUntil);
+	return valid.user;
 }
 
 function setSessionCookie(cookies: Cookies, token: string, expires: Date) {
