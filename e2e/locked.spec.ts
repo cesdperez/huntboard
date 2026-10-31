@@ -1,4 +1,4 @@
-import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Page } from '@playwright/test';
 import { failOnCspViolations, watchCsp } from './csp.js';
 import { openNewGameSignedIn } from './sign-in.js';
 
@@ -54,9 +54,9 @@ test('locked challenges: hidden before the start, shown early on request, reveal
 
 	await test.step('the admin shows the challenges early', async () => {
 		await admin.getByLabel('Show challenges before the game starts').check();
-		await admin.getByRole('button', { name: 'Save game' }).click();
-		await expect(admin.getByText('Saved.')).toBeVisible();
-		await reloadUntil(rats, rats.getByRole('button', { name: /Swim in a fountain/ }));
+		await saveGame(admin);
+		await rats.reload();
+		await expect(rats.getByRole('button', { name: /Swim in a fountain/ })).toBeVisible();
 		await expect(rats.getByText('Challenges unlock when the game starts.')).toHaveCount(0);
 	});
 
@@ -64,7 +64,8 @@ test('locked challenges: hidden before the start, shown early on request, reveal
 		await test.step('the admin hides them and moves the start to the next minute', async () => {
 			await admin.getByLabel('Show challenges before the game starts').uncheck();
 			const start = await saveTimes(admin, 'next minute', 60);
-			await reloadUntil(rats, rats.getByText('Challenges unlock when the game starts.'));
+			await rats.reload();
+			await expect(rats.getByText('Challenges unlock when the game starts.')).toBeVisible();
 			return start;
 		});
 
@@ -87,12 +88,15 @@ async function openAs(browser: Browser, nickname: string): Promise<Page> {
 	return page;
 }
 
-// "Saved." stays from the previous save, so the admin page cannot tell when this one landed.
-async function reloadUntil(page: Page, shown: Locator) {
-	await expect(async () => {
-		await page.reload();
-		await expect(shown).toBeVisible({ timeout: 1000 });
-	}).toPass();
+// Waits for this save's answer: "Saved." stays on the page from the previous save.
+async function saveGame(page: Page) {
+	const saved = page.waitForResponse(
+		(response) =>
+			response.request().method() === 'POST' && response.url().includes('gameSettingsSave')
+	);
+	await page.getByRole('button', { name: 'Save game' }).click();
+	expect((await saved).ok()).toBe(true);
+	await expect(page.getByText('Saved.')).toBeVisible();
 }
 
 /**
@@ -124,7 +128,6 @@ async function saveTimes(
 	);
 	await page.getByLabel('Start').fill(start);
 	await page.getByLabel('End').fill(end);
-	await page.getByRole('button', { name: 'Save game' }).click();
-	await expect(page.getByText('Saved.')).toBeVisible();
+	await saveGame(page);
 	return startMs;
 }
