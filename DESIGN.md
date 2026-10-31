@@ -183,7 +183,7 @@ The Share tab holds every link a game has: the teams first, since getting them i
 
 Each row in the Share links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
 
-"Print team QR codes" on Share opens a print page outside the tab bar: a card per team and one for the scoreboard, each with the game name, the team name, a large QR code, "Scan to join your team. No app or account needed." and the link spelled out. It is black on white in every theme and mode, prints two cards to an A4 page with dashed lines to cut along, and has a "Print" button on screen.
+"Print team QR codes" on Share opens a print page outside the tab bar: a card per team and one for the scoreboard, each with the game name, the team name, a large QR code, "Scan to join your team. No app or account needed.", and under it "No camera? Go to <host>/join and type" with the join code large. The scoreboard card spells out its link instead. It is black on white in every theme and mode, prints two cards to an A4 page with dashed lines to cut along, and has a "Print" button on screen.
 
 A team's row also shows its join code under the hint, in `--font-score` at 22px, as `K7Q4-M2XD`: two groups of four from Crockford base32, which has no I, L, O or U. The line names the page players type it at, without `https://`, so it can be read out. Rotating the link changes the code.
 

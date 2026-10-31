@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import { absoluteLink } from '#lib/client/absolute-link.js';
 	import { QrCode } from '#lib/components/qr/index.js';
+	import { formatJoinCode, joinCodeOf } from '#lib/domain/join-code.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { isolate } from '#lib/format/text.js';
 	import type { PageProps } from './$types';
@@ -12,18 +13,21 @@
 	let { data }: PageProps = $props();
 
 	const absolute = (path: string) => absoluteLink(path, page.url.href);
+	const joinPage = $derived(absolute(resolve('/join')).replace(/^https?:\/\//, ''));
 
 	const cards = $derived([
 		...data.teams.map((team) => ({
 			key: `team-${team.id}`,
 			title: team.name,
 			url: absolute(resolve('/t/[token]', { token: team.token })),
+			joinCode: formatJoinCode(joinCodeOf(team.token)),
 			instruction: 'Scan to join your team. No app or account needed.'
 		})),
 		{
 			key: 'scoreboard',
 			title: 'Scoreboard',
 			url: absolute(resolve('/s/[token]', { token: data.game.scoreboard_token })),
+			joinCode: null,
 			instruction: 'Scan to follow the scores. No app or account needed.'
 		}
 	]);
@@ -75,7 +79,16 @@
 					class="w-full max-w-[85mm] rounded-none"
 				/>
 				<p class="text-[17px] font-semibold">{card.instruction}</p>
-				<p class="text-[13px] break-all">{card.url}</p>
+				{#if card.joinCode}
+					<p class="text-[15px]">
+						No camera? Go to {joinPage} and type
+						<span class="block font-score text-[32px] font-extrabold tracking-wider"
+							>{card.joinCode}</span
+						>
+					</p>
+				{:else}
+					<p class="text-[13px] break-all">{card.url}</p>
+				{/if}
 			</article>
 		{/each}
 	</main>
