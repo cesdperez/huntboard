@@ -1,33 +1,35 @@
 <script lang="ts">
-	import type { QrCode } from '#lib/client/qr-code.js';
+	import { page } from '$app/state';
+	import { resolveTheme, themeImages } from '#lib/themes/index.js';
 	import { cn } from '#lib/utils.js';
 
 	let { text, label, class: className }: { text: string; label: string; class?: string } = $props();
 
-	let code = $state<QrCode | null>(null);
+	const theme = $derived(resolveTheme(page.data.gameTheme));
+	let svg = $state<string | null>(null);
 
 	// Loaded on demand, so pages that never show a code never download the encoder.
 	$effect(() => {
 		const current = text;
+		const style = { ...theme.qr, logo: themeImages(theme).icon };
 		let stale = false;
-		void import('#lib/client/qr-code.js').then(({ qrCode }) => {
-			if (!stale) code = qrCode(current);
+		void import('#lib/client/qr-code.js').then(({ qrSvg }) => {
+			if (!stale) svg = qrSvg(current, style);
 		});
 		return () => (stale = true);
 	});
 </script>
 
-<!-- Black on white in every theme and mode: phone scanners misread inverted or low-contrast codes. -->
-<div class={cn('aspect-square overflow-hidden rounded-control bg-white', className)}>
-	{#if code}
-		<svg
-			viewBox="0 0 {code.size} {code.size}"
-			role="img"
-			aria-label={label}
-			shape-rendering="crispEdges"
-			class="block size-full"
-		>
-			<path d={code.path} fill="#000" />
-		</svg>
-	{/if}
+<!-- Dark on white in every theme and mode: phone scanners misread inverted or low-contrast codes. -->
+<div
+	role="img"
+	aria-label={label}
+	class={cn(
+		'aspect-square overflow-hidden rounded-control bg-white [&>svg]:block [&>svg]:size-full',
+		className
+	)}
+>
+	<!-- The markup is built from the encoded modules and the theme registry, never from page input. -->
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html svg ?? ''}
 </div>

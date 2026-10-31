@@ -183,11 +183,11 @@ The Share tab holds every link a game has: the teams first, since getting them i
 
 Each row in the Share links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
 
-"Print team QR codes" on Share opens a print page outside the tab bar: a card per team and one for the scoreboard, each with the game name, the team name, a large QR code, "Scan to join your team. No app or account needed.", and under it "No camera? Go to <host>/join and type" with the join code large. The scoreboard card spells out its link instead. It is black on white in every theme and mode, prints two cards to an A4 page with dashed lines to cut along, and has a "Print" button on screen.
+"Print team QR codes" on Share opens a print page outside the tab bar: a card per team and one for the scoreboard, each with the game name, the team name, a large QR code, "Scan to join your team. No app or account needed.", and under it "No camera? Go to <host>/join and type" with the join code large. The scoreboard card spells out its link instead. The page is black on white in every theme and mode, with the QR codes in the theme's QR colours, prints two cards to an A4 page with dashed lines to cut along, and has a "Print" button on screen.
 
 A team's row also shows its join code under the hint, in `--font-score` at 22px, as `K7Q4-M2XD`: two groups of four from Crockford base32, which has no I, L, O or U. The line names the page players type it at, without `https://`, so it can be read out. Rotating the link changes the code.
 
-QR codes are black on white with a 4-module white margin in every theme and mode, because phone scanners misread inverted or low-contrast codes. They are drawn as SVG in the browser.
+QR codes are dark on white with a 4-module white margin in every theme and mode, because phone scanners misread inverted or low-contrast codes. Each theme sets two QR colours in its registry entry: `ink` for the modules and `eye` for the rings of the three finder eyes, at 7:1 and 4.5:1 against white. The modules are rounded and join their dark neighbours, and the eyes have rounded corners. The theme's app icon sits on a cleared white pad at the centre, about a third of the code's width. The code uses error correction level H, so it scans with the centre cleared. They are drawn as SVG in the browser, and `qr-code.test.ts` renders every theme's code to pixels and decodes it back to the link.
 
 Setup has a "Game image" section under the game settings: a preview of the current image, a file field ("Image", or "Replace image" once there is one), an optional label and "Save image". Saving without a file changes only the label. "Remove image" confirms first.
 
@@ -247,9 +247,9 @@ The admin picks a theme for the game in Setup. It changes every page of that gam
 
 A theme is two things:
 
-- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), and optionally a `wordmark`: a partner's image and its alt text, which the app bar shows after "Huntboard ×". No theme removes the Huntboard name.
+- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), its two [QR code](#admin) colours, and optionally a `wordmark`: a partner's image and its alt text, which the app bar shows after "Huntboard ×". No theme removes the Huntboard name.
 - A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
-- Images in `static/themes/<id>/`: `icon.svg` for the browser tab, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. The two PNGs are rendered by a script (see the [README](README.md#local-development)). A theme's wordmark lives here too.
+- Images in `static/themes/<id>/`: `icon.svg` for the browser tab and the centre of its QR codes, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. The two PNGs are rendered by a script (see the [README](README.md#local-development)). A theme's wordmark lives here too.
 
 The server writes `data-game-theme` on `<html>`, so the first paint and the sheets portalled to `<body>` already wear the theme. A stored id that is no longer registered shows `DEFAULT_THEME`.
 
