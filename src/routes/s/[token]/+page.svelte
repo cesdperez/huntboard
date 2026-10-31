@@ -12,6 +12,7 @@
 	import { QrCode } from '#lib/components/qr/index.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
 	import { startPolling } from '#lib/client/live-updates.js';
+	import { trackRecentGame } from '#lib/client/recent-games.svelte.js';
 	import { ordinal } from '#lib/format/ordinal.js';
 	import { REORDER_MS, motionMs } from '#lib/client/score-motion.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
@@ -30,6 +31,12 @@
 	const scoreboardLink = $derived(
 		absoluteLink(resolve('/s/[token]', { token: page.params.token ?? '' }), page.url.href)
 	);
+
+	trackRecentGame(() => ({
+		kind: 'scoreboard',
+		path: resolve('/s/[token]', { token: page.params.token ?? '' }),
+		gameName: data.game.name
+	}));
 
 	onMount(() => {
 		const stopClock = clock.start();

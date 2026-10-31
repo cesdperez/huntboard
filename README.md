@@ -28,6 +28,8 @@ A creator signs in with their email address. The email holds a link and a six-di
 
 Players and admins type a nickname on first visit. It is kept in the browser and only shows who marked or judged something. It is not an account.
 
+The browser also keeps the last 10 team, admin and scoreboard links it opened, with the game and team names those pages show, so the home page and the dead link page can offer them again. A link that answers 404 leaves the list, and a rotated admin link replaces its old one.
+
 - **Links are the access model.** Anyone with a team link is on that team, and several judges share one admin link. A leaked link is rotated from Setup, and the old one stops working at once. Setup also shows each link as a QR code, and the big-screen scoreboard shows a QR code of its own link for spectators. Each team link also has an 8-character join code, like `K7Q4-M2XD`, that a player types at `/join` when a QR code will not scan or the code is read out. The code is the first 40 bits of the link token, so rotating the link changes the code too.
 - **Claims take two steps.** A team marks a challenge done, and an admin scores it within its point range or rejects it with an optional reason. A team can undo a claim only while it is pending. An admin can also score a cell in the grid directly, for proof that arrives in person.
 - **A challenge scores at most once per team.** Rejected claims stay as history and the team can claim again. When two judges act on the same pending claim, the first wins and the second sees who judged it.
