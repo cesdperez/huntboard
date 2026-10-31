@@ -26,7 +26,10 @@ describe('recent games', () => {
 		const storage = new FakeStorage();
 
 		recordRecentGame(team('/t/one'), { now: 1, storage });
-		recordRecentGame({ kind: 'admin', path: '/a/two', gameName: 'Office hunt' }, { now: 2, storage });
+		recordRecentGame(
+			{ kind: 'admin', path: '/a/two', gameName: 'Office hunt' },
+			{ now: 2, storage }
+		);
 
 		expect(recentGames(storage)).toEqual([
 			{ kind: 'admin', path: '/a/two', gameName: 'Office hunt', openedAt: 2 },
@@ -61,7 +64,10 @@ describe('recent games', () => {
 
 	it('replaces the path a rotated link had', () => {
 		const storage = new FakeStorage();
-		recordRecentGame({ kind: 'admin', path: '/a/old', gameName: 'Office hunt' }, { now: 1, storage });
+		recordRecentGame(
+			{ kind: 'admin', path: '/a/old', gameName: 'Office hunt' },
+			{ now: 1, storage }
+		);
 
 		recordRecentGame(
 			{ kind: 'admin', path: '/a/new', gameName: 'Office hunt' },
@@ -83,7 +89,10 @@ describe('recent games', () => {
 
 	it('forgets a dead link, a page under it included', () => {
 		const storage = new FakeStorage();
-		recordRecentGame({ kind: 'admin', path: '/a/abc', gameName: 'Office hunt' }, { now: 1, storage });
+		recordRecentGame(
+			{ kind: 'admin', path: '/a/abc', gameName: 'Office hunt' },
+			{ now: 1, storage }
+		);
 		recordRecentGame(team('/t/abcdef'), { now: 2, storage });
 		recordRecentGame(team('/t/xyz'), { now: 3, storage });
 

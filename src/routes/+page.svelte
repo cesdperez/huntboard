@@ -5,6 +5,7 @@
 	import { resolve } from '$app/paths';
 	import { AppBar } from '#lib/components/event/index.js';
 	import { Marker } from '#lib/components/marker/index.js';
+	import { RecentGames } from '#lib/components/recent-games/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 
 	// The example claim the hero judges once, so the leaderboard shows what a scored claim does.
@@ -145,6 +146,7 @@
 					Playing in a hunt? Open the team link your organiser sent you. There is nothing to
 					install.
 				</p>
+				<RecentGames class="mt-4 max-w-[40ch]" />
 			</div>
 
 			<figure class="demo">

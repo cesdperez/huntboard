@@ -8,6 +8,7 @@
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import { Toast } from '#lib/components/toast/index.js';
 	import { GameClock, setGameClock } from '#lib/client/game-clock.svelte.js';
+	import { trackRecentGame } from '#lib/client/recent-games.svelte.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
 	import { isolate } from '#lib/format/text.js';
@@ -33,6 +34,11 @@
 		}))
 	);
 	onMount(() => clock.start());
+	trackRecentGame(() => ({
+		kind: 'admin',
+		path: resolve('/a/[token]', { token }),
+		gameName: data.game.name
+	}));
 </script>
 
 <svelte:head>
