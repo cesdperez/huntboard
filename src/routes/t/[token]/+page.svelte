@@ -85,8 +85,8 @@
 
 <div class="min-h-dvh">
 	<header>
+		<AppBar><NicknameButton /></AppBar>
 		{#if event}
-			<AppBar><NicknameButton /></AppBar>
 			<EventBanner
 				name={data.game.name}
 				day={clock.startDay}
@@ -94,10 +94,7 @@
 				image={data.game.image}
 			/>
 		{:else}
-			<div class="mx-auto flex max-w-content items-center justify-between gap-3 px-gutter pt-2">
-				<p class="truncate type-secondary">{data.game.name}</p>
-				<NicknameButton />
-			</div>
+			<p class="mx-auto max-w-content truncate px-gutter pt-2 type-secondary">{data.game.name}</p>
 			{#if data.game.image}
 				<div class="mx-auto max-w-content px-gutter pb-2">
 					<GameImageHeader image={data.game.image} />

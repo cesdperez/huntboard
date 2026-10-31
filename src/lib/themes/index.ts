@@ -1,8 +1,8 @@
 export type ColorMode = 'light' | 'dark';
 
 /**
- * `plain` is the flag layout. `event` adds an app bar and an event banner, descriptive challenge
- * rows with a points column, and a leaderboard heading.
+ * `plain` is the flag layout, with a slim app bar on the paper. `event` colours the app bar and adds
+ * an event banner, descriptive challenge rows with a points column, and a leaderboard heading.
  */
 export type ThemeLayout = 'plain' | 'event';
 
@@ -15,7 +15,7 @@ export interface Theme {
 	/** Stylesheets for every family the theme's tokens name, Archivo too if it keeps the flag sans. */
 	fonts: readonly string[];
 	layout: ThemeLayout;
-	/** Artwork the event layout's app bar shows in place of the Huntboard name. */
+	/** A partner's artwork, which the app bar shows after "Huntboard ×". It never replaces the name. */
 	wordmark?: { src: string; alt: string };
 }
 

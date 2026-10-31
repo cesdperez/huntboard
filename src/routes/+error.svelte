@@ -8,7 +8,6 @@
 	import { newAdminToken } from '#lib/client/new-admin-link.js';
 	import { forgetDeadLink } from '#lib/client/recent-games.js';
 	import { RecentGames } from '#lib/components/recent-games/index.js';
-	import { pageLayout } from '#lib/themes/page-layout.js';
 
 	const notFound = $derived(page.status === 404);
 	const heading = $derived(
@@ -18,8 +17,6 @@
 				? 'This page did not load'
 				: 'You are offline'
 	);
-
-	const event = $derived(pageLayout() === 'event');
 
 	// This tab rotated the admin link and lost the answer, so the link it is on may be the old one.
 	let newToken = $state<string | null>(null);
@@ -46,9 +43,7 @@
 	<title>{heading} · Huntboard</title>
 </svelte:head>
 
-{#if event}
-	<header><AppBar /></header>
-{/if}
+<header><AppBar /></header>
 
 <main class="mx-auto flex max-w-content flex-col gap-3 px-gutter py-10">
 	<h1 class="type-title">{heading}</h1>
