@@ -1,4 +1,4 @@
-import { formatDay, type ClockTimeOptions } from '#lib/format/clock-time.js';
+import { formatDay, formatTime, type ClockTimeOptions } from '#lib/format/clock-time.js';
 
 export interface CaptainMessageTeam {
 	gameName: string;
@@ -35,11 +35,7 @@ export function captainMessage(
 
 // Always with the day, because the captain may read it days before the game.
 function startTime(iso: string, now: Date, options: ClockTimeOptions): string {
-	const time = new Intl.DateTimeFormat(options.locale, {
-		timeZone: options.timeZone,
-		timeStyle: 'short'
-	}).format(new Date(iso));
-	return `${formatDay(iso, now, options)} at ${time}`;
+	return `${formatDay(iso, now, options)} at ${formatTime(iso, options)}`;
 }
 
 /** A wa.me link without a number, so WhatsApp asks which chat to send the text to. */
