@@ -1,5 +1,7 @@
 <script lang="ts">
 	import ClockIcon from '@lucide/svelte/icons/clock';
+	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
+	import TrophyIcon from '@lucide/svelte/icons/trophy';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -7,6 +9,7 @@
 	import { AppBar } from '#lib/components/event/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
 	import { Toast } from '#lib/components/toast/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { GameClock, setGameClock } from '#lib/client/game-clock.svelte.js';
 	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
@@ -17,7 +20,7 @@
 
 	const token = $derived(data.game.admin_token);
 	const tabs = $derived([
-		{ label: 'Queue', routeId: '/a/[token]/queue', href: resolve('/a/[token]/queue', { token }) },
+		{ label: 'Judge', routeId: '/a/[token]/queue', href: resolve('/a/[token]/queue', { token }) },
 		{ label: 'Grid', routeId: '/a/[token]/grid', href: resolve('/a/[token]/grid', { token }) },
 		{ label: 'Teams', routeId: '/a/[token]/teams', href: resolve('/a/[token]/teams', { token }) },
 		{ label: 'Setup', routeId: '/a/[token]/setup', href: resolve('/a/[token]/setup', { token }) }
@@ -41,10 +44,35 @@
 </svelte:head>
 
 <div class="flex min-h-dvh flex-col">
-	{#if event}
-		<!-- Judging is fast work on a phone, so the event banner shrinks to one row here. -->
-		<header>
-			<AppBar><NicknameButton /></AppBar>
+	<header>
+		<AppBar>
+			<div class="flex min-w-0 items-center">
+				<Button
+					href={resolve('/s/[token]', { token: data.game.scoreboard_token })}
+					target="_blank"
+					variant="ghost"
+					size="icon"
+					aria-label="Scoreboard (opens in a new tab)"
+					title="Scoreboard"
+				>
+					<TrophyIcon aria-hidden="true" />
+				</Button>
+				{#if data.signedIn}
+					<Button
+						href={resolve('/games')}
+						variant="ghost"
+						size="icon"
+						aria-label="My games"
+						title="My games"
+					>
+						<LayoutGridIcon aria-hidden="true" />
+					</Button>
+				{/if}
+				<NicknameButton />
+			</div>
+		</AppBar>
+		{#if event}
+			<!-- Judging is fast work on a phone, so the event banner shrinks to one row here. -->
 			<div class="surface-banner">
 				<div
 					class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-3 px-gutter py-2"
@@ -61,18 +89,13 @@
 					</p>
 				</div>
 			</div>
-		</header>
-	{:else}
-		<header
-			class="mx-auto flex w-full max-w-content items-center justify-between gap-3 px-gutter pt-4"
-		>
-			<div class="flex min-w-0 flex-col">
+		{:else}
+			<div class="mx-auto flex max-w-content flex-col px-gutter pt-2">
 				<p class="truncate type-secondary">{data.game.name}</p>
 				<p class="type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
 			</div>
-			<NicknameButton />
-		</header>
-	{/if}
+		{/if}
+	</header>
 	<OfflineNotice class="mx-auto w-full max-w-content px-gutter pt-2" />
 
 	<main class={cn('mx-auto w-full flex-1 px-gutter pt-4 pb-28', !wide && 'max-w-content')}>
@@ -99,7 +122,7 @@
 						)}
 					>
 						{tab.label}
-						{#if tab.label === 'Queue' && data.pendingCount > 0}
+						{#if tab.routeId === '/a/[token]/queue' && data.pendingCount > 0}
 							<span
 								class="min-w-6 rounded-full bg-marker px-1.5 text-center text-[13px] leading-6 text-on-marker tabular-nums"
 							>
