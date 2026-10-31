@@ -20,7 +20,7 @@ Only game creators have accounts. Each team joins through its own secret link, s
 | Role | How they get in | What they can do |
 |---|---|---|
 | Creator | An account: their email address | Create games at `/new` and find them again on My games (`/games`). They land on the new game's admin page |
-| Admin | The admin link | Edit the game, challenges and teams, judge claims, add adjustments, record arrivals, rotate links |
+| Admin | The admin link | Edit the game, challenges and teams, judge claims, add adjustments, record arrivals, share and rotate links |
 | Player | Their team's link | See all challenges, mark them done with an optional note and photo or video, undo a pending claim, rename the team and set its picture |
 | Spectator | The scoreboard link | See team names, pictures, members and totals |
 
@@ -28,7 +28,7 @@ A creator signs in with their email address. The email holds a link and a six-di
 
 Players and admins type a nickname on first visit. It is kept in the browser and only shows who marked or judged something. It is not an account.
 
-- **Links are the access model.** Anyone with a team link is on that team, and several judges share one admin link. A leaked link is rotated from Setup, and the old one stops working at once. Setup also shows each link as a QR code, and the big-screen scoreboard shows a QR code of its own link for spectators.
+- **Links are the access model.** Anyone with a team link is on that team, and several judges share one admin link. The Share tab lists every link with its QR code and prints a card per team to hand out. A leaked link is rotated there, and the old one stops working at once. The big-screen scoreboard shows a QR code of its own link for spectators.
 - **Claims take two steps.** A team marks a challenge done, and an admin scores it within its point range or rejects it with an optional reason. A team can undo a claim only while it is pending. An admin can also score a cell in the grid directly, for proof that arrives in person.
 - **A challenge scores at most once per team.** Rejected claims stay as history and the team can claim again. When two judges act on the same pending claim, the first wins and the second sees who judged it.
 - **Points are whole numbers inside the challenge's range.** Anything exceptional is an adjustment with a reason. A team's total is its scored claims plus adjustments, minus the late penalty.
