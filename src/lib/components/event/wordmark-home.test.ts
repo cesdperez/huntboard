@@ -39,6 +39,6 @@ describe('wordmarkHome', () => {
 	});
 
 	it('does not mistake a route that only starts like a game route', () => {
-		expect(wordmarkHome(at('/tour'))).toBe('/');
+		expect(wordmarkHome(at('/t/[token]-print', { token: 'x' }))).toBe('/');
 	});
 });
