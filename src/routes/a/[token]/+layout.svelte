@@ -21,6 +21,7 @@
 		{ label: 'Queue', routeId: '/a/[token]/queue', href: resolve('/a/[token]/queue', { token }) },
 		{ label: 'Grid', routeId: '/a/[token]/grid', href: resolve('/a/[token]/grid', { token }) },
 		{ label: 'Teams', routeId: '/a/[token]/teams', href: resolve('/a/[token]/teams', { token }) },
+		{ label: 'Share', routeId: '/a/[token]/share', href: resolve('/a/[token]/share', { token }) },
 		{ label: 'Setup', routeId: '/a/[token]/setup', href: resolve('/a/[token]/setup', { token }) }
 	]);
 	// The grid is the one admin screen wider than the content column.

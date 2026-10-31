@@ -3,7 +3,6 @@ import { challengesActions } from '#lib/server/actions/challenges.js';
 import { claimGameActions } from '#lib/server/actions/claim-game.js';
 import { gameImageActions } from '#lib/server/actions/game-image.js';
 import { gameSettingsActions } from '#lib/server/actions/game-settings.js';
-import { linksActions } from '#lib/server/actions/links.js';
 import { mediaActions } from '#lib/server/actions/media.js';
 import { teamsActions } from '#lib/server/actions/teams.js';
 import { listChallengesWithClaimCounts } from '#lib/server/db/challenges.js';
@@ -29,7 +28,6 @@ export const actions = {
 	...gameImageActions,
 	...teamsActions,
 	...challengesActions,
-	...linksActions,
 	...claimGameActions,
 	...mediaActions
 } satisfies Actions;

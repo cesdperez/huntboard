@@ -36,6 +36,7 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		await expect(admin.getByText('Imported 2 challenges.')).toBeVisible();
 	});
 
+	await admin.getByRole('link', { name: 'Share', exact: true }).click();
 	const teamUrl = await admin.getByLabel(TEAM, { exact: true }).inputValue();
 	const rats = await open(browser, 'Rat player');
 	await rats.goto(teamUrl);

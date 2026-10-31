@@ -11,13 +11,13 @@ import {
 } from '#lib/server/use-cases/links.js';
 import type { AdminActions } from './types.js';
 
-/** Setup tab actions. Names start with "links" so they cannot collide with other sections. */
+/** Share tab actions. Names start with "links" so they cannot collide with other sections. */
 export const linksActions = {
 	linksRotateAdmin: async ({ params, request }) => {
 		const game = await requireAdminGame(params.token);
 		const outcome = await rotateAdminLink(env.DB, game.id, await request.formData());
 		if (!('token' in outcome)) return respond('links', outcome);
-		redirect(303, resolve('/a/[token]/setup', { token: outcome.token }));
+		redirect(303, resolve('/a/[token]/share', { token: outcome.token }));
 	},
 
 	linksRotateScoreboard: adminAction('links', rotateScoreboardLink),

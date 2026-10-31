@@ -129,7 +129,7 @@ Tapping a row opens a bottom sheet with the description, the note field, "Add ph
 
 ### Admin
 
-A bottom tab bar with four tabs: Queue, Grid, Teams, Setup. The Queue tab shows a count badge of pending claims.
+A bottom tab bar with five tabs: Queue, Grid, Teams, Share, Setup. The Queue tab shows a count badge of pending claims.
 
 ```
 +--------------------------------+
@@ -142,7 +142,7 @@ A bottom tab bar with four tabs: Queue, Grid, Teams, Setup. The Queue tab shows 
 | [ 5 ] [ 12 ] [ 20 ]  [ __ ]    |
 | [ Reject ]          [ Score ]  |
 +--------------------------------+
-| Queue | Grid | Teams | Setup   |
+| Queue|Grid|Teams|Share|Setup |
 +--------------------------------+
 ```
 
@@ -176,7 +176,13 @@ A game made before accounts opens Setup with a "My games" section: "Add to My ga
 
 The game settings end with the theme, one option per registered theme, saved with the rest of the form.
 
-Each row in the Setup links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
+Setup opens with a checklist, the first thing an admin sees after "Create game": "Get the game ready", or "The game is ready" once it has both times, a challenge and a team. Under the heading, the game state and the header's countdown: "Not started. Starts in 0:42:10", "Live. Ends in 1:42:10" or "Ended at 21:00". Each check shows a check mark and what is in place ("2 challenges"), or a link to its Setup section that says what to do ("Add teams"). "Share the links" always links to Share.
+
+The Share tab holds every link a game has: the teams first, since getting them in is the point, then the scoreboard under "Spectators", then the admin link under "Judges", last because it is the one to keep to organisers. Rotating the admin link moves to Share on the new link. Without teams, Share says so and links to the Teams section in Setup.
+
+Each row in the Share links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
+
+"Print team QR codes" on Share opens a print page outside the tab bar: a card per team and one for the scoreboard, each with the game name, the team name, a large QR code, "Scan to join your team. No app or account needed." and the link spelled out. It is black on white in every theme and mode, prints two cards to an A4 page with dashed lines to cut along, and has a "Print" button on screen.
 
 A team's row also shows its join code under the hint, in `--font-score` at 22px, as `K7Q4-M2XD`: two groups of four from Crockford base32, which has no I, L, O or U. The line names the page players type it at, without `https://`, so it can be read out. Rotating the link changes the code.
 
