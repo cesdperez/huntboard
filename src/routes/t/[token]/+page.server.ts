@@ -17,7 +17,10 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ params, depends, locals }) => {
 	depends(GAME_DATA);
 	const { team, game } = await requireTeamLink(params.token);
-	return { ...(await getTeamPage(env.DB, team, game)), ...applyGameTheme(locals, game) };
+	return {
+		...(await getTeamPage(env.DB, team, game, new Date())),
+		...applyGameTheme(locals, game)
+	};
 };
 
 export const actions = {

@@ -20,6 +20,7 @@ export function gameSettingsSaved(game: GameRow, data: FormData): boolean {
 	return (
 		game.name === sent(data, 'name') &&
 		game.late_penalty_per_minute === Number(sent(data, 'late_penalty_per_minute')) &&
+		game.show_challenges_early === (data.has('show_challenges_early') ? 1 : 0) &&
 		timeSaved('starts_at') &&
 		timeSaved('ends_at') &&
 		(!data.has('theme') || game.theme === data.get('theme'))

@@ -28,7 +28,8 @@ describe('createGame', () => {
 			starts_at: null,
 			ends_at: null,
 			late_penalty_per_minute: 0,
-			theme: 'contour'
+			theme: 'contour',
+			show_challenges_early: 0
 		});
 		expect(game.admin_token).toMatch(/^[A-Za-z0-9_-]{22}$/);
 		expect(game.scoreboard_token).toMatch(/^[A-Za-z0-9_-]{22}$/);
@@ -109,7 +110,8 @@ describe('updateGameSettings', () => {
 		starts_at: '2026-06-20T14:00:00.000Z',
 		ends_at: '2026-06-20T19:00:00.000Z',
 		late_penalty_per_minute: 5,
-		theme: 'night'
+		theme: 'night',
+		show_challenges_early: 0
 	};
 
 	it('stores the settings and returns the updated game', async () => {
@@ -155,7 +157,8 @@ describe('resetGame', () => {
 			starts_at: '2026-06-01T10:00:00.000Z',
 			ends_at: '2026-06-01T15:00:00.000Z',
 			late_penalty_per_minute: 2,
-			theme: 'night'
+			theme: 'night',
+			show_challenges_early: 0
 		});
 		const team = await seedTeam(db, game.id, { arrived_at: '2026-06-01T15:05:00.000Z' });
 		const challenge = await seedChallenge(db, game.id);
