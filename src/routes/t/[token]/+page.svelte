@@ -7,6 +7,7 @@
 	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { GameImageHeader } from '#lib/components/images/index.js';
 	import { NicknameButton, NicknamePrompt } from '#lib/components/nickname/index.js';
+	import LinkQrSheet from '#lib/components/setup/link-qr-sheet.svelte';
 	import AvatarForm from '#lib/components/team/avatar-form.svelte';
 	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
 	import ChallengeSheet from '#lib/components/team/challenge-sheet.svelte';
@@ -15,8 +16,10 @@
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
 	import TeamWelcome from '#lib/components/team/team-welcome.svelte';
 	import { Toast, toast } from '#lib/components/toast/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { refreshUntilUnlocked } from '#lib/client/challenge-unlock.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
+	import { gameLinks } from '#lib/client/game-links.js';
 	import { judgedClaimMessages } from '#lib/domain/judged-claims.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import { groupBySection } from '#lib/format/group-by-section.js';
@@ -35,6 +38,7 @@
 	let selectedId = $state<number | null>(null);
 	let sheetOpen = $state(false);
 	let renaming = $state(false);
+	let showingQr = $state(false);
 	const selected = $derived(data.challenges.find((c) => c.id === selectedId) ?? null);
 
 	// Null until the first load is shown, so opening the page announces nothing.
@@ -62,6 +66,7 @@
 	});
 
 	const token = $derived(page.params.token ?? '');
+	const teamLink = $derived(gameLinks(page.url.href).team(token));
 	let heading = $state<HTMLElement | null>(null);
 
 	trackRecentGame(() => ({
@@ -125,6 +130,7 @@
 		onrename={() => (renaming = true)}
 	>
 		<AvatarForm avatarKey={data.team.avatarKey} {clock} />
+		<Button class="flex-1" onclick={() => (showingQr = true)}>Show QR</Button>
 	</TeamStrip>
 
 	<main class="mx-auto max-w-content px-gutter pt-2 pb-24">
@@ -135,6 +141,7 @@
 			gameName={data.game.name}
 			challengesLocked={data.challengesLocked}
 			ondismiss={() => heading?.focus()}
+			onshowqr={() => (showingQr = true)}
 		/>
 		{#if data.challengesLocked}
 			<section aria-labelledby="challenges-locked-heading" class="flex flex-col gap-1 py-6">
@@ -183,5 +190,6 @@
 	{clock}
 	onclose={() => (renaming = false)}
 />
+<LinkQrSheet label={data.team.name} url={teamLink} bind:open={showingQr} />
 <NicknamePrompt />
 <Toast />
