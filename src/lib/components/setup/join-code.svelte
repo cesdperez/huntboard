@@ -1,16 +1,12 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { absoluteLink } from '#lib/client/absolute-link.js';
+	import { gameLinks } from '#lib/client/game-links.js';
 	import { formatJoinCode, joinCodeOf } from '#lib/domain/join-code.js';
 
 	let { token }: { token: string } = $props();
 
 	const code = $derived(formatJoinCode(joinCodeOf(token)));
-	// Read out loud, so it names the page without the https:// a player would never say.
-	const joinPage = $derived(
-		absoluteLink(resolve('/join'), page.url.href).replace(/^https?:\/\//, '')
-	);
+	const joinPage = $derived(gameLinks(page.url.href).joinPage);
 </script>
 
 <p class="type-secondary">

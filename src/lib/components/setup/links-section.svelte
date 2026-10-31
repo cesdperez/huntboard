@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { resultUnder } from '#lib/action-results.js';
-	import { absoluteLink } from '#lib/client/absolute-link.js';
+	import { gameLinks } from '#lib/client/game-links.js';
 	import type { GameRow, TeamLinkRow } from '#lib/server/db/types.js';
 	import LinkRow from './link-row.svelte';
 
@@ -10,7 +10,7 @@
 
 	const result = $derived(resultUnder(page.form, 'links'));
 
-	const absolute = (path: string) => absoluteLink(path, page.url.href);
+	const links = $derived(gameLinks(page.url.href));
 </script>
 
 {#if result?.error}
@@ -36,7 +36,7 @@
 					id="link-team-{team.id}"
 					label={team.name}
 					hint="Team page. Everyone in the team can mark challenges done."
-					url={absolute(resolve('/t/[token]', { token: team.token }))}
+					url={links.team(team.token)}
 					joinToken={team.token}
 					action="linksRotateTeam"
 					teamId={team.id}
@@ -54,7 +54,7 @@
 			id="link-scoreboard"
 			label="Scoreboard"
 			hint="Read only. Put it on a big screen or share it with spectators."
-			url={absolute(resolve('/s/[token]', { token: game.scoreboard_token }))}
+			url={links.scoreboard(game.scoreboard_token)}
 			action="linksRotateScoreboard"
 			rotated={result?.rotated === 'scoreboard'}
 		/>
@@ -68,7 +68,7 @@
 			id="link-admin"
 			label="Admin"
 			hint="Judge claims and change the game. Keep it to organisers. Rotating moves you to the new link."
-			url={absolute(resolve('/a/[token]', { token: game.admin_token }))}
+			url={links.admin(game.admin_token)}
 			action="linksRotateAdmin"
 			rotated={page.state.adminLinkRotated === true}
 		/>

@@ -3,7 +3,7 @@
 	import PrinterIcon from '@lucide/svelte/icons/printer';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { absoluteLink } from '#lib/client/absolute-link.js';
+	import { gameLinks } from '#lib/client/game-links.js';
 	import { QrCode } from '#lib/components/qr/index.js';
 	import { formatJoinCode, joinCodeOf } from '#lib/domain/join-code.js';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -12,21 +12,20 @@
 
 	let { data }: PageProps = $props();
 
-	const absolute = (path: string) => absoluteLink(path, page.url.href);
-	const joinPage = $derived(absolute(resolve('/join')).replace(/^https?:\/\//, ''));
+	const links = $derived(gameLinks(page.url.href));
 
 	const cards = $derived([
 		...data.teams.map((team) => ({
 			key: `team-${team.id}`,
 			title: team.name,
-			url: absolute(resolve('/t/[token]', { token: team.token })),
+			url: links.team(team.token),
 			joinCode: formatJoinCode(joinCodeOf(team.token)),
 			instruction: 'Scan to join your team. No app or account needed.'
 		})),
 		{
 			key: 'scoreboard',
 			title: 'Scoreboard',
-			url: absolute(resolve('/s/[token]', { token: data.game.scoreboard_token })),
+			url: links.scoreboard(data.game.scoreboard_token),
 			joinCode: null,
 			instruction: 'Scan to follow the scores. No app or account needed.'
 		}
@@ -81,7 +80,7 @@
 				<p class="text-[17px] font-semibold">{card.instruction}</p>
 				{#if card.joinCode}
 					<p class="text-[15px]">
-						No camera? Go to {joinPage} and type
+						No camera? Go to {links.joinPage} and type
 						<span class="block font-score text-[32px] font-extrabold tracking-wider"
 							>{card.joinCode}</span
 						>
