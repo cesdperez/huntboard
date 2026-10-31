@@ -63,7 +63,7 @@ test('images: game image and team pictures, from upload to reset', async ({ brow
 
 	await test.step('a team refuses a file the browser cannot read', async () => {
 		await rats.getByRole('button', { name: /Show the scoreboard/ }).click();
-		await pick(rats, 'Add picture', {
+		await pick(rats, 'Add team picture', {
 			name: 'notes.png',
 			mimeType: 'image/png',
 			buffer: Buffer.from('not an image')
@@ -74,9 +74,9 @@ test('images: game image and team pictures, from upload to reset', async ({ brow
 	});
 
 	await test.step('a team adds a picture, cropped square to 256 pixels', async () => {
-		await pick(rats, 'Add picture', await png(rats, 900, 600));
+		await pick(rats, 'Add team picture', await png(rats, 900, 600));
 		await expect(rats.getByRole('status').filter({ hasText: 'Picture saved' })).toBeVisible();
-		await expect(rats.getByRole('button', { name: 'Change picture' })).toBeVisible();
+		await expect(rats.getByRole('button', { name: 'Change team picture' })).toBeVisible();
 		const avatar = rats.locator('#team-standings img').first();
 		await expect(avatar).toBeVisible();
 		expect(await naturalSize(avatar)).toEqual({ width: 256, height: 256 });
@@ -128,8 +128,11 @@ async function open(
 ): Promise<Page> {
 	const context = await browser.newContext(viewport ? { viewport, hasTouch: false } : {});
 	if (nickname) {
+		// A player with a name has been through the welcome screen of every team link.
 		await context.addInitScript((name) => {
 			localStorage.setItem('huntboard.nickname', name);
+			const team = /^\/t\/([^/]+)/.exec(location.pathname);
+			if (team) localStorage.setItem(`huntboard.team-welcome-dismissed.${team[1]}`, '1');
 		}, nickname);
 	}
 	const page = await context.newPage();
