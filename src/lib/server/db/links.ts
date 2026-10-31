@@ -1,3 +1,4 @@
+import { joinCodeOf, tokenPrefixOf } from '#lib/domain/join-code.js';
 import { getGameById } from './games.js';
 import type { GameRow, TeamRow } from './types.js';
 
@@ -80,4 +81,22 @@ export async function findTeamLink(db: D1Database, token: string): Promise<TeamL
 	if (!team) return null;
 	const game = await getGameById(db, team.game_id);
 	return game && { team, game };
+}
+
+/**
+ * The team token with this join code, or null for none. Two teams that share a code both get null,
+ * so a code never opens the wrong team.
+ */
+export async function findTeamTokenByJoinCode(
+	db: D1Database,
+	code: string
+): Promise<string | null> {
+	const prefix = tokenPrefixOf(code);
+	// A range on the unique token index reads only the rows that share the prefix. '~' sorts after every base64url character.
+	const { results } = await db
+		.prepare('SELECT token FROM team WHERE token >= ?1 AND token < ?2')
+		.bind(prefix, `${prefix}~`)
+		.all<{ token: string }>();
+	const matches = results.filter(({ token }) => joinCodeOf(token) === code);
+	return matches.length === 1 ? matches[0].token : null;
 }

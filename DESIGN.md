@@ -177,6 +177,8 @@ The game settings end with the theme, one option per registered theme, saved wit
 
 Each row in the Setup links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
 
+A team's row also shows its join code under the hint, in `--font-score` at 22px, as `K7Q4-M2XD`: two groups of four from Crockford base32, which has no I, L, O or U. The line names the page players type it at, without `https://`, so it can be read out. Rotating the link changes the code.
+
 QR codes are black on white with a 4-module white margin in every theme and mode, because phone scanners misread inverted or low-contrast codes. They are drawn as SVG in the browser.
 
 Setup has a "Game image" section under the game settings: a preview of the current image, a file field ("Image", or "Replace image" once there is one), an optional label and "Save image". Saving without a file changes only the label. "Remove image" confirms first.
@@ -199,6 +201,13 @@ These pages belong to no game, so they wear the default theme.
 - The email wears Contour, light and dark, in a 560px card: the app bar with "Huntboard", the banner with "Sign in" in `--font-banner` after a magenta control ring and the address under it, a "Sign in" button in `--action`, then the code in `--font-score` in a bordered box. How long both work and the link spelled out close it in `--muted`. A plain-text part carries the same words.
 - My games: "New game" as the primary button, then the games, newest first, each opening its admin link. "Sign out" comes last, as a ghost button.
 - Sign-in errors show in place, above the button they are about.
+
+### Join
+
+`/join` belongs to no game, so it wears the default theme, like `/new`. It has one field, "Join code", and "Join", which opens the team page. It takes the code in any case, with or without spaces and dashes, and reads O as 0 and I or L as 1. The landing page links to it from the line for players: "Have a join code? Enter it".
+
+- A code that opens nothing: "No team has this code. Check it with your organiser." It says nothing more, so guessing learns nothing.
+- Input that cannot be a code: "A join code has 8 letters and digits, like K7Q4-M2XD." An empty field: "Type the join code your organiser gave you."
 
 ### Scoreboard
 

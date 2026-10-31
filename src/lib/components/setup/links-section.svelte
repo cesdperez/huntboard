@@ -48,6 +48,7 @@
 				url={absolute(resolve('/t/[token]', { token: team.token }))}
 				action="linksRotateTeam"
 				teamId={team.id}
+				joinToken={team.token}
 				rotated={result?.rotated === `team-${team.id}`}
 			/>
 		{/each}

@@ -144,6 +144,9 @@
 				<p class="mt-8 max-w-[40ch] text-[15px] leading-snug">
 					Playing in a hunt? Open the team link your organiser sent you. There is nothing to
 					install.
+					<a href={resolve('/join')} class="font-semibold underline underline-offset-4"
+						>Have a join code? Enter it</a
+					>
 				</p>
 			</div>
 
