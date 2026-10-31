@@ -59,6 +59,9 @@ export interface ClaimRow {
 	judge_note: string | null;
 	/** Key in the MEDIA bucket, or null for a claim without a photo or video. */
 	media_key: string | null;
+	/** The nickname that last edited the claim while it was pending, or null if nobody did. */
+	edited_by: string | null;
+	edited_at: string | null;
 }
 
 export interface AdjustmentRow {
