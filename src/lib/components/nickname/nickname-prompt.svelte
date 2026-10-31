@@ -7,15 +7,19 @@
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { nickname } from './nickname-store.svelte.js';
 
+	/** editOnly leaves the first ask to the page, which then opens this only from the nickname button. */
+	let { editOnly = false }: { editOnly?: boolean } = $props();
+
 	let draft = $state('');
 	let invalid = $state(false);
 	// Without a nickname there is nothing to attribute actions to, so the first prompt cannot be dismissed.
-	const dismissable = $derived(nickname.value !== null);
+	const dismissable = $derived(editOnly || nickname.value !== null);
+	const open = $derived(editOnly ? nickname.loaded && nickname.editing : nickname.promptOpen);
 
 	onMount(() => nickname.load());
 
-	function onOpenChange(open: boolean) {
-		if (!open) nickname.editing = false;
+	function onOpenChange(isOpen: boolean) {
+		if (!isOpen) nickname.editing = false;
 	}
 
 	function submit(event: SubmitEvent) {
@@ -24,14 +28,14 @@
 	}
 
 	$effect(() => {
-		if (nickname.promptOpen) {
+		if (open) {
 			draft = nickname.value ?? '';
 			invalid = false;
 		}
 	});
 </script>
 
-<Sheet.Root open={nickname.promptOpen} {onOpenChange}>
+<Sheet.Root {open} {onOpenChange}>
 	<Sheet.Content
 		showCloseButton={dismissable}
 		interactOutsideBehavior={dismissable ? 'close' : 'ignore'}

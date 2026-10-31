@@ -138,8 +138,11 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 
 async function open(browser: Browser, nickname: string): Promise<Page> {
 	const context = await browser.newContext();
+	// A player with a name has been through the welcome screen of every team link.
 	await context.addInitScript((name) => {
 		localStorage.setItem('huntboard.nickname', name);
+		const team = /^\/t\/([^/]+)/.exec(location.pathname);
+		if (team) localStorage.setItem(`huntboard.team-welcome-dismissed.${team[1]}`, '1');
 	}, nickname);
 	const page = await context.newPage();
 	watchCsp(page);

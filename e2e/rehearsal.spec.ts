@@ -101,18 +101,33 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await sheet.getByRole('button', { name: 'Close' }).click();
 	});
 
-	await test.step('a player types a join code at /join and lands on that team page', async () => {
+	await test.step('a player types a join code at /join, names themself and starts playing', async () => {
 		const name = TEAMS[1];
 		const row = admin
 			.getByRole('listitem')
 			.filter({ has: admin.getByLabel(name, { exact: true }) });
 		const code = await row.getByText(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/).textContent();
-		const player = await openAs(browser, `${name} player`);
+		const player = await openAs(browser, null);
 		await player.goto('/join');
 		await player.getByLabel('Join code').fill(code!);
 		await player.getByRole('button', { name: 'Join' }).click();
 		await expect(player).toHaveURL(teamUrls.get(name)!);
+		await expect(player.getByRole('heading', { level: 1 })).toHaveText(`Welcome to ${gameName}!`);
+		await expect(player.getByText(`You're on ${name}.`)).toBeVisible();
+		await expect(player.getByLabel('Team name')).toHaveValue(name);
+		await player.getByLabel('Your name').fill(`${name} player`);
+		await player.getByRole('button', { name: 'Start playing' }).click();
 		await expect(player.getByRole('region', { name: 'Your team' })).toContainText(name);
+		await expect(player.getByRole('button', { name: /Change nickname/ })).toContainText(
+			`${name} player`
+		);
+
+		await player.reload();
+		await expect(player.getByRole('region', { name: 'Your team' })).toContainText(name);
+		await player.getByRole('button', { name: 'How to play' }).click();
+		await expect(player.getByRole('dialog', { name: 'How to play' })).toContainText(
+			'Waiting for a judge'
+		);
 		await player.context().close();
 	});
 
@@ -311,8 +326,11 @@ async function openAs(
 ): Promise<Page> {
 	const context = await browser.newContext(viewport ? { viewport, hasTouch: false } : {});
 	if (nickname) {
+		// A player with a name has been through the welcome screen of every team link.
 		await context.addInitScript((name) => {
 			localStorage.setItem('huntboard.nickname', name);
+			const team = /^\/t\/([^/]+)/.exec(location.pathname);
+			if (team) localStorage.setItem(`huntboard.team-welcome-dismissed.${team[1]}`, '1');
 		}, nickname);
 	}
 	const page = await context.newPage();
