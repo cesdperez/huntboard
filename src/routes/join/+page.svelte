@@ -17,12 +17,12 @@
 	<title>Join a team · Huntboard</title>
 </svelte:head>
 
-{#if event}
-	<header>
-		<AppBar />
+<header>
+	<AppBar />
+	{#if event}
 		<PageBanner title="Join a team">Type the code your organiser gave you.</PageBanner>
-	</header>
-{/if}
+	{/if}
+</header>
 
 <main class="mx-auto flex max-w-content flex-col gap-6 px-gutter {event ? 'py-6' : 'py-10'}">
 	{#if !event}
