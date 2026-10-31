@@ -13,6 +13,8 @@ declare global {
 		interface PageData {
 			gameTheme?: string;
 			colorMode?: ColorMode;
+			/** From the root layout, for the app bar links. */
+			signedIn?: boolean;
 		}
 		interface PageState {
 			/** Set when rotating the admin link moved the page to the new link. */

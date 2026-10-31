@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { resolveTheme } from '#lib/themes/index.js';
+	import { pageLayout } from '#lib/themes/page-layout.js';
 	import { cn } from '#lib/utils.js';
+	import { wordmarkHome } from './wordmark-home.js';
 
 	type Props = {
 		/** Sits at the right end, like the nickname button. */
@@ -14,37 +15,47 @@
 
 	let { children, class: className }: Props = $props();
 
-	const wordmark = $derived(resolveTheme(page.data.gameTheme).wordmark);
-	const home = $derived(page.route.id === '/');
-	const wordmarkClass = 'app-bar-wordmark font-display text-[20px] leading-none font-bold';
+	const event = $derived(pageLayout() === 'event');
+	const partner = $derived(resolveTheme(page.data.gameTheme).wordmark);
+	const home = $derived(
+		wordmarkHome({
+			routeId: page.route.id,
+			params: page.params,
+			signedIn: page.data.signedIn ?? false,
+			error: page.error !== null
+		})
+	);
+	const here = $derived(page.url.pathname === home);
+	const wordmarkClass = $derived(
+		cn(
+			'app-bar-wordmark inline-flex shrink-0 items-center gap-[0.3em] leading-none font-bold',
+			event ? 'font-display text-[20px]' : 'text-[17px]'
+		)
+	);
 </script>
 
 {#snippet mark()}
-	{#if wordmark}
+	Huntboard
+	{#if partner}
+		<span aria-hidden="true" class="font-sans text-[0.8em] font-normal">×</span>
+		<span class="sr-only">with</span>
 		<!-- Sized in em, so the big-screen scoreboard scales it with the app bar text. -->
-		<img src={wordmark.src} alt={wordmark.alt} class="block h-[0.9em] w-auto" />
-	{:else}
-		Huntboard
+		<img src={partner.src} alt={partner.alt} class="block h-[0.7em] w-auto" />
 	{/if}
 {/snippet}
 
-<div class="surface-app-bar">
+<div class={event ? 'surface-app-bar' : 'border-b border-line bg-paper text-ink'}>
 	<div
 		class={cn(
-			'mx-auto flex min-h-12 max-w-content items-center justify-between gap-3 px-gutter',
+			'mx-auto flex max-w-content items-center justify-between gap-3 px-gutter',
+			event ? 'min-h-12' : 'min-h-11',
 			className
 		)}
 	>
-		{#if home}
+		{#if here}
 			<p class={wordmarkClass}>{@render mark()}</p>
 		{:else}
-			<a
-				href={resolve('/')}
-				class={cn(
-					wordmarkClass,
-					'inline-flex min-h-touch items-center focus-visible:-outline-offset-2'
-				)}
-			>
+			<a href={home} class={cn(wordmarkClass, 'min-h-touch focus-visible:-outline-offset-2')}>
 				{@render mark()}
 			</a>
 		{/if}
