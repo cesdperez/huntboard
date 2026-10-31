@@ -43,56 +43,62 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
+<!-- Beside the game name rather than in the app bar, where a partner wordmark leaves no room. -->
+{#snippet gameLinks()}
+	<nav aria-label="Game" class="flex shrink-0">
+		<Button
+			href={resolve('/s/[token]', { token: data.game.scoreboard_token })}
+			target="_blank"
+			variant="ghost"
+			size="icon"
+			aria-label="Scoreboard (opens in a new tab)"
+			title="Scoreboard"
+		>
+			<TrophyIcon aria-hidden="true" />
+		</Button>
+		{#if data.signedIn}
+			<Button
+				href={resolve('/games')}
+				variant="ghost"
+				size="icon"
+				aria-label="My games"
+				title="My games"
+			>
+				<LayoutGridIcon aria-hidden="true" />
+			</Button>
+		{/if}
+	</nav>
+{/snippet}
+
 <div class="flex min-h-dvh flex-col">
 	<header>
-		<AppBar>
-			<div class="flex min-w-0 items-center">
-				<Button
-					href={resolve('/s/[token]', { token: data.game.scoreboard_token })}
-					target="_blank"
-					variant="ghost"
-					size="icon"
-					aria-label="Scoreboard (opens in a new tab)"
-					title="Scoreboard"
-				>
-					<TrophyIcon aria-hidden="true" />
-				</Button>
-				{#if data.signedIn}
-					<Button
-						href={resolve('/games')}
-						variant="ghost"
-						size="icon"
-						aria-label="My games"
-						title="My games"
-					>
-						<LayoutGridIcon aria-hidden="true" />
-					</Button>
-				{/if}
-				<NicknameButton />
-			</div>
-		</AppBar>
+		<AppBar><NicknameButton /></AppBar>
 		{#if event}
 			<!-- Judging is fast work on a phone, so the event banner shrinks to one row here. -->
 			<div class="surface-banner">
-				<div
-					class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-3 px-gutter py-2"
-				>
-					<p
-						class="banner-glyph-room line-clamp-2 min-w-0 type-banner text-[32px] leading-[max(1,var(--banner-title-leading))] break-words hyphens-auto"
-						title={data.game.name}
-					>
-						{data.game.name}
-					</p>
-					<p class="flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">
-						<ClockIcon aria-hidden="true" class="size-4 shrink-0" />
-						{clock.countdown ?? ' '}
-					</p>
+				<div class="mx-auto flex max-w-content items-center gap-2 px-gutter py-2">
+					<div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3">
+						<p
+							class="banner-glyph-room line-clamp-2 min-w-0 type-banner text-[32px] leading-[max(1,var(--banner-title-leading))] break-words hyphens-auto"
+							title={data.game.name}
+						>
+							{data.game.name}
+						</p>
+						<p class="flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">
+							<ClockIcon aria-hidden="true" class="size-4 shrink-0" />
+							{clock.countdown ?? ' '}
+						</p>
+					</div>
+					{@render gameLinks()}
 				</div>
 			</div>
 		{:else}
-			<div class="mx-auto flex max-w-content flex-col px-gutter pt-2">
-				<p class="truncate type-secondary">{data.game.name}</p>
-				<p class="type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
+			<div class="mx-auto flex max-w-content items-center gap-2 px-gutter pt-2">
+				<div class="flex min-w-0 flex-1 flex-col">
+					<p class="truncate type-secondary">{data.game.name}</p>
+					<p class="type-secondary tabular-nums">{clock.countdown ?? ' '}</p>
+				</div>
+				{@render gameLinks()}
 			</div>
 		{/if}
 	</header>
