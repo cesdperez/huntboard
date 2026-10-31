@@ -80,6 +80,8 @@ export interface WithClaimCount {
 /** Deleting a team without claims also deletes its adjustments, so Setup names them first. */
 export type SetupTeam = TeamRow & WithClaimCount & { adjustment_count: number };
 
+export type TeamLinkRow = Pick<TeamRow, 'id' | 'name' | 'token'>;
+
 export type ChallengeWithClaimCount = ChallengeRow & WithClaimCount;
 
 export interface UserRow {

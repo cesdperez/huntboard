@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { listSetupTeams } from '#lib/server/db/teams.js';
+import { listTeamLinks } from '#lib/server/db/teams.js';
 import { requireAdminGame } from '#lib/server/http/admin-game.js';
 import { applyGameTheme } from '#lib/server/pages/game-theme.js';
 import type { PageServerLoad } from './$types';
@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const game = await requireAdminGame(params.token);
 	return {
 		game,
-		teams: await listSetupTeams(env.DB, game.id),
+		teams: await listTeamLinks(env.DB, game.id),
 		...applyGameTheme(locals, game)
 	};
 };

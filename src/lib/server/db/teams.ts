@@ -1,7 +1,7 @@
 import { teamNameKey } from '#lib/domain/team-name.js';
 import { generateToken } from '#lib/domain/token.js';
 import { nextId } from './ids.js';
-import type { TeamRow, SetupTeam } from './types.js';
+import type { TeamRow, SetupTeam, TeamLinkRow } from './types.js';
 
 export async function listSetupTeams(db: D1Database, gameId: number): Promise<SetupTeam[]> {
 	const { results } = await db
@@ -24,6 +24,14 @@ export async function listTeamNames(
 		.prepare('SELECT id, name FROM team WHERE game_id = ? ORDER BY position, id')
 		.bind(gameId)
 		.all<Pick<TeamRow, 'id' | 'name'>>();
+	return results;
+}
+
+export async function listTeamLinks(db: D1Database, gameId: number): Promise<TeamLinkRow[]> {
+	const { results } = await db
+		.prepare('SELECT id, name, token FROM team WHERE game_id = ? ORDER BY position, id')
+		.bind(gameId)
+		.all<TeamLinkRow>();
 	return results;
 }
 
