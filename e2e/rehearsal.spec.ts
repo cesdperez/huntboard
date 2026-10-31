@@ -86,6 +86,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await expect(admin.getByText('Imported 10 challenges.')).toBeVisible();
 	});
 
+	await admin.getByRole('link', { name: 'Share', exact: true }).click();
 	const scoreboardUrl = await admin.getByLabel('Scoreboard', { exact: true }).inputValue();
 	const teamUrls = new Map<TeamName, string>();
 	for (const name of TEAMS) {
