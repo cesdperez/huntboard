@@ -25,6 +25,8 @@ function claim(id: number, challengeId: number, overrides: Partial<BoardClaim> =
 		judged_by: null,
 		judge_note: null,
 		media_key: null,
+		edited_by: null,
+		edited_at: null,
 		...overrides
 	};
 }
@@ -68,8 +70,19 @@ describe('teamBoard', () => {
 			points: null,
 			judgedBy: null,
 			judgeNote: null,
-			media: null
+			media: null,
+			editedBy: null,
+			editedAt: null
 		});
+	});
+
+	it('shows who last edited a claim and when', () => {
+		const [row] = teamBoard(
+			[challenge(1)],
+			[claim(7, 1, { edited_by: 'Kim', edited_at: '2026-06-01T17:05:00.000Z' })]
+		);
+
+		expect(row.claim).toMatchObject({ editedBy: 'Kim', editedAt: '2026-06-01T17:05:00.000Z' });
 	});
 
 	it('shows the claim media with its kind', () => {

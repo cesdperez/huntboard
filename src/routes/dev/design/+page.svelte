@@ -120,7 +120,9 @@
 				points: null,
 				judgedBy: null,
 				judgeNote: null,
-				media: null
+				media: null,
+				editedBy: null,
+				editedAt: null
 			}
 		},
 		{
@@ -139,7 +141,9 @@
 				points: 25,
 				judgedBy: 'Sam',
 				judgeNote: null,
-				media: null
+				media: null,
+				editedBy: null,
+				editedAt: null
 			}
 		},
 		{
@@ -158,7 +162,9 @@
 				points: null,
 				judgedBy: 'Sam',
 				judgeNote: 'No proof received',
-				media: null
+				media: null,
+				editedBy: null,
+				editedAt: null
 			}
 		}
 	];

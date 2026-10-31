@@ -41,7 +41,9 @@
 		<p class="type-secondary break-words">
 			{#if claim.note}“<bdi>{claim.note}</bdi>” marked by <bdi>{claim.marked_by}</bdi>{:else}Marked
 				by
-				<bdi>{claim.marked_by}</bdi>{/if}
+				<bdi>{claim.marked_by}</bdi>{/if}{#if claim.edited_by}, edited by <bdi
+					>{claim.edited_by}</bdi
+				>{/if}
 		</p>
 		{#if claim.rejected_count > 0}
 			<p class="type-secondary text-danger!">

@@ -5,6 +5,7 @@
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { formatClockTime } from '#lib/format/clock-time.js';
 	import { earlierRejectionsText } from '#lib/format/earlier-rejections.js';
+	import { claimEditedLine } from '#lib/domain/claim-messages.js';
 	import type { GridRow, GridTeam } from '#lib/domain/judging-grid.js';
 	import JudgePanel, { type JudgeTarget } from './judge-panel.svelte';
 
@@ -45,6 +46,7 @@
 	});
 
 	const formatTime = (iso: string) => formatClockTime(iso, new Date());
+	const edited = $derived(claim && claimEditedLine(claim, formatTime));
 </script>
 
 <Sheet.Root open={open && target !== null} onOpenChange={(isOpen) => !isOpen && onclose()}>
@@ -97,6 +99,7 @@
 						<p class="type-secondary">
 							Marked done by <bdi>{claim.markedBy}</bdi> at {formatTime(claim.markedAt)}.
 						</p>
+						{#if edited}<p class="type-secondary">{edited}</p>{/if}
 						{#if claim.judgedBy && claim.status !== 'pending'}
 							<p class="type-secondary">Judged by <bdi>{claim.judgedBy}</bdi>.</p>
 						{/if}
