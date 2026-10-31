@@ -259,6 +259,7 @@ describe('gameIsBlank', () => {
 		['a challenge', blank, 0, 1],
 		['a start time', { ...blank, starts_at: game.starts_at }, 0, 0],
 		['a late penalty', { ...blank, late_penalty_per_minute: 2 }, 0, 0],
+		['challenges shown early', { ...blank, show_challenges_early: 1 }, 0, 0],
 		['an image', { ...blank, image_key: 'games/1/a.webp' }, 0, 0]
 	])('is false with %s', (_case, shown, teams, challenges) => {
 		expect(gameIsBlank(shown, teams, challenges)).toBe(false);

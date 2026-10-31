@@ -158,7 +158,7 @@ describe('resetGame', () => {
 			ends_at: '2026-06-01T15:00:00.000Z',
 			late_penalty_per_minute: 2,
 			theme: 'night',
-			show_challenges_early: 0
+			show_challenges_early: 1
 		});
 		const team = await seedTeam(db, game.id, { arrived_at: '2026-06-01T15:05:00.000Z' });
 		const challenge = await seedChallenge(db, game.id);
@@ -184,6 +184,7 @@ describe('resetGame', () => {
 			starts_at: null,
 			ends_at: null,
 			late_penalty_per_minute: 0,
+			show_challenges_early: 0,
 			image_key: null,
 			image_label: ''
 		});

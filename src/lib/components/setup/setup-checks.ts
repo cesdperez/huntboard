@@ -44,6 +44,7 @@ export function gameIsBlank(game: GameRow, teamCount: number, challengeCount: nu
 		game.starts_at === null &&
 		game.ends_at === null &&
 		game.late_penalty_per_minute === 0 &&
+		game.show_challenges_early === 0 &&
 		game.image_key === null
 	);
 }

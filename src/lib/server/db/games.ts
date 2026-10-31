@@ -104,7 +104,7 @@ export async function resetGame(db: D1Database, gameId: number): Promise<GameRow
 		db
 			.prepare(
 				`UPDATE game SET starts_at = NULL, ends_at = NULL, late_penalty_per_minute = 0,
-					image_key = NULL, image_label = ''
+					show_challenges_early = 0, image_key = NULL, image_label = ''
 				WHERE id = ? RETURNING *`
 			)
 			.bind(gameId)
