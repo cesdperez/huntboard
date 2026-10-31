@@ -13,6 +13,7 @@
 	import type { RotatedLink } from '#lib/server/use-cases/links.js';
 	import { cn } from '#lib/utils.js';
 	import { AdminLinkRotation } from './admin-link-rotation.svelte.js';
+	import JoinCode from './join-code.svelte';
 	import LinkQrSheet from './link-qr-sheet.svelte';
 	import { updateOrRetry } from './update-or-retry.js';
 
@@ -23,6 +24,7 @@
 		url,
 		action,
 		teamId,
+		joinToken,
 		rotated = false
 	}: {
 		id: string;
@@ -31,6 +33,8 @@
 		url: string;
 		action: string;
 		teamId?: number;
+		/** A team link's token, to show the code players can type instead. */
+		joinToken?: string;
 		rotated?: boolean;
 	} = $props();
 
@@ -125,6 +129,9 @@
 	<div class="flex flex-col gap-1">
 		<label for={id} class="font-semibold break-words">{label}</label>
 		<p class="type-secondary">{hint}</p>
+		{#if joinToken}
+			<JoinCode token={joinToken} />
+		{/if}
 	</div>
 
 	<input
