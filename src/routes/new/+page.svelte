@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { AppBar, PageBanner } from '#lib/components/event/index.js';
 	import { GAME_NAME_MAX_LENGTH } from '#lib/domain/game-settings.js';
 	import { Button } from '#lib/components/ui/button/index.js';
@@ -18,12 +19,18 @@
 	<title>New game · Huntboard</title>
 </svelte:head>
 
-{#if event}
-	<header>
-		<AppBar />
+<header>
+	<AppBar>
+		<a
+			href={resolve('/games')}
+			class="inline-flex min-h-touch items-center text-[17px] font-semibold underline-offset-4 hover:underline"
+			>My games</a
+		>
+	</AppBar>
+	{#if event}
 		<PageBanner title="New game">Name it and start setting it up.</PageBanner>
-	</header>
-{/if}
+	{/if}
+</header>
 
 <main class="mx-auto flex max-w-content flex-col gap-6 px-gutter {event ? 'py-6' : 'py-10'}">
 	{#if !event}

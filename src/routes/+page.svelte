@@ -6,6 +6,9 @@
 	import { AppBar } from '#lib/components/event/index.js';
 	import { Marker } from '#lib/components/marker/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
 	// The example claim the hero judges once, so the leaderboard shows what a scored claim does.
 	const CLAIM = {
@@ -119,7 +122,7 @@
 		<a
 			href={resolve('/games')}
 			class="inline-flex min-h-touch items-center text-[17px] font-semibold underline-offset-4 hover:underline"
-			>Sign in</a
+			>{data.signedIn ? 'My games' : 'Sign in'}</a
 		>
 	</AppBar>
 </header>
@@ -134,11 +137,11 @@
 					Everyone follows the same leaderboard as it changes.
 				</p>
 				<div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-					<Button href={resolve('/new')} variant="primary" size="lg">Create a hunt</Button>
+					<Button href={resolve('/new')} variant="primary" size="lg">Create a game</Button>
 					<a
 						href={resolve('/games')}
 						class="inline-flex min-h-touch items-center font-semibold underline underline-offset-4"
-						>Open my hunts</a
+						>My games</a
 					>
 				</div>
 				<p class="mt-8 max-w-[40ch] text-[15px] leading-snug">
@@ -233,7 +236,7 @@
 				</p>
 			</div>
 			<Button href={resolve('/new')} variant="primary" size="lg" class="self-start lg:self-end"
-				>Create a hunt</Button
+				>Create a game</Button
 			>
 		</div>
 	</section>
