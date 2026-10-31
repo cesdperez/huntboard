@@ -21,7 +21,8 @@ const night: Theme = {
 	name: 'Night',
 	modes: { dark: { themeColor: '#101b2b' } },
 	fonts: [],
-	layout: 'plain'
+	layout: 'plain',
+	qr: { ink: '#101b2b', eye: '#101b2b' }
 };
 const registry = [FLAG_THEME, night];
 
