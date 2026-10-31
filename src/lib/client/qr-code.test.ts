@@ -51,13 +51,16 @@ describe('qrSvg', () => {
 		const { width, pixels } = render(svg, sizeOf(svg) * moduleSize);
 		const edge = QUIET_ZONE * moduleSize;
 
+		const dirty: [number, number][] = [];
 		for (let y = 0; y < width; y++) {
 			for (let x = 0; x < width; x++) {
 				if (x >= edge && x < width - edge && y >= edge && y < width - edge) continue;
 				const i = (y * width + x) * 4;
-				expect([pixels[i], pixels[i + 1], pixels[i + 2]]).toEqual([255, 255, 255]);
+				if (pixels[i] !== 255 || pixels[i + 1] !== 255 || pixels[i + 2] !== 255) dirty.push([x, y]);
 			}
 		}
+
+		expect(dirty).toEqual([]);
 	});
 
 	it('draws the code in dark theme colours on white', () => {
