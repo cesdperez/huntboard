@@ -133,7 +133,7 @@ A bottom tab bar with five tabs: Judge, Grid, Teams, Share, Setup. The Judge tab
 
 ```
 +--------------------------------+
-| Queue                     3    |
+| Judge                     3    |
 +--------------------------------+
 | Canal Rats, 4 min ago          |
 | Make a birthday card    5-20   |

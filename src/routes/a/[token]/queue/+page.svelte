@@ -41,7 +41,7 @@
 </script>
 
 <div class="flex items-baseline justify-between gap-3">
-	<h1 bind:this={heading} tabindex="-1" class="type-title">Queue</h1>
+	<h1 bind:this={heading} tabindex="-1" class="type-title">Judge</h1>
 	{#if data.claims.length > 0}
 		<p class="type-score text-[28px]" aria-label="{data.claims.length} to judge">
 			{data.claims.length}

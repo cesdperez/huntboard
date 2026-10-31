@@ -148,7 +148,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 
 	await test.step('the admin judges the queue oldest first', async () => {
 		await admin.getByRole('link', { name: /^Judge/ }).click();
-		await expect(admin.getByRole('heading', { name: 'Queue' })).toBeVisible();
+		await expect(admin.getByRole('heading', { name: 'Judge' })).toBeVisible();
 		await expect(queueItems(admin)).toHaveCount(8);
 		await expect(queueItems(admin).first()).toHaveAccessibleName(
 			'Canal Rats, Make a birthday card'
