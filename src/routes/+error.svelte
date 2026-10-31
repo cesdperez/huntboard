@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { checkConnection, connection, retryPage } from '#lib/components/connection/index.js';
-	import { AppBar } from '#lib/components/event/index.js';
+	import { AccountLink, AppBar } from '#lib/components/event/index.js';
 	import { startPolling } from '#lib/client/live-updates.js';
 	import { newAdminToken } from '#lib/client/new-admin-link.js';
 	import { forgetDeadLink } from '#lib/client/recent-games.js';
@@ -47,7 +47,7 @@
 	<title>{heading} · Huntboard</title>
 </svelte:head>
 
-<header><AppBar /></header>
+<header><AppBar><AccountLink /></AppBar></header>
 
 <main class="mx-auto flex max-w-content flex-col gap-3 px-gutter py-10">
 	<h1 class="type-title">{heading}</h1>

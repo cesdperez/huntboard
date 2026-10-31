@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { resolve } from '$app/paths';
-	import { AppBar, PageBanner } from '#lib/components/event/index.js';
+	import { AccountLink, AppBar, PageBanner } from '#lib/components/event/index.js';
 	import { GAME_NAME_MAX_LENGTH } from '#lib/domain/game-settings.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
@@ -21,11 +20,7 @@
 
 <header>
 	<AppBar>
-		<a
-			href={resolve('/games')}
-			class="inline-flex min-h-touch items-center text-[17px] font-semibold underline-offset-4 hover:underline"
-			>My games</a
-		>
+		<AccountLink />
 	</AppBar>
 	{#if event}
 		<PageBanner title="New game">Name it and start setting it up.</PageBanner>

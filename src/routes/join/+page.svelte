@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { AppBar, PageBanner } from '#lib/components/event/index.js';
+	import { AccountLink, AppBar, PageBanner } from '#lib/components/event/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
@@ -18,7 +18,7 @@
 </svelte:head>
 
 <header>
-	<AppBar />
+	<AppBar><AccountLink /></AppBar>
 	{#if event}
 		<PageBanner title="Join a team">Type the code your organiser gave you.</PageBanner>
 	{/if}
