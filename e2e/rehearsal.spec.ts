@@ -101,6 +101,21 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await sheet.getByRole('button', { name: 'Close' }).click();
 	});
 
+	await test.step('a player types a join code at /join and lands on that team page', async () => {
+		const name = TEAMS[1];
+		const row = admin
+			.getByRole('listitem')
+			.filter({ has: admin.getByLabel(name, { exact: true }) });
+		const code = await row.getByText(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/).textContent();
+		const player = await openAs(browser, `${name} player`);
+		await player.goto('/join');
+		await player.getByLabel('Join code').fill(code!);
+		await player.getByRole('button', { name: 'Join' }).click();
+		await expect(player).toHaveURL(teamUrls.get(name)!);
+		await expect(player.getByRole('region', { name: 'Your team' })).toContainText(name);
+		await player.context().close();
+	});
+
 	const scoreboard = await openAs(browser, null, { width: 1920, height: 1080 });
 	await test.step('the scoreboard lists every team at 0 points', async () => {
 		await scoreboard.goto(scoreboardUrl);
