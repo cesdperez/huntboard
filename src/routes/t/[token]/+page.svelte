@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LockIcon from '@lucide/svelte/icons/lock';
 	import { onMount, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -14,6 +15,7 @@
 	import TeamStrip from '#lib/components/team/team-strip.svelte';
 	import TeamWelcome from '#lib/components/team/team-welcome.svelte';
 	import { Toast, toast } from '#lib/components/toast/index.js';
+	import { refreshUntilUnlocked } from '#lib/client/challenge-unlock.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
 	import { judgedClaimMessages } from '#lib/domain/judged-claims.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
@@ -39,12 +41,24 @@
 	let shownChallenges: TeamChallenge[] | null = null;
 	$effect(() => {
 		const challenges = data.challenges;
+		// Unlocking shows the board as if on a first load, so claims judged before a moved start stay quiet.
+		if (data.challengesLocked) {
+			shownChallenges = null;
+			return;
+		}
 		// Untracked, or the clock's tick would rerun this every second.
 		const claimsOpen = untrack(() => clock.closedMessage === null);
 		if (shownChallenges) {
 			announceJudged(judgedClaimMessages(shownChallenges, challenges, claimsOpen));
 		}
 		shownChallenges = challenges;
+	});
+
+	// Polling alone would leave the challenges locked for up to a minute after the start.
+	const startReached = $derived(clock.phase !== null && clock.phase !== 'before');
+	$effect(() => {
+		if (!startReached || !untrack(() => data.challengesLocked)) return;
+		return refreshUntilUnlocked(refreshGameData, () => data.challengesLocked);
 	});
 
 	const token = $derived(page.params.token ?? '');
@@ -119,9 +133,20 @@
 			teamToken={token}
 			teamName={data.team.name}
 			gameName={data.game.name}
+			challengesLocked={data.challengesLocked}
 			ondismiss={() => heading?.focus()}
 		/>
-		{#if data.challenges.length === 0}
+		{#if data.challengesLocked}
+			<section aria-labelledby="challenges-locked-heading" class="flex flex-col gap-1 py-6">
+				<h2 id="challenges-locked-heading" class="flex items-center gap-2 font-semibold">
+					<LockIcon aria-hidden="true" class="size-5 shrink-0" />
+					Challenges unlock when the game starts.
+				</h2>
+				{#if clock.countdown}
+					<p class="type-secondary tabular-nums">{clock.countdown}</p>
+				{/if}
+			</section>
+		{:else if data.challenges.length === 0}
 			<p class="py-6 type-secondary">Challenges show up here once the game is ready.</p>
 		{:else}
 			{#each groupBySection(data.challenges) as group, groupIndex (groupIndex)}

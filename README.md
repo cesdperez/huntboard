@@ -21,7 +21,7 @@ Only game creators have accounts. Each team joins through its own secret link, s
 |---|---|---|
 | Creator | An account: their email address | Create games at `/new` and find them again on My games (`/games`). They land on the new game's admin page |
 | Admin | The admin link | Edit the game, challenges and teams, judge claims, add adjustments, record arrivals, share and rotate links |
-| Player | Their team's link | See all challenges, mark them done with an optional note and photo or video, undo a pending claim, rename the team and set its picture |
+| Player | Their team's link | See all challenges once the game starts, mark them done with an optional note and photo or video, undo a pending claim, rename the team and set its picture |
 | Spectator | The scoreboard link | See team names, pictures, members and totals |
 
 A creator signs in with their email address. The email holds a link and a six-digit code: the link works in any browser, and the code works in the browser that asked for it, for phones that open links inside the mail app. The first sign-in for an address creates the account and asks only for a display name. A game made before accounts has no owner: a signed-in creator who opens its admin link adds it to their games from the Setup tab.
@@ -38,6 +38,7 @@ The browser also keeps the last 10 team, admin and scoreboard links it opened, w
 - **Late penalty.** Whole minutes late, rounded down, times the penalty per minute, with no cap. A team that never arrives gets no automatic penalty; the admin adds an adjustment.
 - **Times are stored in UTC** and shown in each viewer's own time zone.
 - **Teams see every challenge but not each other's claims.** The scoreboard shows totals only.
+- **Challenges stay hidden until the game starts.** Before the start the team page gets no challenges or sections from the server, so teams can join, set a picture and test their phones without planning ahead. A game without a start or end time counts as not started. "Show challenges before the game starts" in Setup shows them early. At the start the team page reloads at once, so the challenges appear within seconds. After the end they stay visible.
 - **Proof is an optional photo or video on a claim.** The phone shrinks it when it can, uploads it to R2, and the judge sees it beside the claim. Proof can still go to the group chat or come in person, because a claim needs no media. Each team may start 3 uploads for every challenge in the game, spent on any challenge, and 500 MB in all, and a game 3 GB, counting uploads that were never attached. Past a limit the team can still mark the challenge done without media. Media lives in its own R2 bucket under the game id and is deleted after the game: by "Delete all media" in Setup, by a reset, and by a 30-day rule on the bucket. Undoing a claim deletes its media; a rejected claim keeps it as history.
 - **Images.** Besides claim media, the app stores one image per game (an invitation, poster or map) and one picture per team, in R2.
 - **Themes live in code.** A game picks a registered theme in Setup; see [Themes](DESIGN.md#themes).

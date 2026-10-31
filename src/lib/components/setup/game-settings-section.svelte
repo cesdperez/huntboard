@@ -20,12 +20,14 @@
 	const storedName = $derived(game.name);
 	const storedPenalty = $derived(game.late_penalty_per_minute);
 	const storedThemeId = $derived(resolveTheme(game.theme).id);
+	const storedShowEarly = $derived(game.show_challenges_early === 1);
 	const storedStartsAt = $derived(game.starts_at);
 	const storedEndsAt = $derived(game.ends_at);
 
 	let name = $derived(storedName);
 	let penalty = $derived<number | null>(storedPenalty);
 	let themeId = $derived(storedThemeId);
+	let showEarly = $derived(storedShowEarly);
 	// The server only knows UTC, so the wall clock is left empty until the browser renders it.
 	let startsLocal = $derived(browser ? utcToLocalInput(storedStartsAt) : '');
 	let endsLocal = $derived(browser ? utcToLocalInput(storedEndsAt) : '');
@@ -144,6 +146,23 @@
 					: 'game-late-penalty-hint'}
 			/>
 			{@render fieldError('game-late-penalty-error', errors.late_penalty_per_minute)}
+		</div>
+
+		<div class="flex flex-col gap-2">
+			<label class="flex min-h-touch items-center gap-3">
+				<input
+					type="checkbox"
+					name="show_challenges_early"
+					bind:checked={showEarly}
+					class="size-5 shrink-0"
+					aria-describedby="game-show-early-hint"
+				/>
+				Show challenges before the game starts
+			</label>
+			<p id="game-show-early-hint" class="type-secondary">
+				When off, teams can join and set a picture early, and see the challenges once the game
+				starts.
+			</p>
 		</div>
 
 		<fieldset
