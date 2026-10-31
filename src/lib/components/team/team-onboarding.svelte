@@ -7,7 +7,7 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import type { GameClock } from '#lib/client/game-clock.svelte.js';
-	import { NICKNAME_MAX_LENGTH } from '#lib/domain/nickname.js';
+	import { NICKNAME_MAX_LENGTH, normalizeNickname } from '#lib/domain/nickname.js';
 	import { normalizeTeamName, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
 	import AvatarForm from './avatar-form.svelte';
 	import HowToPlay from './how-to-play.svelte';
@@ -32,18 +32,24 @@
 		() => team.name
 	);
 
+	// Saving the nickname can end the welcome, so it waits until a rename has gone through.
+	function begin() {
+		nickname.save(name);
+		onstart();
+	}
+
 	const start: SubmitFunction = (submission) => {
-		nameInvalid = !nickname.save(name);
+		nameInvalid = normalizeNickname(name) === null;
 		if (nameInvalid) return submission.cancel();
 		// Only a changed name is sent, so teammates who just press Start never overwrite each other.
 		if (normalizeTeamName(submission.formData.get('name')) === team.name) {
 			submission.cancel();
-			onstart();
+			begin();
 			return;
 		}
 		return action.submit(
 			'Team name saved',
-			onstart,
+			begin,
 			(formData) => () => team.name === normalizeTeamName(formData.get('name'))
 		)(submission);
 	};

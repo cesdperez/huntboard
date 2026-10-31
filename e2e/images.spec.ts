@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { failOnCspViolations, watchCsp } from './csp.js';
 import { openNewGameSignedIn } from './sign-in.js';
+import { rememberNickname } from './nickname.js';
 
 // The game image and team pictures from upload to removal: resized in the browser, served with a
 // long cache lifetime, and gone from storage once removed or reset.
@@ -128,12 +129,7 @@ async function open(
 ): Promise<Page> {
 	const context = await browser.newContext(viewport ? { viewport, hasTouch: false } : {});
 	if (nickname) {
-		// A player with a name has been through the welcome screen of every team link.
-		await context.addInitScript((name) => {
-			localStorage.setItem('huntboard.nickname', name);
-			const team = /^\/t\/([^/]+)/.exec(location.pathname);
-			if (team) localStorage.setItem(`huntboard.team-welcome-dismissed.${team[1]}`, '1');
-		}, nickname);
+		await rememberNickname(context, nickname);
 	}
 	const page = await context.newPage();
 	watchCsp(page);

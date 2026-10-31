@@ -2,6 +2,7 @@ import { expect, test, type Browser, type Locator, type Page } from '@playwright
 import { failOnCspViolations, watchCsp } from './csp.js';
 import { POLL_INTERVAL_MS } from '../src/lib/client/live-updates.js';
 import { openNewGameSignedIn } from './sign-in.js';
+import { rememberNickname } from './nickname.js';
 
 // A short game played end to end: 4 teams, 10 challenges, every kind of judging, a late arrival
 // and a tie. The final totals are worked out by hand in FINAL_STANDINGS.
@@ -115,12 +116,24 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 		await expect(player.getByRole('heading', { level: 1 })).toHaveText(`Welcome to ${gameName}!`);
 		await expect(player.getByText(`You're on ${name}.`)).toBeVisible();
 		await expect(player.getByLabel('Team name')).toHaveValue(name);
-		await player.getByLabel('Your name').fill(`${name} player`);
+		await player.getByLabel('Your name').fill('   ');
 		await player.getByRole('button', { name: 'Start playing' }).click();
-		await expect(player.getByRole('region', { name: 'Your team' })).toContainText(name);
+		await expect(player.getByRole('alert')).toHaveText('Type your name to continue.');
+
+		await player.getByLabel('Your name').fill(`${name} player`);
+		await player.getByLabel('Team name').fill(`${name} renamed`);
+		await player.getByRole('button', { name: 'Start playing' }).click();
+		const strip = player.getByRole('region', { name: 'Your team' });
+		await expect(strip).toContainText(`${name} renamed`);
 		await expect(player.getByRole('button', { name: /Change nickname/ })).toContainText(
 			`${name} player`
 		);
+
+		await strip.getByRole('button', { name: /Show the scoreboard/ }).click();
+		await strip.getByRole('button', { name: 'Edit team' }).click();
+		await player.getByRole('dialog', { name: 'Edit team' }).getByLabel('Team name').fill(name);
+		await player.getByRole('button', { name: 'Save' }).click();
+		await expect(strip).not.toContainText('renamed');
 
 		await player.reload();
 		await expect(player.getByRole('region', { name: 'Your team' })).toContainText(name);
@@ -326,12 +339,7 @@ async function openAs(
 ): Promise<Page> {
 	const context = await browser.newContext(viewport ? { viewport, hasTouch: false } : {});
 	if (nickname) {
-		// A player with a name has been through the welcome screen of every team link.
-		await context.addInitScript((name) => {
-			localStorage.setItem('huntboard.nickname', name);
-			const team = /^\/t\/([^/]+)/.exec(location.pathname);
-			if (team) localStorage.setItem(`huntboard.team-welcome-dismissed.${team[1]}`, '1');
-		}, nickname);
+		await rememberNickname(context, nickname);
 	}
 	const page = await context.newPage();
 	watchCsp(page);
