@@ -51,9 +51,9 @@
 	data-layout={layout}
 	style:--teams={Math.max(data.standings.length, 3)}
 >
-	{#if layout === 'event'}
-		<header>
-			<AppBar class="scoreboard-app-bar" />
+	<header>
+		<AppBar class="scoreboard-app-bar" />
+		{#if layout === 'event'}
 			<EventBanner
 				heading
 				name={data.game.name}
@@ -62,8 +62,8 @@
 				image={data.game.image}
 				class="scoreboard-banner"
 			/>
-		</header>
-	{/if}
+		{/if}
+	</header>
 	<main class="scoreboard-main mx-auto flex w-full max-w-content flex-1 flex-col px-gutter py-6">
 		<div class="scoreboard-columns flex">
 			<div class="flex min-w-0 flex-1 flex-col">
