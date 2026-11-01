@@ -9,13 +9,15 @@
 		teamName,
 		gameName,
 		challengesLocked,
-		ondismiss
+		ondismiss,
+		onshowqr
 	}: {
 		teamToken: string;
 		teamName: string;
 		gameName: string;
 		challengesLocked: boolean;
 		ondismiss: () => void;
+		onshowqr: () => void;
 	} = $props();
 
 	// Hidden until the browser has read the dismissal, so the server never renders it.
@@ -51,7 +53,11 @@
 			{/if}
 			<li>Tap "Mark done" once your team has done it. Add a photo or video if you have one.</li>
 			<li>A judge scores it. Your rank and total show at the top.</li>
+			<li>Teammates next to you can join by scanning "Show QR" from your screen.</li>
 		</ul>
-		<Button class="self-start" onclick={dismiss}>Hide</Button>
+		<div class="flex flex-wrap gap-3">
+			<Button onclick={onshowqr}>Show QR</Button>
+			<Button onclick={dismiss}>Hide</Button>
+		</div>
 	</section>
 {/if}

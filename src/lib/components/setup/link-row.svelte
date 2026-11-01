@@ -13,6 +13,7 @@
 	import type { RotatedLink } from '#lib/server/use-cases/links.js';
 	import { cn } from '#lib/utils.js';
 	import { AdminLinkRotation } from './admin-link-rotation.svelte.js';
+	import { ClipboardCopy } from './clipboard-copy.svelte.js';
 	import JoinCode from './join-code.svelte';
 	import LinkQrSheet from './link-qr-sheet.svelte';
 	import { updateOrRetry } from './update-or-retry.js';
@@ -40,7 +41,7 @@
 
 	let field = $state<HTMLInputElement | null>(null);
 	let newAdminField = $state<HTMLInputElement | null>(null);
-	let copyState = $state<'idle' | 'copied' | 'manual'>('idle');
+	const clipboard = new ClipboardCopy();
 	let confirming = $state(false);
 	let submitting = $state(false);
 	let showingQr = $state(false);
@@ -48,7 +49,6 @@
 	let rotating = $state(false);
 	let rotateButton = $state<HTMLElement | null>(null);
 	let cancelButton = $state<HTMLElement | null>(null);
-	let resetTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const rotatesAdmin = $derived(action === 'linksRotateAdmin');
 	// Kept until an answer comes, so a retry after a lost answer sends it again and rotates once.
@@ -96,9 +96,9 @@
 	const newAdminUrl = $derived(rotation.pending && url.replace(/[^/]+$/, rotation.pending));
 
 	const status = $derived(
-		copyState === 'copied'
+		clipboard.state === 'copied'
 			? 'Link copied.'
-			: copyState === 'manual'
+			: clipboard.state === 'blocked'
 				? 'Copying is blocked here. The link is selected, so copy it by hand.'
 				: rotated && !rotating
 					? 'New link made. The old one no longer works.'
@@ -112,16 +112,9 @@
 	}
 
 	async function copy(text: string, input: HTMLInputElement | null) {
-		clearTimeout(resetTimer);
-		try {
-			await navigator.clipboard.writeText(text);
-			copyState = 'copied';
-			resetTimer = setTimeout(() => (copyState = 'idle'), 2000);
-		} catch {
-			input?.focus();
-			input?.select();
-			copyState = 'manual';
-		}
+		if (await clipboard.copy(text)) return;
+		input?.focus();
+		input?.select();
 	}
 </script>
 
@@ -230,7 +223,9 @@
 		{:else}
 			<div class="flex gap-3">
 				<Button onclick={() => copy(url, field)}>
-					{copyState === 'copied' ? 'Copied' : 'Copy'}<span class="sr-only"> {label} link</span>
+					{clipboard.state === 'copied' ? 'Copied' : 'Copy'}<span class="sr-only">
+						{label} link</span
+					>
 				</Button>
 				<Button onclick={() => (showingQr = true)}>
 					Show QR<span class="sr-only"> code of the {label} link</span>

@@ -15,7 +15,7 @@ export function formatClockTime(
 ): string {
 	const date = new Date(iso);
 	const day = new Intl.DateTimeFormat(locale, { timeZone, dateStyle: 'short' });
-	const time = new Intl.DateTimeFormat(locale, { timeZone, timeStyle: 'short' }).format(date);
+	const time = formatTime(iso, { locale, timeZone });
 	if (day.format(date) === day.format(now)) return time;
 	const weekday = new Intl.DateTimeFormat(locale, {
 		timeZone,
@@ -24,6 +24,11 @@ export function formatClockTime(
 		month: 'short'
 	}).format(date);
 	return `${weekday}, ${time}`;
+}
+
+/** A UTC ISO time as the viewer's wall clock time alone, "21:00". */
+export function formatTime(iso: string, { locale, timeZone }: ClockTimeOptions = {}): string {
+	return new Intl.DateTimeFormat(locale, { timeZone, timeStyle: 'short' }).format(new Date(iso));
 }
 
 /** A UTC ISO time as the viewer's calendar day, "24 October", with the year only when it differs. */
