@@ -4,10 +4,11 @@
 </script>
 
 {#if nickname.value}
+	<!-- Shrinks, so a partner wordmark, How to play and a long name still fit a 390px phone. -->
 	<Button
 		bind:ref={nickname.button}
 		variant="ghost"
-		class="max-w-40 truncate"
+		class="max-w-40 min-w-0 shrink truncate"
 		onclick={() => (nickname.editing = true)}
 	>
 		<span class="sr-only">Change nickname. Current:</span>
