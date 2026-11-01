@@ -18,7 +18,8 @@ beforeEach(async () => {
 		starts_at: STARTS_AT,
 		ends_at: ENDS_AT,
 		late_penalty_per_minute: 0,
-		theme: 'flag'
+		theme: 'flag',
+		show_challenges_early: 0
 	});
 });
 
@@ -38,7 +39,8 @@ describe('saveGameSettings', () => {
 				starts_at: '2026-06-21T10:00:00.000Z',
 				ends_at: '2026-06-21T12:00:00.000Z',
 				late_penalty_per_minute: '3',
-				theme: 'highland-bru'
+				theme: 'highland-bru',
+				show_challenges_early: 'on'
 			})
 		);
 
@@ -48,7 +50,8 @@ describe('saveGameSettings', () => {
 			starts_at: '2026-06-21T10:00:00.000Z',
 			ends_at: '2026-06-21T12:00:00.000Z',
 			late_penalty_per_minute: 3,
-			theme: 'highland-bru'
+			theme: 'highland-bru',
+			show_challenges_early: 1
 		});
 	});
 

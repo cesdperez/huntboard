@@ -8,8 +8,15 @@
 		teamToken,
 		teamName,
 		gameName,
+		challengesLocked,
 		ondismiss
-	}: { teamToken: string; teamName: string; gameName: string; ondismiss: () => void } = $props();
+	}: {
+		teamToken: string;
+		teamName: string;
+		gameName: string;
+		challengesLocked: boolean;
+		ondismiss: () => void;
+	} = $props();
 
 	// Hidden until the browser has read the dismissal, so the server never renders it.
 	let dismissed = $state(true);
@@ -37,7 +44,11 @@
 			<b class="font-semibold"><bdi>{gameName}</bdi></b>.
 		</h2>
 		<ul class="flex list-disc flex-col gap-1 pl-5 type-secondary">
-			<li>Tap a challenge to open it.</li>
+			{#if challengesLocked}
+				<li>The challenges show up here when the game starts. Tap one to open it.</li>
+			{:else}
+				<li>Tap a challenge to open it.</li>
+			{/if}
 			<li>Tap "Mark done" once your team has done it. Add a photo or video if you have one.</li>
 			<li>A judge scores it. Your rank and total show at the top.</li>
 		</ul>

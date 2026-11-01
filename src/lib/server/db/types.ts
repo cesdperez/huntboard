@@ -11,6 +11,8 @@ export interface GameRow {
 	late_penalty_per_minute: number;
 	/** A theme id. Read it through resolveTheme, which handles ids no longer registered. */
 	theme: string;
+	/** 1 shows teams the challenges before the start, 0 hides them until the game starts. */
+	show_challenges_early: number;
 	created_at: string;
 	/** Key in the IMAGES bucket, or null without a game image. */
 	image_key: string | null;

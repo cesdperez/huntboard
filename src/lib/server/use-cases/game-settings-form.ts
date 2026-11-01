@@ -53,7 +53,12 @@ export function parseGameSettings(data: FormData): GameSettingsResult {
 	}
 
 	if (Object.keys(errors).length > 0) return { ok: false, errors };
-	const settings: ParsedGameSettings = { name, late_penalty_per_minute: latePenalty };
+	const settings: ParsedGameSettings = {
+		name,
+		late_penalty_per_minute: latePenalty,
+		// A checkbox sends its field only while ticked.
+		show_challenges_early: data.has('show_challenges_early') ? 1 : 0
+	};
 	if (data.has('starts_at') || data.has('ends_at')) {
 		settings.starts_at = startsAt ?? null;
 		settings.ends_at = endsAt ?? null;

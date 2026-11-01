@@ -28,6 +28,7 @@ const game: GameRow = {
 	ends_at: '2026-10-30T21:00:00.000Z',
 	late_penalty_per_minute: 2,
 	theme: 'highland-bru',
+	show_challenges_early: 0,
 	created_at: '2026-10-01T00:00:00.000Z',
 	image_key: null,
 	image_label: '',
@@ -85,6 +86,11 @@ describe('gameSettingsSaved', () => {
 		['theme', 'lightmile-azulejo']
 	])('is false when %s differs', (key, value) => {
 		expect(gameSettingsSaved(game, form({ ...sent, [key]: value }))).toBe(false);
+	});
+
+	it('is false when the show challenges early box differs', () => {
+		expect(gameSettingsSaved(game, form({ ...sent, show_challenges_early: 'on' }))).toBe(false);
+		expect(gameSettingsSaved({ ...game, show_challenges_early: 1 }, form(sent))).toBe(false);
 	});
 
 	it('ignores times the form did not send', () => {
@@ -253,6 +259,7 @@ describe('gameIsBlank', () => {
 		['a challenge', blank, 0, 1],
 		['a start time', { ...blank, starts_at: game.starts_at }, 0, 0],
 		['a late penalty', { ...blank, late_penalty_per_minute: 2 }, 0, 0],
+		['challenges shown early', { ...blank, show_challenges_early: 1 }, 0, 0],
 		['an image', { ...blank, image_key: 'games/1/a.webp' }, 0, 0]
 	])('is false with %s', (_case, shown, teams, challenges) => {
 		expect(gameIsBlank(shown, teams, challenges)).toBe(false);

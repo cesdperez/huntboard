@@ -21,8 +21,8 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		await admin.getByRole('button', { name: 'Create game' }).click();
 		await expect(admin).toHaveURL(/\/a\/[^/]+\/setup$/);
 		const [start, end] = await localInputs(admin, [-30, 60]);
-		await admin.getByLabel('Start').fill(start);
-		await admin.getByLabel('End').fill(end);
+		await admin.getByLabel('Start', { exact: true }).fill(start);
+		await admin.getByLabel('End', { exact: true }).fill(end);
 		await admin.getByRole('button', { name: 'Save game' }).click();
 		await expect(admin.getByText('Saved.')).toBeVisible();
 		await admin.getByLabel('New team').fill(TEAM);
