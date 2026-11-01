@@ -6,6 +6,7 @@ import { applyGameTheme } from '#lib/server/pages/game-theme.js';
 import { requireTeamLink } from '#lib/server/http/team-link.js';
 import { getTeamPage } from '#lib/server/pages/team-page.js';
 import {
+	editOwnClaim,
 	markDone,
 	renameOwnTeam,
 	requestMediaUpload,
@@ -17,7 +18,10 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ params, depends, locals }) => {
 	depends(GAME_DATA);
 	const { team, game } = await requireTeamLink(params.token);
-	return { ...(await getTeamPage(env.DB, team, game)), ...applyGameTheme(locals, game) };
+	return {
+		...(await getTeamPage(env.DB, team, game, new Date())),
+		...applyGameTheme(locals, game)
+	};
 };
 
 export const actions = {
@@ -31,6 +35,12 @@ export const actions = {
 		const link = await requireTeamLink(params.token);
 		const data = await request.formData();
 		return respond('team', await undoOwnClaim(env.DB, env.MEDIA, link, data, new Date()));
+	},
+
+	edit: async ({ params, request }) => {
+		const link = await requireTeamLink(params.token);
+		const data = await request.formData();
+		return respond('team', await editOwnClaim(env.DB, env.MEDIA, link, data, new Date()));
 	},
 
 	rename: async ({ params, request }) => {

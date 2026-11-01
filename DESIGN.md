@@ -111,7 +111,7 @@ The bottom third of the screen is where thumbs reach. Primary actions live there
 
 Tapping a row opens a bottom sheet with the description, the note field, "Add photo or video" and one primary button: "Mark done". A pending row's sheet offers "Undo claim" instead.
 
-- The strip shows the rank in display type at 28px and the total at the full 40px, or 32px on screens up to 400px wide. The team name takes up to two lines, so a typical name fits beside a picture and a four-digit total at 360px. Tapping it expands the scoreboard in place, with the team's own row marked by an `--own` bar on its left edge and a semibold name. "Edit team" and "Add team picture" sit side by side under that list.
+- The strip shows the rank in display type at 28px and the total at the full 40px, or 32px on screens up to 400px wide. The team name takes up to two lines, so a typical name fits beside a picture and a four-digit total at 360px. Tapping it expands the scoreboard in place, with the team's own row marked by an `--own` bar on its left edge and a semibold name. "Edit team", "Add team picture" and "Show QR" sit under that list, side by side where they fit; on a 390px phone "Show QR" wraps to a full-width row. "Show QR" opens the QR sheet from [Admin](#admin) with the team's own link, so a teammate standing next to the phone can scan it and join.
 - "Add team picture" opens the phone's photo picker and saves at once: no preview, no second tap. While it uploads the button reads "Saving picture". Once the team has a picture it reads "Change team picture". The toast says "Picture saved". Teams cannot remove their picture; the organiser can.
 - A picture error shows in place under the two buttons, like a sheet error.
 - With a game image, the event header sits between the game name and the strip: a 48px thumbnail, the label and "View". It is not sticky, so the strip and the list keep their room at 390 × 844. Tapping it opens the image whole in a sheet, titled with the label.
@@ -124,10 +124,11 @@ Tapping a row opens a bottom sheet with the description, the note field, "Add ph
 - While the media is on its way, "Mark done" stays disabled and reads "Waiting for the upload". Once attached, "Mark done" sends it with the note. A claim needs no media, so the team can still send proof in the group chat or show it in person.
 - "Remove" or marking done stops any step still running and forgets the file. Closing the sheet stops a step still running, but a finished upload stays with the challenge's note, so opening the sheet again spends no second upload. An error shows in place under the status row, and "Remove" clears it so the team can pick another file. Outside the game window the button is hidden.
 - A claim with media shows its thumbnail on the row, 32px between the title and the points, and in the sheet, 40px beside "Photo sent" or "Video sent". A video shows the play tile, so a list never loads videos. Thumbnails have 8px corners, so they never read as a 3px marker.
+- Before the game starts the list is locked: a lock icon and "Challenges unlock when the game starts.", with the countdown under it. The server sends no challenges or sections until then, unless the admin ticked "Show challenges before the game starts". When the countdown reaches the start, the page reloads its data at once and retries for a few seconds, so the challenges appear without waiting for the next poll.
 - The first visit to a team link in a browser shows a welcome screen in place of the strip and the list, under the same header. It is one page, not steps:
   - "Welcome to **Birthday hunt**!" and "You're on **Canal Rats**."
   - "Your name", required, with a line that says it is the player's own name, not the team name, and that the team and the judge see it. It is the nickname, prefilled when the browser already has one.
-  - "Your team (optional)": the team name, prefilled and editable, and "Add team picture". A line says the name is shared and anyone on the team can change it. The name is sent only when the player changed it, so teammates who press Start never overwrite each other. A field nobody touched follows a rename by a teammate.
+  - "Your team (optional)": the team name, prefilled and editable, "Add team picture" and "Show QR". A line says the name is shared, anyone on the team can change it, and teammates nearby can join by scanning "Show QR". The name is sent only when the player changed it, so teammates who press Start never overwrite each other. A field nobody touched follows a rename by a teammate.
   - "How to play": three numbered steps (mark done with proof, a judge checks it and it can be edited or undone until then, scored or rejected), then the closed message while claims are closed, like "The game starts at 18:00. Claims open then."
   - One primary button, "Start playing". It saves the name, then the team name if changed. On success the screen goes for that team link in this browser, and focus moves to the list heading.
 - The welcome screen takes no focus on open, so the phone keyboard stays closed until the player taps "Your name". While no name is stored it returns on every visit, because claims need one.
@@ -182,7 +183,7 @@ The Teams tab lists teams in their setup order, not by rank, so a row does not m
 
 A game made before accounts opens Setup with a "My games" section: "Add to My games" for a signed-in visitor, or "Sign in to add it to your games", which returns to Setup after sign-in. A game with an owner has no such section.
 
-The game settings end with the theme, one option per registered theme, saved with the rest of the form.
+The game settings end with "Show challenges before the game starts", off by default, and the theme, one option per registered theme, saved with the rest of the form.
 
 Setup opens with a checklist, the first thing an admin sees after "Create game": "Get the game ready", or "The game is ready" once it has both times, a challenge and a team. Under the heading, the game state and the header's countdown: "Not started. Starts in 0:42:10", "Live. Ends in 1:42:10" or "Ended at 21:00". Each check shows a check mark and what is in place ("2 challenges"), or a link to its Setup section that says what to do ("Add teams"). "Share the links" always links to Share.
 
@@ -190,13 +191,15 @@ The Share tab holds every link a game has: the teams first, since getting them i
 
 Each row in the Share links list has "Copy", "Show QR" and "Rotate". "Show QR" opens a sheet titled "<name> link" with a large QR code of the link and the link as text under it, so an organiser can hand team links out in person. The sheet shows the current link, so after a rotation it shows the new code.
 
-"Print team QR codes" on Share opens a print page outside the tab bar: a card per team and one for the scoreboard, each with the game name, the team name, a large QR code, "Scan to join your team. No app or account needed.", and under it "No camera? Go to <host>/join and type" with the join code large. The scoreboard card spells out its link instead. It is black on white in every theme and mode, prints two cards to an A4 page with dashed lines to cut along, and has a "Print" button on screen.
+"Print team QR codes" on Share opens a print page outside the tab bar: a card per team and one for the scoreboard, each with the game name, the team name, a large QR code, "Scan to join your team. No app or account needed.", and under it "No camera? Go to <host>/join and type" with the join code large. The scoreboard card spells out its link instead. The page is black on white in every theme and mode, with the QR codes in the theme's QR colours, prints two cards to an A4 page with dashed lines to cut along, and has a "Print" button on screen.
 
 A team's row also shows its join code under the hint, in `--font-score` at 22px, as `K7Q4-M2XD`: two groups of four from Crockford base32, which has no I, L, O or U. The line names the page players type it at, without `https://`, so it can be read out. Rotating the link changes the code.
 
-QR codes are black on white with a 4-module white margin in every theme and mode, because phone scanners misread inverted or low-contrast codes. They are drawn as SVG in the browser.
+QR codes are dark on white with a 4-module white margin in every theme and mode, because phone scanners misread inverted or low-contrast codes. Each theme sets two QR colours in its registry entry: `ink` for the modules and `eye` for the rings of the three finder eyes, at 7:1 and 4.5:1 against white. The modules are rounded and join their dark neighbours, and the eyes have rounded corners. The theme's app icon sits on a cleared white pad at the centre, about a third of the code's width. The code uses error correction level H, so it scans with the centre cleared. They are drawn as SVG in the browser, and `qr-code.test.ts` renders every theme's code to pixels and decodes it back to the link.
 
 Setup has a "Game image" section under the game settings: a preview of the current image, a file field ("Image", or "Replace image" once there is one), an optional label and "Save image". Saving without a file changes only the label. "Remove image" confirms first.
+
+In the Setup team list, each team row ends with "Message the captain": "Send on WhatsApp" and "Copy". Both carry one message for the team's captain: make a group chat with the team and add the organiser, share the team link in it, or the `/join` page and the join code, and tap "Show QR" on the team page when standing together. It ends with the start day and time in the admin's time zone once the game has a start time. Team and game names are in WhatsApp bold. "Send on WhatsApp" opens a `wa.me` link with the text and no number, so WhatsApp asks which chat to send it to, on a phone and in WhatsApp Desktop. "Copy" is for Signal, SMS and the rest. The app creates no groups and stores no phone numbers.
 
 In the Setup team list, a team's edit form shows its picture with "Remove picture", which confirms first. This is moderation: the team can add a new one.
 
@@ -254,9 +257,9 @@ The admin picks a theme for the game in Setup. It changes every page of that gam
 
 A theme is two things:
 
-- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), and optionally a `wordmark`: a partner's image and its alt text, which the app bar shows after "Huntboard ×". No theme removes the Huntboard name.
+- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), its two [QR code](#admin) colours, and optionally a `wordmark`: a partner's image and its alt text, which the app bar shows after "Huntboard ×". No theme removes the Huntboard name.
 - A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
-- Images in `static/themes/<id>/`: `icon.svg` for the browser tab, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. The two PNGs are rendered by a script (see the [README](README.md#local-development)). A theme's wordmark lives here too.
+- Images in `static/themes/<id>/`: `icon.svg` for the browser tab and the centre of its QR codes, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. The two PNGs are rendered by a script (see the [README](README.md#local-development)). A theme's wordmark lives here too.
 
 The server writes `data-game-theme` on `<html>`, so the first paint and the sheets portalled to `<body>` already wear the theme. A stored id that is no longer registered shows `DEFAULT_THEME`.
 

@@ -32,6 +32,8 @@ function claim(
 		judged_by: null,
 		judge_note: null,
 		media_key: null,
+		edited_by: null,
+		edited_at: null,
 		...overrides
 	};
 }

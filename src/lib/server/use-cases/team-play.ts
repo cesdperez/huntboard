@@ -18,7 +18,7 @@ import {
 	teamNameError
 } from '#lib/domain/team-name.js';
 import { error, type ActionOutcome, type ErrorResult } from './action-outcome.js';
-import { markClaim, undoClaim } from '../db/claims.js';
+import { editClaim, markClaim, undoClaim, type ClaimEdit } from '../db/claims.js';
 import { setTeamAvatar } from '../db/images.js';
 import { isTeamUpload, recordMediaUpload } from '../db/media-uploads.js';
 import { updateTeam } from '../db/teams.js';
@@ -39,6 +39,7 @@ import type { TeamLink } from '../db/links.js';
 export type TeamFormResult =
 	| { kind: 'marked' }
 	| { kind: 'undone' }
+	| { kind: 'edited' }
 	| { kind: 'renamed' }
 	| { kind: 'avatar-saved' }
 	/** Where to PUT the file before marking done with `mediaKey` set to key. */
@@ -49,6 +50,8 @@ export type TeamFormResult =
 type TeamOutcome = ActionOutcome<TeamFormResult>;
 
 const CHALLENGE_GONE = 'That challenge is not in this game any more.';
+export const CLAIM_GONE = 'This claim is not in this game any more. Reload the page.';
+const CHANGES_NOT_SAVED = 'Your changes were not saved.';
 export const MEDIA_TAKEN = 'This photo or video is already on another claim. Attach it again.';
 export const MEDIA_UPLOADS_OFF =
 	'Photos and videos cannot be attached right now. Mark it done without one and send the proof another way.';
@@ -76,27 +79,21 @@ export async function markDone(
 
 	const markedBy = normalizeNickname(data.get('nickname'));
 	if (!markedBy) return error(400, 'Set your nickname first, so the judge knows who marked this.');
-	const note = readString(data, 'note');
-	if (note.length > CLAIM_NOTE_MAX_LENGTH) {
-		return error(400, `Keep the note to at most ${CLAIM_NOTE_MAX_LENGTH} characters.`);
-	}
+	const note = readNote(data);
+	if (note === undefined) return noteTooLong();
 	const challengeId = readId(data, 'challengeId');
 	if (challengeId === null) return error(404, CHALLENGE_GONE);
 	const mediaKey = readString(data, 'mediaKey') || null;
 	if (mediaKey !== null) {
-		const [signedForTeam, mediaError] = await Promise.all([
-			isTeamUpload(db, team.id, mediaKey),
-			checkClaimMedia(media, game.id, mediaKey)
-		]);
-		if (!signedForTeam) return error(400, MEDIA_NOT_UPLOADED);
-		if (mediaError) return error(400, mediaError);
+		const mediaError = await attachableMediaError(db, media, { team, game }, mediaKey);
+		if (mediaError) return mediaError;
 	}
 
 	const result = await markClaim(db, {
 		gameId: game.id,
 		teamId: team.id,
 		challengeId,
-		note: note || null,
+		note,
 		markedBy,
 		mediaKey
 	});
@@ -112,6 +109,88 @@ export async function markDone(
 		case 'not-found':
 			return error(404, CHALLENGE_GONE);
 	}
+}
+
+/**
+ * Changes the note and, by `media`, keeps, removes or replaces the photo or video of a pending
+ * claim. A replacement passes the same checks as media sent with markDone.
+ */
+export async function editOwnClaim(
+	db: D1Database,
+	media: MediaBucket,
+	{ team, game }: TeamLink,
+	data: FormData,
+	now: Date
+): Promise<TeamOutcome> {
+	const closed = closedOutcome(game, now);
+	if (closed) return closed;
+
+	const editedBy = normalizeNickname(data.get('nickname'));
+	if (!editedBy) return error(400, 'Set your nickname first, so the judge knows who edited this.');
+	const note = readNote(data);
+	if (note === undefined) return noteTooLong();
+	const claimId = readId(data, 'claimId');
+	if (claimId === null) return error(404, CLAIM_GONE);
+	const change = await readMediaChange(db, media, { team, game }, data);
+	if ('status' in change) return change;
+
+	const result = await editClaim(db, { teamId: team.id, claimId, note, editedBy, media: change });
+	switch (result.status) {
+		case 'edited':
+			await deleteObjects(media, [result.replacedMediaKey]);
+			return { status: 200, result: { kind: 'edited' } };
+		case 'conflict':
+			return error(409, `${conflictMessage(result.claim)} ${CHANGES_NOT_SAVED}`);
+		case 'media-taken':
+			return error(409, MEDIA_TAKEN);
+		case 'not-found':
+			return error(404, CLAIM_GONE);
+	}
+}
+
+async function readMediaChange(
+	db: D1Database,
+	media: MediaBucket,
+	link: TeamLink,
+	data: FormData
+): Promise<ClaimEdit['media'] | TeamOutcome> {
+	switch (readString(data, 'media')) {
+		case 'remove':
+			return { kind: 'set', key: null };
+		case 'replace': {
+			const key = readString(data, 'mediaKey');
+			if (!key) return error(400, MEDIA_NOT_UPLOADED);
+			return (await attachableMediaError(db, media, link, key)) ?? { kind: 'set', key };
+		}
+		default:
+			return { kind: 'keep' };
+	}
+}
+
+async function attachableMediaError(
+	db: D1Database,
+	media: MediaBucket,
+	{ team, game }: TeamLink,
+	key: string
+): Promise<TeamOutcome | null> {
+	const [signedForTeam, mediaError] = await Promise.all([
+		isTeamUpload(db, team.id, key),
+		checkClaimMedia(media, game.id, key)
+	]);
+	if (!signedForTeam) return error(400, MEDIA_NOT_UPLOADED);
+	if (mediaError) return error(400, mediaError);
+	return null;
+}
+
+/** The trimmed note, null when empty, or undefined when too long. */
+function readNote(data: FormData): string | null | undefined {
+	const note = readString(data, 'note');
+	if (note.length > CLAIM_NOTE_MAX_LENGTH) return undefined;
+	return note || null;
+}
+
+function noteTooLong(): TeamOutcome {
+	return error(400, `Keep the note to at most ${CLAIM_NOTE_MAX_LENGTH} characters.`);
 }
 
 /**
@@ -171,7 +250,7 @@ export async function undoOwnClaim(
 		case 'conflict':
 			return error(409, conflictMessage(result.claim));
 		default:
-			return error(404, 'This claim is not in this game any more. Reload the page.');
+			return error(404, CLAIM_GONE);
 	}
 }
 

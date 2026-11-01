@@ -111,3 +111,75 @@ export async function undoClaim(
 		.first<ClaimRow>();
 	return claim ? { status: 'conflict', claim } : { status: 'not-found' };
 }
+
+export interface ClaimEdit {
+	teamId: number;
+	claimId: number;
+	note: string | null;
+	editedBy: string;
+	/** A key is checked against the MEDIA bucket by the caller. A null key removes the media. */
+	media: { kind: 'keep' } | { kind: 'set'; key: string | null };
+}
+
+export type EditClaimResult =
+	/** replacedMediaKey is the object the claim no longer uses, for the caller to delete. */
+	| { status: 'edited'; claim: ClaimRow; replacedMediaKey: string | null }
+	/** A judge got to it first: the claim as it is now. */
+	| { status: 'conflict'; claim: ClaimRow }
+	/** Another claim, of any team and status, already has this media key. */
+	| { status: 'media-taken' }
+	| { status: 'not-found' };
+
+/**
+ * Changes the note and media of a claim of the team only while it is still pending. A replaced
+ * or removed upload no longer counts against the team's media limits.
+ */
+export async function editClaim(db: D1Database, edit: ClaimEdit): Promise<EditClaimResult> {
+	let before: D1Result<Pick<ClaimRow, 'media_key'>>;
+	let edited: D1Result<ClaimRow>;
+	let current: D1Result<ClaimRow>;
+	try {
+		[before, , edited, current] = await db.batch<ClaimRow>(editStatements(db, edit));
+	} catch (error) {
+		if (isMediaKeyTaken(error)) return { status: 'media-taken' };
+		throw error;
+	}
+	const claim = edited.results[0];
+	if (claim) {
+		const oldKey = before.results[0]?.media_key ?? null;
+		const replacedMediaKey = oldKey !== claim.media_key ? oldKey : null;
+		return { status: 'edited', claim, replacedMediaKey };
+	}
+	return current.results[0]
+		? { status: 'conflict', claim: current.results[0] }
+		: { status: 'not-found' };
+}
+
+// One batch is one transaction: a judge cannot score the claim between the statements, and a
+// taken media key rolls back the freed upload too.
+function editStatements(db: D1Database, edit: ClaimEdit): D1PreparedStatement[] {
+	const pending = `SELECT media_key FROM claim WHERE id = ?1 AND team_id = ?2 AND status = 'pending'`;
+	const setsMedia = edit.media.kind === 'set' ? 1 : 0;
+	const key = edit.media.kind === 'set' ? edit.media.key : null;
+	return [
+		db.prepare(pending).bind(edit.claimId, edit.teamId),
+		db
+			.prepare(
+				`DELETE FROM media_upload
+				WHERE ?3 AND team_id = ?2 AND key = (${pending}) AND key IS NOT ?4`
+			)
+			.bind(edit.claimId, edit.teamId, setsMedia, key),
+		// marked_at stays, so adding a forgotten photo does not send the claim to the back of the
+		// judge queue, which is ordered by it.
+		db
+			.prepare(
+				`UPDATE claim SET note = ?3, edited_by = ?4,
+					edited_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+					media_key = CASE WHEN ?5 THEN ?6 ELSE media_key END
+				WHERE id = ?1 AND team_id = ?2 AND status = 'pending'
+				RETURNING *`
+			)
+			.bind(edit.claimId, edit.teamId, edit.note, edit.editedBy, setsMedia, key),
+		db.prepare('SELECT * FROM claim WHERE id = ? AND team_id = ?').bind(edit.claimId, edit.teamId)
+	];
+}

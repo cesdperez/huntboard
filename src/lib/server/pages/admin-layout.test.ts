@@ -29,7 +29,8 @@ describe('getAdminLayout', () => {
 			starts_at: null,
 			ends_at: null,
 			late_penalty_per_minute: 0,
-			theme: 'flag'
+			theme: 'flag',
+			show_challenges_early: 0
 		});
 		const locals: App.Locals = {};
 

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { listTeamClaims, markClaim, undoClaim } from './claims.js';
+import { editClaim, listTeamClaims, markClaim, undoClaim, type ClaimEdit } from './claims.js';
 import { createGame } from './games.js';
+import { isTeamUpload, recordMediaUpload } from './media-uploads.js';
 import { createTestDb } from './testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from './testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from './types.js';
@@ -264,5 +265,144 @@ describe('undoClaim', () => {
 		await undoClaim(db, rats.id, claim.id);
 
 		expect(await undoClaim(db, rats.id, claim.id)).toEqual({ status: 'not-found' });
+	});
+});
+
+describe('editClaim', () => {
+	const OLD_KEY = '1/claims/oldoldoldoldoldoldoldo.jpg';
+	const NEW_KEY = '1/claims/newnewnewnewnewnewnewn.mp4';
+
+	function signed(teamId: number, key: string) {
+		const roomy = { uploadsPerChallenge: 1000, teamMaxBytes: 2 ** 40, gameMaxBytes: 2 ** 40 };
+		return recordMediaUpload(db, { gameId: game.id, teamId, key, size: 10 }, roomy);
+	}
+
+	function edit(claimId: number, fields: Partial<ClaimEdit> = {}) {
+		return editClaim(db, {
+			teamId: rats.id,
+			claimId,
+			note: 'better note',
+			editedBy: 'Kim',
+			media: { kind: 'keep' },
+			...fields
+		});
+	}
+
+	it('changes the note and records who edited it, keeping who marked it and when', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id, {
+			note: 'old note',
+			marked_by: 'Sam',
+			marked_at: '2026-06-01T17:00:00.000Z',
+			media_key: OLD_KEY
+		});
+
+		const result = await edit(claim.id);
+
+		expect(result).toEqual({
+			status: 'edited',
+			claim: expect.objectContaining({
+				id: claim.id,
+				status: 'pending',
+				note: 'better note',
+				marked_by: 'Sam',
+				marked_at: '2026-06-01T17:00:00.000Z',
+				edited_by: 'Kim',
+				edited_at: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
+				media_key: OLD_KEY
+			}),
+			replacedMediaKey: null
+		});
+	});
+
+	it('replaces the media, returns the old key and frees its upload from the team budget', async () => {
+		await signed(rats.id, OLD_KEY);
+		await signed(rats.id, NEW_KEY);
+		const claim = await seedClaim(db, rats.id, swim.id, { media_key: OLD_KEY });
+
+		const result = await edit(claim.id, { media: { kind: 'set', key: NEW_KEY } });
+
+		expect(result).toMatchObject({
+			status: 'edited',
+			claim: { media_key: NEW_KEY },
+			replacedMediaKey: OLD_KEY
+		});
+		expect(await isTeamUpload(db, rats.id, OLD_KEY)).toBe(false);
+		expect(await isTeamUpload(db, rats.id, NEW_KEY)).toBe(true);
+	});
+
+	it('removes the media and frees its upload', async () => {
+		await signed(rats.id, OLD_KEY);
+		const claim = await seedClaim(db, rats.id, swim.id, { media_key: OLD_KEY });
+
+		const result = await edit(claim.id, { media: { kind: 'set', key: null } });
+
+		expect(result).toMatchObject({
+			status: 'edited',
+			claim: { media_key: null },
+			replacedMediaKey: OLD_KEY
+		});
+		expect(await isTeamUpload(db, rats.id, OLD_KEY)).toBe(false);
+	});
+
+	it('adds media to a claim that had none', async () => {
+		const claim = await seedClaim(db, rats.id, swim.id);
+
+		expect(await edit(claim.id, { media: { kind: 'set', key: NEW_KEY } })).toMatchObject({
+			status: 'edited',
+			claim: { media_key: NEW_KEY },
+			replacedMediaKey: null
+		});
+	});
+
+	it('keeps the media and its upload when the same key is sent again', async () => {
+		await signed(rats.id, OLD_KEY);
+		const claim = await seedClaim(db, rats.id, swim.id, { media_key: OLD_KEY });
+
+		const result = await edit(claim.id, { media: { kind: 'set', key: OLD_KEY } });
+
+		expect(result).toMatchObject({ status: 'edited', replacedMediaKey: null });
+		expect(await isTeamUpload(db, rats.id, OLD_KEY)).toBe(true);
+	});
+
+	it.each([
+		['scored', { status: 'scored' as const, points: 15, judged_by: 'Alex' }],
+		['rejected', { status: 'rejected' as const, judged_by: 'Alex' }]
+	])('refuses a %s claim and leaves it and its media as they are', async (_, judged) => {
+		await signed(rats.id, OLD_KEY);
+		const claim = await seedClaim(db, rats.id, swim.id, {
+			...judged,
+			note: 'old note',
+			media_key: OLD_KEY
+		});
+
+		const result = await edit(claim.id, { media: { kind: 'set', key: null } });
+
+		expect(result).toEqual({ status: 'conflict', claim });
+		expect(await listTeamClaims(db, rats.id)).toEqual([claim]);
+		expect(await isTeamUpload(db, rats.id, OLD_KEY)).toBe(true);
+	});
+
+	it('refuses media another claim already has, changing nothing', async () => {
+		const cake = await seedChallenge(db, game.id);
+		await signed(rats.id, OLD_KEY);
+		await seedClaim(db, rats.id, cake.id, { status: 'rejected', media_key: NEW_KEY });
+		const claim = await seedClaim(db, rats.id, swim.id, { note: 'old note', media_key: OLD_KEY });
+
+		const result = await edit(claim.id, { media: { kind: 'set', key: NEW_KEY } });
+
+		expect(result).toEqual({ status: 'media-taken' });
+		expect((await listTeamClaims(db, rats.id)).at(-1)).toEqual(claim);
+		expect(await isTeamUpload(db, rats.id, OLD_KEY)).toBe(true);
+	});
+
+	it('does not touch a claim of another team', async () => {
+		const claim = await seedClaim(db, owls.id, swim.id, { note: 'owl note' });
+
+		expect(await edit(claim.id)).toEqual({ status: 'not-found' });
+		expect(await listTeamClaims(db, owls.id)).toEqual([claim]);
+	});
+
+	it('reports a claim that is already gone', async () => {
+		expect(await edit(9999)).toEqual({ status: 'not-found' });
 	});
 });

@@ -11,6 +11,8 @@ export interface GameRow {
 	late_penalty_per_minute: number;
 	/** A theme id. Read it through resolveTheme, which handles ids no longer registered. */
 	theme: string;
+	/** 1 shows teams the challenges before the start, 0 hides them until the game starts. */
+	show_challenges_early: number;
 	created_at: string;
 	/** Key in the IMAGES bucket, or null without a game image. */
 	image_key: string | null;
@@ -59,6 +61,9 @@ export interface ClaimRow {
 	judge_note: string | null;
 	/** Key in the MEDIA bucket, or null for a claim without a photo or video. */
 	media_key: string | null;
+	/** The nickname that last edited the claim while it was pending, or null if nobody did. */
+	edited_by: string | null;
+	edited_at: string | null;
 }
 
 export interface AdjustmentRow {

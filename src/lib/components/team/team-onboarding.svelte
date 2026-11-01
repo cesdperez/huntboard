@@ -17,10 +17,11 @@
 		gameName: string;
 		team: { name: string; members: string; avatarKey: string | null };
 		clock: GameClock;
+		onshowqr: () => void;
 		onstart: () => void;
 	};
 
-	let { gameName, team, clock, onstart }: Props = $props();
+	let { gameName, team, clock, onshowqr, onstart }: Props = $props();
 
 	let name = $state(untrack(() => nickname.value ?? ''));
 	let nameInvalid = $state(false);
@@ -99,7 +100,10 @@
 			<h2 id="onboarding-team-heading" class="type-heading">
 				Your team <span class="type-secondary">(optional)</span>
 			</h2>
-			<p class="type-secondary">The team name is shared. Anyone on the team can change it.</p>
+			<p class="type-secondary">
+				The team name is shared. Anyone on the team can change it. Teammates next to you can join by
+				scanning "Show QR" from your screen.
+			</p>
 		</div>
 		<div class="flex flex-col gap-2">
 			<Label for="onboarding-team-name">Team name</Label>
@@ -125,6 +129,7 @@
 		<div class="flex flex-wrap items-center gap-3">
 			<TeamAvatar name={team.name} avatarKey={team.avatarKey} class="size-12 text-[20px]" />
 			<AvatarForm avatarKey={team.avatarKey} {clock} />
+			<Button class="flex-1" onclick={onshowqr}>Show QR</Button>
 		</div>
 	</section>
 

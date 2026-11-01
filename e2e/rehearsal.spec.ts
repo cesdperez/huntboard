@@ -63,8 +63,8 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 
 	await test.step('set the game window to running, with a late penalty', async () => {
 		const [start, end] = await localInputs(admin, [-30, 60]);
-		await admin.getByLabel('Start').fill(start);
-		await admin.getByLabel('End').fill(end);
+		await admin.getByLabel('Start', { exact: true }).fill(start);
+		await admin.getByLabel('End', { exact: true }).fill(end);
 		await admin.getByLabel('Late penalty per minute').fill(String(PENALTY_PER_MINUTE));
 		await admin.getByLabel('Control flag').check();
 		await admin.getByRole('button', { name: 'Save game' }).click();
@@ -282,7 +282,7 @@ test('rehearsal: a 4-team, 10-challenge game from creation to final scores', asy
 
 	await test.step('the game ends', async () => {
 		await admin.getByRole('link', { name: 'Setup' }).click();
-		await admin.getByLabel('End').fill(end);
+		await admin.getByLabel('End', { exact: true }).fill(end);
 		await admin.getByRole('button', { name: 'Save game' }).click();
 		await expect(admin.getByText('Saved.')).toBeVisible();
 	});

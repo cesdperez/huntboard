@@ -67,7 +67,7 @@ export async function claimGame(db: D1Database, gameId: number, userId: number):
 
 export type GameSettings = Pick<
 	GameRow,
-	'name' | 'starts_at' | 'ends_at' | 'late_penalty_per_minute' | 'theme'
+	'name' | 'starts_at' | 'ends_at' | 'late_penalty_per_minute' | 'theme' | 'show_challenges_early'
 >;
 
 export async function updateGameSettings(
@@ -77,7 +77,8 @@ export async function updateGameSettings(
 ): Promise<GameRow> {
 	const game = await db
 		.prepare(
-			`UPDATE game SET name = ?, starts_at = ?, ends_at = ?, late_penalty_per_minute = ?, theme = ?
+			`UPDATE game SET name = ?, starts_at = ?, ends_at = ?, late_penalty_per_minute = ?, theme = ?,
+				show_challenges_early = ?
 			WHERE id = ? RETURNING *`
 		)
 		.bind(
@@ -86,6 +87,7 @@ export async function updateGameSettings(
 			settings.ends_at,
 			settings.late_penalty_per_minute,
 			settings.theme,
+			settings.show_challenges_early,
 			gameId
 		)
 		.first<GameRow>();
@@ -102,7 +104,7 @@ export async function resetGame(db: D1Database, gameId: number): Promise<GameRow
 		db
 			.prepare(
 				`UPDATE game SET starts_at = NULL, ends_at = NULL, late_penalty_per_minute = 0,
-					image_key = NULL, image_label = ''
+					show_challenges_early = 0, image_key = NULL, image_label = ''
 				WHERE id = ? RETURNING *`
 			)
 			.bind(gameId)

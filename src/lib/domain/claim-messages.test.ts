@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	claimConflictMessage,
+	claimEditedLine,
 	claimLine,
 	rejectedRowLine,
 	claimsClosedMessage,
@@ -128,6 +129,26 @@ describe('claimLine', () => {
 	it('offers no new claim once claims are closed', () => {
 		expect(claimLine({ ...claim, status: 'rejected', judgedBy: 'Alex' }, formatTime, false)).toBe(
 			'Alex rejected this.'
+		);
+	});
+});
+
+describe('claimEditedLine', () => {
+	const formatTime = (iso: string) => `<${iso.slice(11, 16)}>`;
+
+	it('says who last edited the claim and when', () => {
+		expect(
+			claimEditedLine({ editedBy: 'Kim', editedAt: '2026-06-01T17:05:00.000Z' }, formatTime)
+		).toBe('Edited by Kim at <17:05>.');
+	});
+
+	it('has no line for a claim nobody edited', () => {
+		expect(claimEditedLine({ editedBy: null, editedAt: null }, formatTime)).toBeNull();
+	});
+
+	it('isolates the nickname', () => {
+		expect(claimEditedLine({ editedBy: RLO, editedAt: '2026-06-01T17:05:00.000Z' }, String)).toBe(
+			`Edited by ${ISOLATED} at 2026-06-01T17:05:00.000Z.`
 		);
 	});
 });

@@ -24,8 +24,16 @@ describe('parseGameSettings', () => {
 				starts_at: '2026-06-20T14:00:00.000Z',
 				ends_at: '2026-06-20T19:00:00.000Z',
 				late_penalty_per_minute: 5,
-				theme: 'flag'
+				theme: 'flag',
+				show_challenges_early: 0
 			}
+		});
+	});
+
+	it('shows challenges early when the box is ticked', () => {
+		expect(parseGameSettings(form({ show_challenges_early: 'on' }))).toMatchObject({
+			ok: true,
+			settings: { show_challenges_early: 1 }
 		});
 	});
 
@@ -42,7 +50,12 @@ describe('parseGameSettings', () => {
 
 		expect(parseGameSettings(data)).toEqual({
 			ok: true,
-			settings: { name: 'Canal hunt', late_penalty_per_minute: 5, theme: 'flag' }
+			settings: {
+				name: 'Canal hunt',
+				late_penalty_per_minute: 5,
+				theme: 'flag',
+				show_challenges_early: 0
+			}
 		});
 	});
 

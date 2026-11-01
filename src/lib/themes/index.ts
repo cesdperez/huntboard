@@ -17,6 +17,8 @@ export interface Theme {
 	layout: ThemeLayout;
 	/** A partner's artwork, which the app bar shows after "Huntboard ×". It never replaces the name. */
 	wordmark?: { src: string; alt: string };
+	/** QR code colours on white in every mode, dark enough for a phone to scan: modules and finder eyes. */
+	qr: { ink: string; eye: string };
 }
 
 /** The theme a page gets, and the mode it forces. A null mode follows the OS. */
@@ -32,7 +34,8 @@ export const FLAG_THEME: Theme = {
 	fonts: [
 		'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap'
 	],
-	layout: 'plain'
+	layout: 'plain',
+	qr: { ink: '#14213d', eye: '#14213d' }
 };
 
 const HIGHLAND_BRU: Theme = {
@@ -42,7 +45,8 @@ const HIGHLAND_BRU: Theme = {
 	fonts: [
 		'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600..900&family=Jersey+10&display=swap'
 	],
-	layout: 'event'
+	layout: 'event',
+	qr: { ink: '#151515', eye: '#124bcc' }
 };
 
 // Georgia is a system font, so only Archivo is loaded.
@@ -54,6 +58,7 @@ const AZULEJO: Theme = {
 		'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap'
 	],
 	layout: 'event',
+	qr: { ink: '#283950', eye: '#b8412d' },
 	wordmark: { src: '/themes/azulejo/wordmark.svg', alt: 'Lightmile' }
 };
 
@@ -64,7 +69,8 @@ const CONTOUR: Theme = {
 	fonts: [
 		'https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,700..900&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap'
 	],
-	layout: 'event'
+	layout: 'event',
+	qr: { ink: '#1b2230', eye: '#b4247e' }
 };
 
 export const THEMES: readonly Theme[] = [CONTOUR, FLAG_THEME, HIGHLAND_BRU, AZULEJO];

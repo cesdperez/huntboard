@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CircleHelpIcon from '@lucide/svelte/icons/circle-help';
+	import LockIcon from '@lucide/svelte/icons/lock';
 	import { onMount, tick, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -7,6 +8,7 @@
 	import { AppBar, EventBanner } from '#lib/components/event/index.js';
 	import { GameImageHeader } from '#lib/components/images/index.js';
 	import { NicknameButton, NicknamePrompt, nickname } from '#lib/components/nickname/index.js';
+	import LinkQrSheet from '#lib/components/setup/link-qr-sheet.svelte';
 	import AvatarForm from '#lib/components/team/avatar-form.svelte';
 	import ChallengeRow from '#lib/components/team/challenge-row.svelte';
 	import ChallengeSheet from '#lib/components/team/challenge-sheet.svelte';
@@ -17,7 +19,9 @@
 	import TeamOnboarding from '#lib/components/team/team-onboarding.svelte';
 	import { Toast, toast } from '#lib/components/toast/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
+	import { refreshUntilUnlocked } from '#lib/client/challenge-unlock.js';
 	import { GameClock } from '#lib/client/game-clock.svelte.js';
+	import { gameLinks } from '#lib/client/game-links.js';
 	import { judgedClaimMessages } from '#lib/domain/judged-claims.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import { groupBySection } from '#lib/format/group-by-section.js';
@@ -37,6 +41,7 @@
 	let selectedId = $state<number | null>(null);
 	let sheetOpen = $state(false);
 	let renaming = $state(false);
+	let showingQr = $state(false);
 	let howToPlay = $state(false);
 	const selected = $derived(data.challenges.find((c) => c.id === selectedId) ?? null);
 
@@ -44,6 +49,11 @@
 	let shownChallenges: TeamChallenge[] | null = null;
 	$effect(() => {
 		const challenges = data.challenges;
+		// Unlocking shows the board as if on a first load, so claims judged before a moved start stay quiet.
+		if (data.challengesLocked) {
+			shownChallenges = null;
+			return;
+		}
 		// Untracked, or the clock's tick would rerun this every second.
 		const claimsOpen = untrack(() => clock.closedMessage === null);
 		if (shownChallenges) {
@@ -52,7 +62,15 @@
 		shownChallenges = challenges;
 	});
 
+	// Polling alone would leave the challenges locked for up to a minute after the start.
+	const startReached = $derived(clock.phase !== null && clock.phase !== 'before');
+	$effect(() => {
+		if (!startReached || !untrack(() => data.challengesLocked)) return;
+		return refreshUntilUnlocked(refreshGameData, () => data.challengesLocked);
+	});
+
 	const token = $derived(page.params.token ?? '');
+	const teamLink = $derived(gameLinks(page.url.href).team(token));
 	let heading = $state<HTMLElement | null>(null);
 
 	// Hidden until the browser has read the dismissal, so the server never renders it.
@@ -136,7 +154,13 @@
 
 	{#if welcoming}
 		<main class="mx-auto max-w-content px-gutter pt-6 pb-24">
-			<TeamOnboarding gameName={data.game.name} team={data.team} {clock} onstart={startPlaying} />
+			<TeamOnboarding
+				gameName={data.game.name}
+				team={data.team}
+				{clock}
+				onshowqr={() => (showingQr = true)}
+				onstart={startPlaying}
+			/>
 		</main>
 	{:else}
 		<TeamStrip
@@ -147,11 +171,22 @@
 			onrename={() => (renaming = true)}
 		>
 			<AvatarForm avatarKey={data.team.avatarKey} {clock} />
+			<Button class="flex-1" onclick={() => (showingQr = true)}>Show QR</Button>
 		</TeamStrip>
 
 		<main class="mx-auto max-w-content px-gutter pt-2 pb-24">
 			<h1 bind:this={heading} tabindex="-1" class="sr-only">{data.team.name} challenges</h1>
-			{#if data.challenges.length === 0}
+			{#if data.challengesLocked}
+				<section aria-labelledby="challenges-locked-heading" class="flex flex-col gap-1 py-6">
+					<h2 id="challenges-locked-heading" class="flex items-center gap-2 font-semibold">
+						<LockIcon aria-hidden="true" class="size-5 shrink-0" />
+						Challenges unlock when the game starts.
+					</h2>
+					{#if clock.countdown}
+						<p class="type-secondary tabular-nums">{clock.countdown}</p>
+					{/if}
+				</section>
+			{:else if data.challenges.length === 0}
 				<p class="py-6 type-secondary">Challenges show up here once the game is ready.</p>
 			{:else}
 				{#each groupBySection(data.challenges) as group, groupIndex (groupIndex)}
@@ -189,6 +224,7 @@
 	{clock}
 	onclose={() => (renaming = false)}
 />
+<LinkQrSheet label={data.team.name} url={teamLink} bind:open={showingQr} />
 <HowToPlaySheet open={howToPlay} {clock} onclose={() => (howToPlay = false)} />
 <NicknamePrompt editOnly />
 <Toast />

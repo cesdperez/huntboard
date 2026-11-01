@@ -15,7 +15,8 @@ beforeEach(async () => {
 		starts_at: '2026-06-01T16:00:00.000Z',
 		ends_at: '2026-06-01T21:00:00.000Z',
 		late_penalty_per_minute: 2,
-		theme: 'flag'
+		theme: 'flag',
+		show_challenges_early: 0
 	});
 });
 

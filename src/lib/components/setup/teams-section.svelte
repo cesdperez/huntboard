@@ -16,6 +16,7 @@
 	import type { GameRow, SetupTeam } from '#lib/server/db/types.js';
 	import { TEAM_MEMBERS_MAX_LENGTH, TEAM_NAME_MAX_LENGTH } from '#lib/domain/team-name.js';
 	import { suggestTeamName } from '#lib/domain/team-name-suggestion.js';
+	import CaptainMessageButtons from './captain-message-buttons.svelte';
 	import { deleteTeamQuestion } from './delete-team-question.js';
 	import {
 		teamAdded,
@@ -273,6 +274,7 @@
 								Edit
 							</Button>
 						</div>
+						<CaptainMessageButtons {game} {team} />
 					{/if}
 					{#if error}
 						<p id="team-error-{team.id}" class="text-[15px] text-danger" role="alert">{error}</p>

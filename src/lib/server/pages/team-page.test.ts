@@ -14,6 +14,10 @@ let owls: TeamRow;
 let swim: ChallengeRow;
 let cake: ChallengeRow;
 
+const beforeStart = new Date('2026-06-01T15:59:59.000Z');
+const duringGame = new Date('2026-06-01T17:00:00.000Z');
+const afterEnd = new Date('2026-06-01T21:00:00.000Z');
+
 beforeEach(async () => {
 	db = createTestDb();
 	game = await updateGameSettings(db, (await createGame(db, 'Canal hunt')).id, {
@@ -21,7 +25,8 @@ beforeEach(async () => {
 		starts_at: '2026-06-01T16:00:00.000Z',
 		ends_at: '2026-06-01T21:00:00.000Z',
 		late_penalty_per_minute: 1,
-		theme: 'flag'
+		theme: 'flag',
+		show_challenges_early: 0
 	});
 	rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
 	owls = await seedTeam(db, game.id, { name: 'Night Owls' });
@@ -33,7 +38,7 @@ describe('getTeamPage', () => {
 	it('shows the game, the team name and every challenge with this team claim', async () => {
 		await seedClaim(db, rats.id, swim.id, { note: 'photo at 17:02' });
 
-		const page = await getTeamPage(db, rats, game);
+		const page = await getTeamPage(db, rats, game, duringGame);
 
 		expect(page.team).toEqual({ name: 'Canal Rats', members: '', avatarKey: null });
 		expect(page.game).toEqual({
@@ -53,7 +58,7 @@ describe('getTeamPage', () => {
 		await setGameImage(db, game.id, `${game.id}/poster.webp`, 'Map');
 		const link = (await findTeamLink(db, rats.token))!;
 
-		const page = await getTeamPage(db, link.team, link.game);
+		const page = await getTeamPage(db, link.team, link.game, duringGame);
 
 		expect(page.team.avatarKey).toBe(`${game.id}/rats.webp`);
 		expect(page.game.image).toEqual({ src: `/images/${game.id}/poster.webp`, label: 'Map' });
@@ -64,7 +69,7 @@ describe('getTeamPage', () => {
 		await seedClaim(db, owls.id, swim.id, { status: 'scored', points: 9 });
 		await seedAdjustment(db, rats.id, { points: 4 });
 
-		const page = await getTeamPage(db, rats, game);
+		const page = await getTeamPage(db, rats, game, duringGame);
 
 		expect(page.standings).toEqual([
 			{
@@ -92,7 +97,7 @@ describe('getTeamPage', () => {
 		const key = `${game.id}/claims/abcdefghijklmnopqrstuv.jpg`;
 		await seedClaim(db, rats.id, swim.id, { media_key: key });
 
-		const page = await getTeamPage(db, rats, game);
+		const page = await getTeamPage(db, rats, game, duringGame);
 
 		expect(page.challenges[0].claim?.media).toEqual({ src: `/media/${key}`, kind: 'photo' });
 	});
@@ -110,7 +115,7 @@ describe('getTeamPage', () => {
 		});
 		await seedClaim(db, owls.id, cake.id, { status: 'rejected', judge_note: 'owl rejection' });
 
-		const json = JSON.stringify(await getTeamPage(db, rats, game));
+		const json = JSON.stringify(await getTeamPage(db, rats, game, duringGame));
 
 		expect(json).toContain('rat note');
 		for (const leak of [
@@ -126,10 +131,55 @@ describe('getTeamPage', () => {
 	});
 
 	it('does not send the team token or the game tokens', async () => {
-		const json = JSON.stringify(await getTeamPage(db, rats, game));
+		const json = JSON.stringify(await getTeamPage(db, rats, game, duringGame));
 
 		expect(json).not.toContain(rats.token);
 		expect(json).not.toContain(game.admin_token);
 		expect(json).not.toContain(game.scoreboard_token);
+	});
+
+	describe('before the game starts', () => {
+		it('sends no challenges or section names, and says they are locked', async () => {
+			const page = await getTeamPage(db, rats, game, beforeStart);
+
+			expect(page.challenges).toEqual([]);
+			expect(page.challengesLocked).toBe(true);
+			const json = JSON.stringify(page);
+			for (const leak of ['Swim in a fountain', 'Bake a cake', 'Water']) {
+				expect(json).not.toContain(leak);
+			}
+		});
+
+		it('sends no challenges while the game has no start or end time', async () => {
+			const unscheduled = await updateGameSettings(db, game.id, {
+				...game,
+				starts_at: null,
+				ends_at: null
+			});
+
+			const page = await getTeamPage(db, rats, unscheduled, duringGame);
+
+			expect(page.challenges).toEqual([]);
+			expect(page.challengesLocked).toBe(true);
+		});
+
+		it('sends the challenges when the game shows them early', async () => {
+			const early = await updateGameSettings(db, game.id, { ...game, show_challenges_early: 1 });
+
+			const page = await getTeamPage(db, rats, early, beforeStart);
+
+			expect(page.challenges.map((c) => c.title)).toEqual(['Swim in a fountain', 'Bake a cake']);
+			expect(page.challengesLocked).toBe(false);
+		});
+	});
+
+	it.each([
+		['during', duringGame],
+		['after', afterEnd]
+	])('sends the challenges %s the game without the early setting', async (_, now) => {
+		const page = await getTeamPage(db, rats, game, now);
+
+		expect(page.challenges.map((c) => c.title)).toEqual(['Swim in a fountain', 'Bake a cake']);
+		expect(page.challengesLocked).toBe(false);
 	});
 });
