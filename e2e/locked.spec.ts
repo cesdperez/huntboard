@@ -126,8 +126,8 @@ async function saveTimes(
 		},
 		{ startMinutes, lengthMinutes }
 	);
-	await page.getByLabel('Start').fill(start);
-	await page.getByLabel('End').fill(end);
+	await page.getByLabel('Start', { exact: true }).fill(start);
+	await page.getByLabel('End', { exact: true }).fill(end);
 	await saveGame(page);
 	return startMs;
 }
