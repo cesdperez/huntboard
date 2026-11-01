@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
 import { failOnCspViolations, watchCsp } from './csp.js';
 import { openNewGameSignedIn } from './sign-in.js';
+import { rememberNickname } from './nickname.js';
 
 // Claim photos and videos from the team's phone to the judge and the zip download: compressed in
 // the browser, uploaded straight to storage, shown inline to judges, and gone once deleted.
@@ -172,9 +173,7 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 
 async function open(browser: Browser, nickname: string): Promise<Page> {
 	const context = await browser.newContext();
-	await context.addInitScript((name) => {
-		localStorage.setItem('huntboard.nickname', name);
-	}, nickname);
+	await rememberNickname(context, nickname);
 	const page = await context.newPage();
 	watchCsp(page);
 	return page;

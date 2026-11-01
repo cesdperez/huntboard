@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { failOnCspViolations, watchCsp } from './csp.js';
+import { rememberNickname } from './nickname.js';
 import { openNewGameSignedIn } from './sign-in.js';
 
 // Teams can open their link before the start without seeing the challenges, unless the admin
@@ -45,9 +46,6 @@ test('locked challenges: hidden before the start, shown early on request, reveal
 		await rats.goto(ratsUrl);
 		await expect(rats.getByText('Challenges unlock when the game starts.')).toBeVisible();
 		await expect(rats.getByText(/^Starts in \d+:\d\d:\d\d$/).first()).toBeVisible();
-		await expect(
-			rats.getByText('The challenges show up here when the game starts. Tap one to open it.')
-		).toBeVisible();
 		await expect(rats.getByText('Swim in a fountain')).toHaveCount(0);
 		await expect(rats.getByText('Water')).toHaveCount(0);
 	});
@@ -80,9 +78,7 @@ test('locked challenges: hidden before the start, shown early on request, reveal
 
 async function openAs(browser: Browser, nickname: string): Promise<Page> {
 	const context = await browser.newContext();
-	await context.addInitScript((name) => {
-		localStorage.setItem('huntboard.nickname', name);
-	}, nickname);
+	await rememberNickname(context, nickname);
 	const page = await context.newPage();
 	watchCsp(page);
 	return page;

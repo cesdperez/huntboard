@@ -26,7 +26,7 @@ Only game creators have accounts. Each team joins through its own secret link, s
 
 A creator signs in with their email address. The email holds a link and a six-digit code: the link works in any browser, and the code works in the browser that asked for it, for phones that open links inside the mail app. The first sign-in for an address creates the account and asks only for a display name. A game made before accounts has no owner: a signed-in creator who opens its admin link adds it to their games from the Setup tab.
 
-Players and admins type a nickname on first visit. It is kept in the browser and only shows who marked or judged something. It is not an account.
+Players and admins type a nickname on first visit: players on the welcome screen of their team link, admins in a prompt. It is kept in the browser and only shows who marked or judged something. It is not an account.
 
 The browser also keeps the last 10 team, admin and scoreboard links it opened, with the game and team names those pages show, so the home page and the dead link page can offer them again. A link that answers 404 leaves the list, and a rotated admin link replaces its old one.
 

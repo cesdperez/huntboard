@@ -70,7 +70,7 @@
 		{#if action.busy}
 			Saving picture
 		{:else}
-			{avatarKey ? 'Change picture' : 'Add picture'}
+			{avatarKey ? 'Change team picture' : 'Add team picture'}
 		{/if}
 	</Button>
 </form>
