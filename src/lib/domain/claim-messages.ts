@@ -61,6 +61,15 @@ export function claimLine(
 	}
 }
 
+/** Who last changed the note or media of a claim, or null when nobody did. */
+export function claimEditedLine(
+	claim: Pick<TeamClaim, 'editedBy' | 'editedAt'>,
+	formatTime: (iso: string) => string
+): string | null {
+	if (claim.editedBy === null || claim.editedAt === null) return null;
+	return `Edited by ${isolate(claim.editedBy)} at ${formatTime(claim.editedAt)}.`;
+}
+
 /** Tells a team that a judge scored or rejected its claim on the challenge with this title. */
 export function judgedClaimMessage(
 	title: string,

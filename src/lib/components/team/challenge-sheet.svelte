@@ -9,7 +9,8 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
-	import { claimLine } from '#lib/domain/claim-messages.js';
+	import type { ClaimMedia } from '#lib/domain/claim-media.js';
+	import { claimEditedLine, claimLine } from '#lib/domain/claim-messages.js';
 	import type { TeamChallenge } from '#lib/domain/team-board.js';
 	import type { GameClock } from '#lib/client/game-clock.svelte.js';
 	import { MediaThumb, UploadStatus } from '#lib/components/media/index.js';
@@ -29,6 +30,11 @@
 
 	let content = $state<HTMLElement | null>(null);
 	let drafts = $state<Record<number, string>>({});
+	/** The claim whose edit form is showing, so a new claim on the same challenge starts closed. */
+	let editing = $state<number | null>(null);
+	let editDrafts = $state<Record<number, string>>({});
+	/** Claims whose sent photo or video the team chose to remove when saving the edit. */
+	let removedSent = $state<Record<number, boolean>>({});
 
 	const claimOf = (challengeId: number) =>
 		challenges.find((each) => each.id === challengeId)?.claim ?? null;
@@ -105,6 +111,29 @@
 		void focusAfterSwap(() => addButton);
 	}
 
+	function startEdit(claimId: number, note: string | null) {
+		editing = claimId;
+		editDrafts[claimId] = note ?? '';
+		removedSent[claimId] = false;
+		action.clearError();
+		media.clear();
+	}
+
+	function stopEdit(claimId: number, challengeId: number) {
+		if (editing === claimId) editing = null;
+		delete editDrafts[claimId];
+		delete removedSent[claimId];
+		uploadFor(challengeId).clear();
+	}
+
+	function removeSent(claimId: number) {
+		removedSent[claimId] = true;
+		void focusAfterSwap(() => addButton);
+	}
+
+	const mediaChange = (claimId: number) =>
+		media.key ? 'replace' : removedSent[claimId] ? 'remove' : 'keep';
+
 	const sentChallenge = (formData: FormData) => Number(formData.get('challengeId'));
 
 	const mark: SubmitFunction = (input) => {
@@ -121,6 +150,25 @@
 				return () => {
 					const after = claimOf(challengeId);
 					return after !== null && after.id !== before && after.status !== 'rejected';
+				};
+			}
+		)(input);
+	};
+
+	const edit: SubmitFunction = (input) => {
+		const challengeId = sentChallenge(input.formData);
+		const claimId = Number(input.formData.get('claimId'));
+		return actionFor(challengeId).submit(
+			'Claim updated',
+			() => {
+				stopEdit(claimId, challengeId);
+				closeIfShowing(challengeId);
+			},
+			() => {
+				const before = claimOf(challengeId)?.editedAt;
+				return () => {
+					const after = claimOf(challengeId);
+					return after?.id === claimId && after.editedAt !== before;
 				};
 			}
 		)(input);
@@ -163,6 +211,7 @@
 
 			{#if claim}
 				{@const line = claimLine(claim, clock.formatTime, clock.closedMessage === null)}
+				{@const edited = claimEditedLine(claim, clock.formatTime)}
 				<div class="flex items-start gap-3 border-y py-3">
 					<Marker state={claim.status} points={claim.points ?? undefined} />
 					<div class="flex min-w-0 flex-col gap-1">
@@ -178,6 +227,7 @@
 							<p class="type-secondary break-words">Note: <bdi>{claim.note}</bdi></p>
 						{/if}
 						{#if line}<p class="type-secondary">{line}</p>{/if}
+						{#if edited}<p class="type-secondary">{edited}</p>{/if}
 						{#if claim.media}
 							<p class="flex items-center gap-2 type-secondary">
 								<MediaThumb kind={claim.media.kind} src={claim.media.src} class="size-10" />
@@ -196,20 +246,118 @@
 				{/if}
 			{/snippet}
 
-			{#if claim?.status === 'pending'}
-				<form method="POST" action="?/undo" class="flex flex-col gap-4" use:enhance={undo}>
+			{#snippet mediaField(sent: ClaimMedia | null)}
+				{#if media.phase !== 'idle' && media.kind}
+					<UploadStatus
+						phase={media.phase}
+						kind={media.kind}
+						progress={media.progress}
+						preview={media.preview}
+						error={media.error}
+						onremove={removeMedia}
+						bind:removeButton
+					/>
+				{:else if clock.closedMessage === null}
+					<input
+						bind:this={fileInput}
+						type="file"
+						accept="image/*,video/*"
+						class="hidden"
+						aria-hidden="true"
+						tabindex="-1"
+						onchange={picked}
+					/>
+					{#if sent}
+						{@const noun = sent.kind === 'video' ? 'video' : 'photo'}
+						<div class="flex items-center gap-3">
+							<MediaThumb kind={sent.kind} src={sent.src} class="size-10" />
+							<span class="min-w-0 flex-1 type-secondary">
+								{sent.kind === 'video' ? 'Video sent' : 'Photo sent'}
+							</span>
+							<Button
+								bind:ref={addButton}
+								aria-label="Replace {noun}"
+								onclick={() => fileInput?.click()}
+							>
+								Replace
+							</Button>
+							<Button
+								variant="ghost"
+								aria-label="Remove {noun}"
+								onclick={() => claim && removeSent(claim.id)}
+							>
+								Remove
+							</Button>
+						</div>
+					{:else}
+						<Button bind:ref={addButton} onclick={() => fileInput?.click()}>
+							Add photo or video
+						</Button>
+					{/if}
+				{/if}
+			{/snippet}
+
+			{#if claim?.status === 'pending' && editing === claim.id}
+				<form method="POST" action="?/edit" class="flex flex-col gap-4" use:enhance={edit}>
 					<input type="hidden" name="claimId" value={claim.id} />
 					<input type="hidden" name="challengeId" value={challenge.id} />
+					<input type="hidden" name="nickname" value={nickname.value ?? ''} />
+					<input type="hidden" name="media" value={mediaChange(claim.id)} />
+					<input type="hidden" name="mediaKey" value={media.key ?? ''} />
+					<div class="flex flex-col gap-2">
+						<Label for="claim-edit-note">
+							Note <span class="font-normal text-muted">(optional)</span>
+						</Label>
+						<Input
+							id="claim-edit-note"
+							name="note"
+							maxlength={CLAIM_NOTE_MAX_LENGTH}
+							autocomplete="off"
+							placeholder="Which photo, or what you did"
+							disabled={clock.closedMessage !== null}
+							bind:value={editDrafts[claim.id]}
+						/>
+					</div>
+					{@render mediaField(removedSent[claim.id] ? null : claim.media)}
 					{@render message()}
 					<Button
 						type="submit"
+						variant="primary"
 						size="lg"
 						disabled={clock.closedMessage !== null}
-						busy={action.busy}
+						busy={action.busy || media.busy}
 					>
-						Undo claim
+						{media.busy ? 'Waiting for the upload' : 'Save changes'}
 					</Button>
+					<Button variant="ghost" onclick={() => stopEdit(claim.id, challenge.id)}>Cancel</Button>
 				</form>
+			{:else if claim?.status === 'pending'}
+				<div class="flex flex-col gap-4">
+					{@render message()}
+					<Button
+						variant="primary"
+						size="lg"
+						disabled={clock.closedMessage !== null}
+						onclick={() => startEdit(claim.id, claim.note)}
+					>
+						Edit claim
+					</Button>
+					<form method="POST" action="?/undo" class="flex flex-col gap-2" use:enhance={undo}>
+						<input type="hidden" name="claimId" value={claim.id} />
+						<input type="hidden" name="challengeId" value={challenge.id} />
+						<Button
+							type="submit"
+							variant="ghost"
+							disabled={clock.closedMessage !== null}
+							busy={action.busy}
+						>
+							Undo claim
+						</Button>
+						<p class="text-center type-secondary">
+							Undo takes the claim back. Use it when you marked the wrong challenge.
+						</p>
+					</form>
+				</div>
 			{:else if canMark}
 				<form method="POST" action="?/mark" class="flex flex-col gap-4" use:enhance={mark}>
 					<input type="hidden" name="challengeId" value={challenge.id} />
@@ -229,30 +377,7 @@
 						/>
 					</div>
 					<input type="hidden" name="mediaKey" value={media.key ?? ''} />
-					{#if media.phase !== 'idle' && media.kind}
-						<UploadStatus
-							phase={media.phase}
-							kind={media.kind}
-							progress={media.progress}
-							preview={media.preview}
-							error={media.error}
-							onremove={removeMedia}
-							bind:removeButton
-						/>
-					{:else if clock.closedMessage === null}
-						<input
-							bind:this={fileInput}
-							type="file"
-							accept="image/*,video/*"
-							class="hidden"
-							aria-hidden="true"
-							tabindex="-1"
-							onchange={picked}
-						/>
-						<Button bind:ref={addButton} onclick={() => fileInput?.click()}>
-							Add photo or video
-						</Button>
-					{/if}
+					{@render mediaField(null)}
 					{@render message()}
 					<Button
 						type="submit"
@@ -264,6 +389,8 @@
 						{media.busy ? 'Waiting for the upload' : 'Mark done'}
 					</Button>
 				</form>
+			{:else if action.error}
+				<p class="text-[15px] text-danger" role="alert">{action.error}</p>
 			{/if}
 		{/if}
 	</Sheet.Content>

@@ -21,6 +21,8 @@ export interface BoardClaim {
 	judged_by: string | null;
 	judge_note: string | null;
 	media_key: string | null;
+	edited_by: string | null;
+	edited_at: string | null;
 }
 
 /** The claim a team sees on a challenge. Times are UTC ISO strings. */
@@ -34,6 +36,9 @@ export interface TeamClaim {
 	judgedBy: string | null;
 	judgeNote: string | null;
 	media: ClaimMedia | null;
+	/** Who last changed the note or media while the claim was pending, or null if nobody did. */
+	editedBy: string | null;
+	editedAt: string | null;
 }
 
 export interface TeamChallenge {
@@ -95,6 +100,8 @@ function toTeamClaim(claim: BoardClaim): TeamClaim {
 		points: claim.points,
 		judgedBy: claim.judged_by,
 		judgeNote: claim.judge_note,
-		media: claimMedia(claim.media_key)
+		media: claimMedia(claim.media_key),
+		editedBy: claim.edited_by,
+		editedAt: claim.edited_at
 	};
 }

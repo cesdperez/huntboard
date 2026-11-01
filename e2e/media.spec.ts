@@ -69,13 +69,47 @@ test('media: a photo and a video from claim to download and deletion', async ({ 
 		await rats.getByRole('button', { name: 'Close' }).click();
 	});
 
+	await test.step('the team replaces the photo and the note of its pending claim', async () => {
+		await openChallenge(rats, PHOTO_CHALLENGE);
+		const sheet = rats.getByRole('dialog');
+		const oldSrc = await sheet.locator('img').first().getAttribute('src');
+		expect(oldSrc).not.toBeNull();
+
+		await sheet.getByRole('button', { name: 'Edit claim' }).click();
+		await sheet.getByRole('button', { name: 'Remove photo' }).click();
+		await expect(sheet.getByRole('button', { name: 'Add photo or video' })).toBeVisible();
+		await sheet.getByRole('button', { name: 'Cancel' }).click();
+		await sheet.getByRole('button', { name: 'Edit claim' }).click();
+		await expect(sheet.getByRole('button', { name: 'Replace photo' })).toBeVisible();
+
+		await expect(sheet.getByLabel('Note')).toHaveValue('in the big fountain');
+		await sheet.getByLabel('Note').fill('the bigger fountain');
+		await sheet.getByRole('button', { name: 'Remove photo' }).click();
+		await pick(rats, await png(rats, 1800, 2400));
+		await expect(rats.getByText('Photo attached')).toBeVisible();
+		await sheet.getByRole('button', { name: 'Save changes' }).click();
+		await expect(toast(rats)).toHaveText('Claim updated');
+
+		await openChallenge(rats, PHOTO_CHALLENGE);
+		await expect(sheet).toContainText('Note: the bigger fountain');
+		await expect(sheet).toContainText('Edited by Rat player');
+		expect(await sheet.locator('img').first().getAttribute('src')).not.toBe(oldSrc);
+		await rats.getByRole('button', { name: 'Close' }).click();
+		expect((await admin.request.get(oldSrc!)).status()).toBe(404);
+	});
+
 	await test.step('the judge sees the photo and plays the video in the queue', async () => {
 		await admin.getByRole('link', { name: 'Judge' }).click();
 		const photo = queueItem(admin, PHOTO_CHALLENGE).getByRole('img', {
 			name: `Photo from ${TEAM}, ${PHOTO_CHALLENGE}`
 		});
 		await expect(photo).toBeVisible();
-		await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1600);
+		await expect(queueItem(admin, PHOTO_CHALLENGE)).toContainText(
+			'“the bigger fountain” marked by Rat player, edited by Rat player'
+		);
+		await expect
+			.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalHeight))
+			.toBe(1600);
 		const clip = queueItem(admin, VIDEO_CHALLENGE).locator('video');
 		await expect(clip).toHaveAttribute('aria-label', `Video from ${TEAM}, ${VIDEO_CHALLENGE}`);
 		await expect(clip).toHaveAttribute('preload', 'none');
@@ -178,9 +212,13 @@ async function openChallenge(page: Page, title: string) {
 	}).toPass();
 }
 
-async function pick(page: Page, file: { name: string; mimeType: string; buffer: Buffer }) {
+async function pick(
+	page: Page,
+	file: { name: string; mimeType: string; buffer: Buffer },
+	button = 'Add photo or video'
+) {
 	const chooser = page.waitForEvent('filechooser');
-	await page.getByRole('button', { name: 'Add photo or video' }).click();
+	await page.getByRole('button', { name: button }).click();
 	await (await chooser).setFiles(file);
 }
 
