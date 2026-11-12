@@ -1,7 +1,7 @@
 import type { HuntResult } from './hunt.ts';
 import type { Sample } from './http.ts';
 
-/** Cloudflare free plan, per day. See the README "Free-tier budget". */
+/** Cloudflare free plan, per day. See the README "Request budget". */
 const FREE_PLAN = { requests: 100_000, rowsRead: 5_000_000, rowsWritten: 100_000 };
 /** The budget keeps about half the rows read limit spare. */
 const ROWS_READ_BUDGET = FREE_PLAN.rowsRead / 2;
