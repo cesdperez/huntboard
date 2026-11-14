@@ -8,9 +8,7 @@
 	import { Marker } from '#lib/components/marker/index.js';
 	import { RecentGames } from '#lib/components/recent-games/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-
-	const KOFI_URL = 'https://ko-fi.com/chechoxyz';
-	const AUTHOR_URL = 'https://checho.xyz';
+	import { AUTHOR_URL, KOFI_URL } from '#lib/constants/site.js';
 
 	// The example claim the hero judges once, so the leaderboard shows what a scored claim does.
 	const CLAIM = {
