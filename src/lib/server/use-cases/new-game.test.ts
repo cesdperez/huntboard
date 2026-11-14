@@ -74,6 +74,12 @@ describe('createNewGame', () => {
 				.run();
 		}
 		await createGame(db, 'Other', other);
+		await db
+			.prepare(
+				"UPDATE game SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-29 days') WHERE id = (SELECT min(id) FROM game WHERE owner_user_id = ?)"
+			)
+			.bind(userId)
+			.run();
 		expect(await createNewGame(db, userId, form({ name: 'Refused' }))).toEqual({
 			status: 429,
 			result: { name: 'Refused', error: 'You can create 20 games in 30 days. Try again later.' }

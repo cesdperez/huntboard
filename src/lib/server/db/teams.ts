@@ -1,4 +1,4 @@
-import { teamNameKey } from '#lib/domain/team-name.js';
+import { teamNameKey, TEAMS_PER_GAME_MAX } from '#lib/domain/team-name.js';
 import { generateToken } from '#lib/domain/token.js';
 import { nextId } from './ids.js';
 import type { TeamRow, SetupTeam, TeamLinkRow } from './types.js';
@@ -34,8 +34,6 @@ export async function listTeamLinks(db: D1Database, gameId: number): Promise<Tea
 		.all<TeamLinkRow>();
 	return results;
 }
-
-export const TEAMS_PER_GAME_MAX = 50;
 
 export type AddTeamResult =
 	{ status: 'added'; team: TeamRow } | { status: 'name-taken' } | { status: 'full' };

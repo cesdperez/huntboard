@@ -1,12 +1,13 @@
 import {
 	TEAM_MEMBERS_ERROR,
 	TEAM_NAME_TAKEN_ERROR,
+	TEAMS_PER_GAME_MAX,
 	normalizeTeamMembers,
 	normalizeTeamName,
 	teamNameError
 } from '#lib/domain/team-name.js';
 import type { ActionOutcome } from './action-outcome.js';
-import { addTeam, moveTeam, TEAMS_PER_GAME_MAX, updateTeam } from '../db/teams.js';
+import { addTeam, moveTeam, updateTeam } from '../db/teams.js';
 import { readId, readString } from './form.js';
 import type { ImageBucket } from '../storage/image-store.js';
 import { deleteTeamWithAvatar, removeTeamAvatar } from './images.js';

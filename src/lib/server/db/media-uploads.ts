@@ -21,7 +21,6 @@ interface Usage {
 	team_count: number;
 	team_bytes: number;
 	game_bytes: number;
-	all_bytes: number;
 	challenges: number;
 }
 
@@ -69,11 +68,9 @@ export async function recordMediaUpload(
 				(SELECT coalesce(sum(size), 0) FROM media_upload WHERE team_id = ?1) AS team_bytes,
 				(SELECT coalesce(sum(size), 0) FROM media_upload
 					JOIN team ON team.id = media_upload.team_id WHERE team.game_id = ?2) AS game_bytes,
-				(SELECT count(*) FROM challenge WHERE game_id = ?2) AS challenges,
-				(SELECT coalesce(sum(size), 0) FROM media_upload
-					WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-' || ?3 || ' days')) AS all_bytes`
+				(SELECT count(*) FROM challenge WHERE game_id = ?2) AS challenges`
 		)
-		.bind(teamId, gameId, limits.retentionDays)
+		.bind(teamId, gameId)
 		.first<Usage>();
 	if (!usage?.team_found) return 'team-gone';
 	if (usage.team_count >= limits.uploadsPerChallenge * usage.challenges) {

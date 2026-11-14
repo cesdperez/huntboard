@@ -97,8 +97,23 @@ describe('recordMediaUpload', () => {
 				"UPDATE media_upload SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-11 days') WHERE key = 'x'"
 			)
 			.run();
+		const another = await createGame(db, 'Another hunt');
+		const anotherTeam = await seedTeam(db, another.id);
+		await seedChallenge(db, another.id);
+		expect(
+			await recordMediaUpload(
+				db,
+				{ gameId: another.id, teamId: anotherTeam.id, key: 'y', size: 100 },
+				LIMITS
+			)
+		).toBe('recorded');
+		await db
+			.prepare(
+				"UPDATE media_upload SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-9 days') WHERE key = 'y'"
+			)
+			.run();
 		await record(rats, 'a', 100);
-		expect(await record(owls, 'b', 50)).toBe('recorded');
+		expect(await record(owls, 'b', 1)).toBe('all-bytes');
 	});
 
 	it('reports a team deleted since its link was checked', async () => {
