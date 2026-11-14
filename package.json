@@ -8,7 +8,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173 --local-upstream localhost:4173 --env-file .env.dev",
-		"prepare": "svelte-kit sync || echo ''",
+		"prepare": "svelte-kit sync || echo '' && simple-git-hooks",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p loadtest",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"gen": "wrangler types --env-file .env.example --env-file .env.dev --strict-vars false",
@@ -21,7 +21,10 @@
 		"test:watch": "vitest",
 		"rehearsal": "playwright test",
 		"loadtest": "vite build && node loadtest/run.ts",
-		"loadtest:check": "tsc -p loadtest"
+		"loadtest:check": "tsc -p loadtest",
+		"scan": "sh scripts/require-tools.sh gitleaks trivy && gitleaks git --no-banner --redact --log-opts=HEAD && trivy fs --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --include-dev-deps --exit-code 1 --skip-version-check --quiet .",
+		"scan:staged": "sh scripts/require-tools.sh gitleaks && gitleaks git --staged --no-banner --redact",
+		"knip": "knip"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -44,11 +47,14 @@
 		"eslint-plugin-svelte": "^3.24.1",
 		"globals": "^17.14.0",
 		"jsqr": "^1.4.0",
+		"knip": "^6.45.1",
+		"lint-staged": "^17.6.0",
 		"mediabunny": "^1.66.0",
 		"prettier": "^3.10.1",
 		"prettier-plugin-svelte": "^4.1.1",
 		"prettier-plugin-tailwindcss": "^0.8.1",
 		"shadcn-svelte": "^1.8.1",
+		"simple-git-hooks": "^2.14.0",
 		"svelte": "^5.57.3",
 		"svelte-check": "^4.7.8",
 		"tailwind-variants": "^4.0.2",
@@ -63,5 +69,16 @@
 	},
 	"imports": {
 		"#lib/*": "./src/lib/*"
+	},
+	"simple-git-hooks": {
+		"pre-commit": "pnpm exec lint-staged && pnpm scan:staged",
+		"pre-push": "pnpm check && pnpm test && pnpm scan && pnpm knip"
+	},
+	"lint-staged": {
+		"*.{js,ts,svelte}": [
+			"prettier --write",
+			"eslint"
+		],
+		"*.{css,html,json,md,yaml,yml}": "prettier --write"
 	}
 }
