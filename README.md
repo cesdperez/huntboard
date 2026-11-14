@@ -103,6 +103,10 @@ Without `RESEND_API_KEY` in `.env.dev`, the dev server sends no sign-in email an
 
 A theme's `touch-icon.png` and `share.png` are rendered, not drawn: run `node scripts/theme-images.ts` after changing a theme's colours or its card in that script.
 
+### Several worktrees
+
+The main checkout uses ports 5173 (dev), 4173 (preview) and 4174 (load test). A linked worktree gets three ports derived from its path. Run `pnpm ports` to see this checkout's URLs. Set `HUNTBOARD_PORT` to override the preview port; the other ports follow it. `bash scripts/stop-servers.sh` stops this checkout's servers. Orca setup copies `.env.dev` from the primary checkout, or `.env.example`, installs dependencies and applies local D1 migrations. Local D1 and R2 state stays in each checkout's `.wrangler/`.
+
 ## Testing
 
 ```sh
@@ -147,7 +151,7 @@ pnpm loadtest              # 5 game hours at 30x: about 12 minutes
 pnpm loadtest --speed 300  # a quick smoke run
 ```
 
-It serves the build with `wrangler dev` on port 4174 and keeps its own D1 state in `.wrangler/loadtest`, wiped on every run. `LOADTEST_METRICS` makes the Worker add each request's D1 usage in a `Server-Timing` header. Leave it unset in production. Local latency says nothing about Cloudflare, so the latency check only catches gross regressions.
+It serves the build with `wrangler dev` on this checkout's load-test port and keeps its own D1 state in `.wrangler/loadtest`, wiped on every run. `LOADTEST_METRICS` makes the Worker add each request's D1 usage in a `Server-Timing` header. Leave it unset in production. Local latency says nothing about Cloudflare, so the latency check only catches gross regressions.
 
 ## Request budget
 
