@@ -204,7 +204,7 @@ In the Setup team list, each team row ends with "Message the captain": "Send on 
 
 In the Setup team list, a team's edit form shows its picture with "Remove picture", which confirms first. This is moderation: the team can add a new one.
 
-Before the reset, Setup has a "Claim media" section: how many claims have a photo or video, "Download all media", and "Delete all media". The download is one zip with a folder per team and a file per claim, named after the challenge and the claim number. "Delete all media" shows only after a download in the same visit, or when no claim has media, so nobody deletes what they never saved. It confirms first and keeps the claims and scores. Media is deleted 30 days after upload anyway, and the section says so.
+Before the reset, Setup has a "Claim media" section: how many claims have a photo or video, "Download all media", and "Delete all media". The download is one zip with a folder per team and a file per claim, named after the challenge and the claim number. "Delete all media" shows only after a download in the same visit, or when no claim has media, so nobody deletes what they never saved. It confirms first and keeps the claims and scores. Media is deleted 10 days after upload anyway, and the section says so.
 
 Setup ends with "Reset game", which returns the game to how `/new` created it: the name, the theme and the admin and scoreboard links stay, everything else goes, the game image and claim media included. The theme stays because, like the name, it belongs to the event, and a reset clears a rehearsal before that same event. It confirms first, naming what gets deleted.
 

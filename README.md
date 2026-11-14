@@ -39,7 +39,7 @@ The browser also keeps the last 10 team, admin and scoreboard links it opened, w
 - **Times are stored in UTC** and shown in each viewer's own time zone.
 - **Teams see every challenge once it is shown, but not each other's claims.** The scoreboard shows totals only.
 - **Challenges stay hidden until the game starts.** Before the start the team page gets no challenges or sections from the server, so teams can join, set a picture and test their phones without planning ahead. A game without a start or end time counts as not started. "Show challenges before the game starts" in Setup shows them early. At the start the team page reloads at once, so the challenges appear within seconds. After the end they stay visible.
-- **Proof is an optional photo or video on a claim.** The phone shrinks it when it can, uploads it to R2, and the judge sees it beside the claim. Proof can still go to the group chat or come in person, because a claim needs no media. Each team may start 3 uploads for every challenge in the game, spent on any challenge, and 500 MB in all, and a game 3 GB, counting uploads that were never attached. Past a limit the team can still mark the challenge done without media. Media lives in its own R2 bucket under the game id and is deleted after the game: by "Delete all media" in Setup, by a reset, and by a 30-day rule on the bucket. Undoing a claim deletes its media; a rejected claim keeps it as history. Replacing or removing media in an edit deletes the old object and frees its upload from the team's limits.
+- **Proof is an optional photo or video on a claim.** The phone shrinks it when it can, uploads it to R2, and the judge sees it beside the claim. Proof can still go to the group chat or come in person, because a claim needs no media. Each team may start 3 uploads for every challenge in the game, spent on any challenge, and 500 MB in all, and a game 2 GB, counting uploads that were never attached. Across all games, uploads from the last 10 days together may use up to 50 GB. Past a limit the team can still mark the challenge done without media. Media lives in its own R2 bucket under the game id and is deleted after the game: by "Delete all media" in Setup, by a reset, and by a 10-day rule on the bucket. Undoing a claim deletes its media; a rejected claim keeps it as history. Replacing or removing media in an edit deletes the old object and frees its upload from the team's limits.
 - **Images.** Besides claim media, the app stores one image per game (an invitation, poster or map) and one picture per team, in R2.
 - **Themes live in code.** A game picks a registered theme in Setup; see [Themes](DESIGN.md#themes).
 
@@ -130,7 +130,7 @@ A deployment has no test sign-in. To rehearse against one, sign in there in a br
 HUNTBOARD_URL=https://huntboard.example.com HUNTBOARD_SESSION=... pnpm rehearsal
 ```
 
-Each run creates three games named `Rehearsal ...`, and one account can create 10 games a day. Delete them before a real event:
+Each run creates three games named `Rehearsal ...`, and one account can create 5 games in any 24 hours and 20 in any 30 days. Delete them before a real event:
 
 ```sh
 pnpm exec wrangler d1 execute huntboard --remote --command "DELETE FROM game WHERE name LIKE 'Rehearsal %'"
@@ -233,10 +233,10 @@ pnpm exec wrangler secret put R2_ACCESS_KEY_ID
 pnpm exec wrangler secret put R2_SECRET_ACCESS_KEY
 ```
 
-A lifecycle rule that deletes media 30 days after upload. It covers the whole bucket, which is why media has its own bucket and game images do not share it:
+A lifecycle rule that deletes media 10 days after upload. It covers the whole bucket, which is why media has its own bucket and game images do not share it:
 
 ```sh
-pnpm exec wrangler r2 bucket lifecycle add huntboard-media expire-media --expire-days 30
+pnpm exec wrangler r2 bucket lifecycle add huntboard-media expire-media --expire-days 10
 ```
 
 Without the two secrets, attaching media fails with a message, and claims without media still work.
@@ -245,7 +245,7 @@ A re-import that deletes a challenge deletes the media of its claims too. A team
 
 "Download all media" on the Setup tab zips every claim's media in the Worker, so it needs Workers Paid for two reasons. Zipping about 1 GB takes seconds of CPU, past the free plan's 10 ms. And it reads each file from R2 with its own call, while the free plan allows 50 subrequests per request, R2 calls and D1 queries included, so there the download breaks off after about 48 files. Everything else would fit the free plan.
 
-A game of about 180 claims stores about 1 GB of media. It is deleted after the game, so R2 stays near its 10 GB of free storage.
+A game of about 180 claims stores about 1 GB of media. The 50 GB cap over the 10-day window bounds storage at about 50 GB, under $1 a month past R2's free 10 GB.
 
 ## Security
 
@@ -257,5 +257,5 @@ A game of about 180 claims stores about 1 GB of media. It is deleted after the g
 - **Requests.** Plain HTTP redirects to HTTPS. Bodies without `Content-Length` get 411 and bodies over 2 MiB get 413, before any parsing. Uploaded images are checked for size, declared type and magic bytes.
 - **Claim media.** Phones upload straight to R2, never through the Worker. The team action `mediaUpload` checks the game window, the declared type and the size limit, then records the key for the team in `media_upload` and signs one PUT URL for 15 minutes. That record enforces the per-team and per-game limits, so a team link cannot fill the bucket, and "Delete all media" clears it with the media. It covers one new random key under the game id, and its signature covers the content type and length, so R2 refuses any other file. The R2 API token behind it can only read and write the media bucket. Marking done with media checks the object again in the bucket: the key was signed for this team, the size is within the limit, the stored type matches the key, and the first bytes are a JPEG, WebP, MP4, QuickTime or WebM file. A failed check stores no claim.
 - **Media keys are secrets.** `/media/<game id>/claims/<file>` serves an object without reading D1, like `/images/`, so the 128-bit random name is the only guard. Only the claiming team and the admins receive it.
-- **Abuse limits.** The Worker is served only on its custom domain; `workers_dev` and `preview_urls` are off in `wrangler.jsonc`, so every request passes the zone's WAF. A zone rate-limiting rule, configured in Cloudflare and not in this repo, blocks an IP for 10 seconds after 300 requests in 10 seconds, skipping static paths and `/images/`. The cap is high because a whole party often shares one Wi-Fi IP, and game images and team pictures are skipped because 40 phones opening the scoreboard at the finale would pass it on pictures alone. A distributed attack can still run up the Workers and D1 bill; stopping that needs Cloudflare's paid bot and DDoS features. One account can create 10 games in any 24 hours, because each game can hold 3 GB of media.
+- **Abuse limits.** The Worker is served only on its custom domain; `workers_dev` and `preview_urls` are off in `wrangler.jsonc`, so every request passes the zone's WAF. A zone rate-limiting rule, configured in Cloudflare and not in this repo, blocks an IP for 10 seconds after 300 requests in 10 seconds, skipping static paths and `/images/`. The cap is high because a whole party often shares one Wi-Fi IP, and game images and team pictures are skipped because 40 phones opening the scoreboard at the finale would pass it on pictures alone. A distributed attack can still run up the Workers and D1 bill; stopping that needs Cloudflare's paid bot and DDoS features. One account can create 5 games in any 24 hours and 20 in any 30 days, and each game can have at most 50 teams. Each game holds at most 2 GB of media, and uploads across all games in the last 10 days share a 50 GB cap. These limits bound what one account or a crowd of new accounts can make R2 store. A flood of uploads can fill the shared cap for up to 10 days, which blocks media uploads but not claims.
 - **Accepted trade-offs.** A link is a bearer credential with no expiry until it is rotated. A join code opens its team like the link, with 40 bits instead of 128. With 10,000 teams in the database, one guess finds a team about once in 100 million. `/join` has no rate limit of its own, so one IP guessing at the zone limit of 300 requests in 10 seconds, about 2.6 million a day, finds a team with a chance of about 1 in 40 a day. Anyone with the admin link of a game nobody owns can add it to their games; that changes only their list, not who can open the game. Whoever controls an email inbox controls its account. Spread over many addresses or IPs, the form can still spend Resend's daily free quota. Anyone can create an account and games; the abuse limits above are what cap that. Nicknames are labels, not identities. Team names and members lines are visible to anyone with the scoreboard link.

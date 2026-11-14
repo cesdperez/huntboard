@@ -6,6 +6,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import type { GameRow } from '#lib/server/db/types.js';
 	import { updateOrRetry } from './update-or-retry.js';
+	import { MEDIA_RETENTION_DAYS } from '#lib/domain/claim-media.js';
 
 	let { game, mediaCount }: { game: GameRow; mediaCount: number } = $props();
 
@@ -32,7 +33,7 @@
 			No claim has a photo or video.
 		{:else}
 			{mediaCount === 1 ? '1 claim has' : `${mediaCount} claims have`} a photo or video. Download them
-			to keep them: media is deleted 30 days after upload.
+			to keep them: media is deleted {MEDIA_RETENTION_DAYS} days after upload.
 		{/if}
 	</p>
 	{#if mediaCount > 0}
