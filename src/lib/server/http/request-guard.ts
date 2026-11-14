@@ -39,14 +39,21 @@ export function securityHeaders(url: URL): Record<string, string> {
 		// Not no-referrer: Chrome then sends Origin: null on plain form posts and SvelteKit's CSRF check rejects them.
 		'Referrer-Policy': 'same-origin',
 		'Cross-Origin-Opener-Policy': 'same-origin',
-		'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+		'Permissions-Policy':
+			'accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), bluetooth=(), serial=(), hid=(), midi=(), browsing-topics=(), publickey-credentials-get=(), screen-wake-lock=(), xr-spatial-tracking=()',
 		'X-Robots-Tag': 'noindex, nofollow'
 	};
 	if (url.protocol === 'https:') {
-		headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+		headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload';
 	}
 	if (PRIVATE_PATH.test(url.pathname)) {
 		headers['Cache-Control'] = 'no-store';
 	}
 	return headers;
+}
+
+/** Adds analytics only to public documents, without tracking client-side navigation. */
+export function analyticsHead(path: string): string {
+	if (PRIVATE_PATH.test(path)) return '';
+	return `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"949bbd576d634207a6ce3ca0e98b41dc","spa":false}'></script>`; // gitleaks:allow
 }

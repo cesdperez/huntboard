@@ -2,7 +2,7 @@ import { env } from 'cloudflare:workers';
 import { dev } from '$app/env';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { measureD1Usage } from '#lib/server/http/d1-usage.js';
-import { rejection, securityHeaders } from '#lib/server/http/request-guard.js';
+import { analyticsHead, rejection, securityHeaders } from '#lib/server/http/request-guard.js';
 import { htmlAttributes, resolveAppearance } from '#lib/themes/index.js';
 
 const guard: Handle = async ({ event, resolve }) => {
@@ -20,10 +20,12 @@ const guard: Handle = async ({ event, resolve }) => {
 const theme: Handle = ({ event, resolve }) =>
 	resolve(event, {
 		transformPageChunk: ({ html }) =>
-			html.replace(
-				'%huntboard.theme%',
-				htmlAttributes(resolveAppearance(event.locals.gameTheme, event.locals.colorMode))
-			)
+			html
+				.replace(
+					'%huntboard.theme%',
+					htmlAttributes(resolveAppearance(event.locals.gameTheme, event.locals.colorMode))
+				)
+				.replace('</head>', `${analyticsHead(event.url.pathname)}</head>`)
 	});
 
 export const handle = env.LOADTEST_METRICS

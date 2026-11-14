@@ -3,6 +3,7 @@ engineStrict: true
 verifyDepsBeforeRun: error
 # A compromised release is usually pulled within a day, before it can be installed here.
 minimumReleaseAge: 1440
+# Prebuilt binaries come from optional dependencies, and prepare installs git hooks.
 allowBuilds:
   esbuild: false
   workerd: false

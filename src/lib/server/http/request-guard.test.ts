@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_BODY_BYTES, rejection, securityHeaders } from './request-guard.js';
+import { MAX_BODY_BYTES, analyticsHead, rejection, securityHeaders } from './request-guard.js';
 
 function post(url: string, headers: Record<string, string> = {}) {
 	return new Request(url, { method: 'POST', headers });
@@ -77,8 +77,13 @@ describe('securityHeaders', () => {
 		expect(headers['X-Content-Type-Options']).toBe('nosniff');
 		expect(headers['X-Frame-Options']).toBe('DENY');
 		expect(headers['Referrer-Policy']).toBe('same-origin');
-		expect(headers['Strict-Transport-Security']).toContain('max-age=');
-		expect(headers['Permissions-Policy']).toContain('camera=()');
+		expect(headers['Strict-Transport-Security']).toBe(
+			'max-age=63072000; includeSubDomains; preload'
+		);
+		expect(headers['Permissions-Policy']).toBe(
+			'accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), bluetooth=(), serial=(), hid=(), midi=(), browsing-topics=(), publickey-credentials-get=(), screen-wake-lock=(), xr-spatial-tracking=()'
+		);
+		expect(headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
 		expect(headers['X-Robots-Tag']).toBe('noindex, nofollow');
 		expect(headers['Cache-Control']).toBeUndefined();
 	});
@@ -109,4 +114,16 @@ describe('securityHeaders', () => {
 			securityHeaders(new URL('http://localhost:4173/'))['Strict-Transport-Security']
 		).toBeUndefined();
 	});
+});
+
+describe('analyticsHead', () => {
+	it('includes the beacon on the home page without SPA tracking', () => {
+		expect(analyticsHead('/')).toContain('https://static.cloudflareinsights.com/beacon.min.js');
+		expect(analyticsHead('/')).toContain('"spa":false');
+	});
+
+	it.each(['/a/token', '/t/token', '/s/token', '/login', '/games', '/new'])(
+		'omits the beacon on private path %s',
+		(path) => expect(analyticsHead(path)).toBe('')
+	);
 });

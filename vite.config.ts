@@ -18,7 +18,7 @@ export default defineConfig({
 				mode: 'auto',
 				directives: {
 					'default-src': ['self'],
-					'script-src': ['self'],
+					'script-src': ['self', 'https://static.cloudflareinsights.com'],
 					// Svelte and bits-ui render style attributes, which nonces cannot cover.
 					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
 					'font-src': ['self', 'https://fonts.gstatic.com'],
@@ -28,11 +28,12 @@ export default defineConfig({
 					// mediabunny runs a timer worker from a blob, so video compression goes on in a background tab.
 					'worker-src': ['self', 'blob:'],
 					// Claim media uploads go straight from the phone to R2.
-					'connect-src': ['self', R2_S3_ORIGIN],
+					'connect-src': ['self', R2_S3_ORIGIN, 'https://cloudflareinsights.com'],
 					'frame-ancestors': ['none'],
 					'form-action': ['self'],
-					'base-uri': ['none'],
-					'object-src': ['none']
+					'base-uri': ['self'],
+					'object-src': ['none'],
+					'upgrade-insecure-requests': true
 				}
 			}
 		})
