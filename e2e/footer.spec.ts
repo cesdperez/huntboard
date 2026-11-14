@@ -1,5 +1,23 @@
 import { expect, test } from '@playwright/test';
 
+test('contour fonts load from the app origin', async ({ page }) => {
+	const fontUrls: string[] = [];
+	page.on('request', (request) => {
+		if (request.resourceType() === 'font') fontUrls.push(request.url());
+	});
+	await page.goto('/');
+	const fonts = await page.evaluate(async () => {
+		await document.fonts.ready;
+		return [...document.fonts]
+			.filter((font) => font.status === 'loaded')
+			.map((font) => font.family);
+	});
+	expect(fonts).toContain('Instrument Sans Variable');
+	expect(fonts).toContain('Big Shoulders Variable');
+	expect(fontUrls.length).toBeGreaterThan(0);
+	expect(fontUrls.every((url) => new URL(url).origin === new URL(page.url()).origin)).toBe(true);
+});
+
 test('home footer links open in a new tab', async ({ page }) => {
 	await page.goto('/');
 

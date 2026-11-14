@@ -258,7 +258,7 @@ The admin picks a theme for the game in Setup. It changes every page of that gam
 
 A theme is two things:
 
-- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), the font stylesheets it loads, its [layout](#layouts), its two [QR code](#admin) colours, and optionally a `wordmark`: a partner's image and its alt text, which the app bar shows after "Huntboard ×". No theme removes the Huntboard name.
+- An entry in `src/lib/themes/index.ts`: id, name, the modes it supports with the browser chrome colour of each (the colour at the top of the page: `--paper` in the `plain` layout, `--app-bar-base` in the `event` layout), its [layout](#layouts), its two [QR code](#admin) colours, and optionally a `wordmark`: a partner's image and its alt text, which the app bar shows after "Huntboard ×". No theme removes the Huntboard name.
 - A CSS file next to it, imported by `app.css`, that sets tokens on `:root[data-game-theme='<id>']`. `flag` sits on plain `:root`, so a token a theme leaves out falls back to `flag`.
 - Images in `static/themes/<id>/`: `icon.svg` for the browser tab and the centre of its QR codes, and `touch-icon.png` and `share.png`, the 1200 × 630 link preview that chats like WhatsApp show. Draw `icon.svg` by hand. The two PNGs are rendered by a script (see the [README](README.md#local-development)). A theme's wordmark lives here too.
 
@@ -323,7 +323,7 @@ Every page has an app bar, in both layouts:
 ### What a theme may change
 
 - The palette and every role above.
-- The display font, and the sans font. The theme's stylesheets load every family its tokens name, Archivo included while it keeps the `flag` sans.
+- The display font, and the sans font. Self-host each family with an `@fontsource` package in `dependencies` and `@font-face` rules or package CSS imports in `src/app.css`. Browsers download only the families a page uses.
 - Decoration in the event heading and the page margins. It never sits behind a row, a button or a number.
 
 ### What a theme keeps
