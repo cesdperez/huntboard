@@ -58,6 +58,7 @@
 		<p>
 			<a
 				href={resolve('/a/[token]/setup', { token: newToken })}
+				data-sveltekit-reload
 				data-sveltekit-replacestate
 				class="inline-flex min-h-touch items-center font-semibold text-ink underline"
 				>Open the new admin link</a

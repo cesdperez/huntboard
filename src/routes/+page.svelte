@@ -133,7 +133,9 @@
 					Everyone follows the same leaderboard as it changes.
 				</p>
 				<div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-					<Button href={resolve('/new')} variant="primary" size="lg">Create a game</Button>
+					<Button href={resolve('/new')} data-sveltekit-reload variant="primary" size="lg"
+						>Create a game</Button
+					>
 				</div>
 				<p class="mt-8 max-w-[40ch] text-[15px] leading-snug">
 					Playing in a hunt? Open the team link your organiser sent you. There is nothing to
@@ -230,8 +232,12 @@
 					as they have their links.
 				</p>
 			</div>
-			<Button href={resolve('/new')} variant="primary" size="lg" class="self-start lg:self-end"
-				>Create a game</Button
+			<Button
+				href={resolve('/new')}
+				data-sveltekit-reload
+				variant="primary"
+				size="lg"
+				class="self-start lg:self-end">Create a game</Button
 			>
 		</div>
 	</section>

@@ -15,6 +15,7 @@
 {#if signedIn || offerSignIn}
 	<a
 		href={resolve('/games')}
+		data-sveltekit-reload
 		class="inline-flex min-h-touch items-center text-[17px] font-semibold underline-offset-4 hover:underline"
 		>{signedIn ? 'My games' : 'Sign in'}</a
 	>

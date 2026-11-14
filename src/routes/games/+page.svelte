@@ -44,6 +44,7 @@
 					<li class="border-b border-line">
 						<a
 							href={resolve('/a/[token]', { token: game.adminToken })}
+							data-sveltekit-reload
 							class="flex min-h-row items-center justify-between gap-3 py-3 font-semibold"
 						>
 							<span class="min-w-0 break-words">{game.name}</span>

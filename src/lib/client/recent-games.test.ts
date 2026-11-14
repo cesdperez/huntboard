@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
 	forgetDeadLink,
@@ -140,4 +141,12 @@ describe('recent games', () => {
 		expect(recentGames(storage)).toEqual([]);
 		expect(recentGames(null)).toEqual([]);
 	});
+});
+
+it('uses document navigation for recent game links on the home page', () => {
+	const component = readFileSync(
+		new URL('../components/recent-games/recent-games.svelte', import.meta.url),
+		'utf8'
+	);
+	expect(component).toMatch(/href=\{game\.path\}\s+data-sveltekit-reload/);
 });

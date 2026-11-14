@@ -39,6 +39,7 @@
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={game.path}
+						data-sveltekit-reload
 						class="flex min-h-touch min-w-0 flex-1 flex-col justify-center py-1 underline-offset-4 hover:underline"
 					>
 						<span class="truncate font-semibold">{isolate(game.gameName)}</span>
