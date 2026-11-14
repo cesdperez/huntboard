@@ -110,7 +110,7 @@ The main checkout uses ports 5173 (dev), 4173 (preview) and 4174 (load test). A 
 ## Testing
 
 ```sh
-pnpm test    # Vitest: every *.test.ts under src/, in Node
+pnpm test    # Vitest: every *.test.ts under src/ and scripts/, in Node
 pnpm check   # svelte-check and the load test's type check
 pnpm lint    # Prettier and ESLint
 ```
