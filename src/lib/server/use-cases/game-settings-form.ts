@@ -8,7 +8,7 @@ export type GameSettingsErrors = Partial<Record<keyof GameSettings, string>>;
 type KeptWhenAbsent = Pick<GameSettings, 'starts_at' | 'ends_at' | 'theme'>;
 
 /** Times and theme are absent when the form had none to send, so the stored ones stay as they are. */
-export type ParsedGameSettings = Omit<GameSettings, keyof KeptWhenAbsent> & Partial<KeptWhenAbsent>;
+type ParsedGameSettings = Omit<GameSettings, keyof KeptWhenAbsent> & Partial<KeptWhenAbsent>;
 
 export type GameSettingsResult =
 	{ ok: true; settings: ParsedGameSettings } | { ok: false; errors: GameSettingsErrors };

@@ -2,7 +2,7 @@ import { POLL_INTERVAL_MS } from '../src/lib/client/live-updates.ts';
 import type { AppClient } from './http.ts';
 
 /** The game the hunt plays, per the README "Request budget". */
-export const SHAPE = {
+const SHAPE = {
 	teams: 7,
 	playersPerTeam: 6,
 	judges: ['Ana', 'Bo', 'Cy'],

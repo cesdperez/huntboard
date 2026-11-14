@@ -111,7 +111,7 @@ pnpm check   # svelte-check and the load test's type check
 pnpm lint    # Prettier and ESLint
 ```
 
-All three pass before a commit. Query tests run on in-memory SQLite with every migration applied. UI is checked with Playwright rather than component tests.
+Prettier and ESLint run on staged files before a commit. Query tests run on in-memory SQLite with every migration applied. UI is checked with Playwright rather than component tests.
 
 Git hooks run Prettier and ESLint on staged files and gitleaks on staged changes before a commit. Before a push, they run `pnpm check`, `pnpm test`, `pnpm scan` and `pnpm knip`. Install gitleaks and trivy with `brew install gitleaks trivy`. trivy downloads its vulnerability database on the first run. Accept reviewed false positives in `.gitleaksignore` or `.trivyignore`. After editing the hook config, run `pnpm exec simple-git-hooks` to reinstall the hooks.
 

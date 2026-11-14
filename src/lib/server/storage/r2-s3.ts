@@ -1,5 +1,5 @@
 /** Not a secret. Change it when deploying to another Cloudflare account. */
-export const R2_ACCOUNT_ID = 'd9dadbaab2ed0356e8cd981e4456ff4a';
+const R2_ACCOUNT_ID = 'd9dadbaab2ed0356e8cd981e4456ff4a';
 
 /** Must match `bucket_name` of the MEDIA binding in wrangler.jsonc. */
 export const MEDIA_BUCKET_NAME = 'huntboard-media';
