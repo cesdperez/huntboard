@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
+import { DEV_PORT } from './scripts/ports.js';
 
-const LOCAL_URL = 'http://localhost:5173';
+const LOCAL_URL = `http://localhost:${DEV_PORT}`;
 const baseURL = process.env.HUNTBOARD_URL ?? LOCAL_URL;
 
 /** The rehearsal plays a whole game against HUNTBOARD_URL, or the local dev server it starts. */

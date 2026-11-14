@@ -2,6 +2,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { parseArgs } from 'node:util';
+import { LOADTEST_PORT } from '../scripts/ports.ts';
 import { AppClient } from './http.ts';
 import { playHunt } from './hunt.ts';
 import { report } from './report.ts';
@@ -10,7 +11,7 @@ const { values: options } = parseArgs({
 	options: {
 		speed: { type: 'string', default: '30' },
 		seed: { type: 'string', default: '1' },
-		port: { type: 'string', default: '4174' }
+		port: { type: 'string', default: String(LOADTEST_PORT) }
 	}
 });
 const speed = Number(options.speed);

@@ -7,7 +7,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173 --local-upstream localhost:4173 --env-file .env.dev",
+		"ports": "node scripts/ports.ts --urls",
+		"preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port $(node scripts/ports.ts) --local-upstream localhost:$(node scripts/ports.ts) --env-file .env.dev",
 		"prepare": "svelte-kit sync || echo '' && simple-git-hooks",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p loadtest",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",

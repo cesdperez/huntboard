@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { DEV_PORT } from './scripts/ports.js';
 import { R2_S3_ORIGIN } from './src/lib/server/storage/r2-s3.js';
 
 export default defineConfig({
@@ -36,6 +37,7 @@ export default defineConfig({
 			}
 		})
 	],
+	server: { port: DEV_PORT, strictPort: true },
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
@@ -44,7 +46,7 @@ export default defineConfig({
 				test: {
 					name: 'server',
 					environment: 'node',
-					include: ['src/**/*.{test,spec}.{js,ts}'],
+					include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.test.ts'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
 				}
 			}

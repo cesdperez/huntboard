@@ -1,0 +1,24 @@
+scripts:
+  setup: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    primary=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
+    if [ ! -f .env.dev ]; then
+      if [ -f "$primary/.env.dev" ]; then
+        cp "$primary/.env.dev" .env.dev
+      else
+        cp .env.example .env.dev
+      fi
+    fi
+    pnpm install --frozen-lockfile
+    pnpm db:migrate
+    pnpm --silent ports
+  archive: |
+    #!/usr/bin/env bash
+    # Orca reads this from the primary checkout and runs it in the worktree being removed, which may predate the script.
+    [ -f scripts/stop-servers.sh ] || exit 0
+    bash scripts/stop-servers.sh
+setupAgentStartupPolicy: wait-for-setup
+defaultTabs:
+  - title: Agent
+  - title: Shell
