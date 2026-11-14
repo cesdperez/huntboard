@@ -1,8 +1,9 @@
 engineStrict: true
-verifyDepsBeforeRun: install
+# Stale node_modules otherwise fail later with misleading errors like "Cannot find module $app/tsconfig".
+verifyDepsBeforeRun: error
 # A compromised release is usually pulled within a day, before it can be installed here.
 minimumReleaseAge: 1440
 allowBuilds:
-  esbuild: true
-  workerd: true
+  esbuild: false
+  workerd: false
   simple-git-hooks: false

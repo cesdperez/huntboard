@@ -3,6 +3,21 @@
 	"private": true,
 	"version": "0.0.1",
 	"packageManager": "pnpm@12.18.0",
+	"engines": {
+		"node": ">=26"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": ">=26",
+			"onFail": "error"
+		},
+		"packageManager": {
+			"name": "pnpm",
+			"version": "12.18.0",
+			"onFail": "error"
+		}
+	},
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -23,7 +38,7 @@
 		"rehearsal": "playwright test",
 		"loadtest": "vite build && node loadtest/run.ts",
 		"loadtest:check": "tsc -p loadtest",
-		"scan": "sh scripts/require-tools.sh gitleaks trivy && gitleaks git --no-banner --redact --log-opts=HEAD && trivy fs --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --include-dev-deps --exit-code 1 --skip-version-check --quiet .",
+		"scan": "sh scripts/require-tools.sh gitleaks trivy && gitleaks git --no-banner --redact --log-opts=HEAD && trivy fs --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --skip-version-check --quiet .",
 		"scan:staged": "sh scripts/require-tools.sh gitleaks && gitleaks git --staged --no-banner --redact",
 		"knip": "knip"
 	},
