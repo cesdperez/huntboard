@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HeartIcon from '@lucide/svelte/icons/heart';
 	import { onMount } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
@@ -7,6 +8,9 @@
 	import { Marker } from '#lib/components/marker/index.js';
 	import { RecentGames } from '#lib/components/recent-games/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
+
+	const KOFI_URL = 'https://ko-fi.com/chechoxyz';
+	const AUTHOR_URL = 'https://checho.xyz';
 
 	// The example claim the hero judges once, so the leaderboard shows what a scored claim does.
 	const CLAIM = {
@@ -234,6 +238,33 @@
 		</div>
 	</section>
 </main>
+
+<footer class="wide">
+	<div class="py-8 text-center text-[15px]">
+		<!-- eslint-disable svelte/no-navigation-without-resolve -->
+		<p class="leading-12">
+			Enjoying Huntboard?
+			<a
+				href={KOFI_URL}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="font-semibold underline underline-offset-4"
+				>Buy me a gel<HeartIcon
+					class="ml-1 inline-block h-4 w-4 align-[-0.15em] text-marker"
+					aria-hidden="true"
+				/><span class="sr-only"> (opens in a new tab)</span></a
+			>
+		</p>
+		<a
+			href={AUTHOR_URL}
+			target="_blank"
+			rel="noopener noreferrer"
+			class="inline-flex min-h-12 items-center type-secondary underline underline-offset-4"
+			>See my other projects<span class="sr-only"> (opens in a new tab)</span></a
+		>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
+	</div>
+</footer>
 
 <style>
 	.wide {
