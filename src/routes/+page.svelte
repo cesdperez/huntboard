@@ -242,17 +242,16 @@
 <footer class="wide">
 	<div class="py-8 text-center text-[15px]">
 		<!-- eslint-disable svelte/no-navigation-without-resolve -->
-		<p class="leading-12">
+		<p>
 			Enjoying Huntboard?
 			<a
 				href={KOFI_URL}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="font-semibold underline underline-offset-4"
-				>Buy me a gel<HeartIcon
-					class="ml-1 inline-block h-4 w-4 align-[-0.15em] text-marker"
-					aria-hidden="true"
-				/><span class="sr-only"> (opens in a new tab)</span></a
+				class="inline-flex min-h-12 items-center font-semibold underline underline-offset-4"
+				>Buy me a gel<HeartIcon class="ml-1 h-4 w-4" aria-hidden="true" /><span class="sr-only">
+					(opens in a new tab)</span
+				></a
 			>
 		</p>
 		<a
