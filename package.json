@@ -2,6 +2,7 @@
 	"name": "huntboard",
 	"private": true,
 	"version": "0.0.1",
+	"packageManager": "pnpm@12.18.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -32,7 +33,7 @@
 		"@sveltejs/kit": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
 		"@tailwindcss/vite": "^4.3.0",
-		"@types/node": "^24",
+		"@types/node": "^26",
 		"aws4fetch": "^1.0.20",
 		"bits-ui": "^2.19.5",
 		"client-zip": "^2.5.1",

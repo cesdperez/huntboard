@@ -1,4 +1,7 @@
-onlyBuiltDependencies:
-  - esbuild
-  - workerd
+engineStrict: true
 verifyDepsBeforeRun: install
+# A compromised release is usually pulled within a day, before it can be installed here.
+minimumReleaseAge: 1440
+allowBuilds:
+  esbuild: true
+  workerd: true

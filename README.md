@@ -81,7 +81,7 @@ The schema lives in `migrations/`, applied in order by Wrangler.
 
 ## Local development
 
-Needs Node 24 and pnpm.
+Needs Node 26 and pnpm 12.
 
 ```sh
 pnpm install
