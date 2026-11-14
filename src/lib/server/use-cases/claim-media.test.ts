@@ -232,7 +232,13 @@ describe('deleteAllMedia', () => {
 		const game = await createGame(db, 'Canal hunt');
 		const rats = await seedTeam(db, game.id);
 		await seedChallenge(db, game.id);
-		const roomy = { uploadsPerChallenge: 1, teamMaxBytes: 10, gameMaxBytes: 10 };
+		const roomy = {
+			uploadsPerChallenge: 1,
+			teamMaxBytes: 10,
+			gameMaxBytes: 10,
+			allMaxBytes: 2 ** 40,
+			retentionDays: 10
+		};
 		const upload = { gameId: game.id, teamId: rats.id, key: 'a', size: 10 };
 		await recordMediaUpload(db, upload, roomy);
 

@@ -1,5 +1,7 @@
 import {
+	ALL_MEDIA_MAX_BYTES,
 	GAME_MEDIA_MAX_BYTES,
+	MEDIA_RETENTION_DAYS,
 	isMediaType,
 	maxMediaBytes,
 	TEAM_MEDIA_MAX_BYTES,
@@ -60,10 +62,15 @@ export const TEAM_MEDIA_FULL =
 export const GAME_MEDIA_FULL =
 	'This game has no room left for photos and videos. Mark it done without one and show a judge in person.';
 
+export const MEDIA_STORAGE_FULL =
+	'Huntboard has no room left for photos and videos right now. Mark it done without one and show a judge in person.';
+
 const UPLOAD_LIMITS = {
 	uploadsPerChallenge: TEAM_UPLOADS_PER_CHALLENGE,
 	teamMaxBytes: TEAM_MEDIA_MAX_BYTES,
-	gameMaxBytes: GAME_MEDIA_MAX_BYTES
+	gameMaxBytes: GAME_MEDIA_MAX_BYTES,
+	allMaxBytes: ALL_MEDIA_MAX_BYTES,
+	retentionDays: MEDIA_RETENTION_DAYS
 };
 
 /** Media is optional. When sent, it must be signed for this team, in the bucket, and pass checkClaimMedia. */
@@ -225,6 +232,8 @@ export async function requestMediaUpload(
 			return error(400, TEAM_MEDIA_FULL);
 		case 'game-bytes':
 			return error(400, GAME_MEDIA_FULL);
+		case 'all-bytes':
+			return error(400, MEDIA_STORAGE_FULL);
 		case 'team-gone':
 			return error(404, DEAD_LINK_MESSAGE);
 	}

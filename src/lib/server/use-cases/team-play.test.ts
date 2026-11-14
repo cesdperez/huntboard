@@ -9,6 +9,7 @@ import { createTestDb } from '../db/testing/test-db.js';
 import { seedChallenge, seedClaim, seedTeam } from '../db/testing/seed.js';
 import type { ChallengeRow, GameRow, TeamRow } from '../db/types.js';
 import {
+	ALL_MEDIA_MAX_BYTES,
 	GAME_MEDIA_MAX_BYTES,
 	ORIGINAL_VIDEO_MAX_BYTES,
 	PHOTO_MAX_BYTES,
@@ -20,6 +21,7 @@ import { NOT_AN_IMAGE } from './image-upload.js';
 import {
 	CLAIM_GONE,
 	GAME_MEDIA_FULL,
+	MEDIA_STORAGE_FULL,
 	MEDIA_TAKEN,
 	MEDIA_UPLOADS_OFF,
 	TEAM_MEDIA_FULL,
@@ -66,7 +68,13 @@ function form(fields: Record<string, string>): FormData {
 }
 
 function signedFor(team: TeamRow, key: string, size = 1, gameId = game.id) {
-	const roomy = { uploadsPerChallenge: 1000, teamMaxBytes: 2 ** 40, gameMaxBytes: 2 ** 40 };
+	const roomy = {
+		uploadsPerChallenge: 1000,
+		teamMaxBytes: 2 ** 40,
+		gameMaxBytes: 2 ** 40,
+		allMaxBytes: 2 ** 40,
+		retentionDays: 10
+	};
 	return recordMediaUpload(db, { gameId, teamId: team.id, key, size }, roomy);
 }
 
@@ -422,6 +430,26 @@ describe('requestMediaUpload', () => {
 		);
 
 		expect(outcome).toEqual({ status: 400, result: { kind: 'error', message: GAME_MEDIA_FULL } });
+	});
+
+	it('refuses an upload past the site-wide bytes', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const theirs = await seedTeam(db, other.id);
+		await seedChallenge(db, other.id);
+		await signedFor(theirs, 'earlier', ALL_MEDIA_MAX_BYTES - 99, other.id);
+
+		const outcome = await requestMediaUpload(
+			db,
+			presign,
+			{ team: rats, game },
+			uploadForm('image/jpeg', 100),
+			DURING
+		);
+
+		expect(outcome).toEqual({
+			status: 400,
+			result: { kind: 'error', message: MEDIA_STORAGE_FULL }
+		});
 	});
 
 	it('says uploads are off when the server cannot presign', async () => {

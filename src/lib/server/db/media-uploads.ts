@@ -2,6 +2,8 @@ export interface MediaUploadLimits {
 	uploadsPerChallenge: number;
 	teamMaxBytes: number;
 	gameMaxBytes: number;
+	allMaxBytes: number;
+	retentionDays: number;
 }
 
 export interface MediaUpload {
@@ -12,13 +14,14 @@ export interface MediaUpload {
 }
 
 export type RecordUploadResult =
-	'recorded' | 'team-count' | 'team-bytes' | 'game-bytes' | 'team-gone';
+	'recorded' | 'team-count' | 'team-bytes' | 'game-bytes' | 'all-bytes' | 'team-gone';
 
 interface Usage {
 	team_found: number;
 	team_count: number;
 	team_bytes: number;
 	game_bytes: number;
+	all_bytes: number;
 	challenges: number;
 }
 
@@ -40,6 +43,8 @@ export async function recordMediaUpload(
 				AND (SELECT coalesce(sum(size), 0) FROM media_upload WHERE team_id = ?2) + ?3 <= ?6
 				AND (SELECT coalesce(sum(size), 0) FROM media_upload
 					JOIN team ON team.id = media_upload.team_id WHERE team.game_id = ?4) + ?3 <= ?7
+				AND (SELECT coalesce(sum(size), 0) FROM media_upload
+					WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-' || ?9 || ' days')) + ?3 <= ?8
 			RETURNING key`
 		)
 		.bind(
@@ -49,7 +54,9 @@ export async function recordMediaUpload(
 			gameId,
 			limits.uploadsPerChallenge,
 			limits.teamMaxBytes,
-			limits.gameMaxBytes
+			limits.gameMaxBytes,
+			limits.allMaxBytes,
+			limits.retentionDays
 		)
 		.first();
 	if (inserted) return 'recorded';
@@ -62,16 +69,19 @@ export async function recordMediaUpload(
 				(SELECT coalesce(sum(size), 0) FROM media_upload WHERE team_id = ?1) AS team_bytes,
 				(SELECT coalesce(sum(size), 0) FROM media_upload
 					JOIN team ON team.id = media_upload.team_id WHERE team.game_id = ?2) AS game_bytes,
-				(SELECT count(*) FROM challenge WHERE game_id = ?2) AS challenges`
+				(SELECT count(*) FROM challenge WHERE game_id = ?2) AS challenges,
+				(SELECT coalesce(sum(size), 0) FROM media_upload
+					WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-' || ?3 || ' days')) AS all_bytes`
 		)
-		.bind(teamId, gameId)
+		.bind(teamId, gameId, limits.retentionDays)
 		.first<Usage>();
 	if (!usage?.team_found) return 'team-gone';
 	if (usage.team_count >= limits.uploadsPerChallenge * usage.challenges) {
 		return 'team-count';
 	}
 	if (usage.team_bytes + size > limits.teamMaxBytes) return 'team-bytes';
-	return 'game-bytes';
+	if (usage.game_bytes + size > limits.gameMaxBytes) return 'game-bytes';
+	return 'all-bytes';
 }
 
 export async function isTeamUpload(db: D1Database, teamId: number, key: string): Promise<boolean> {

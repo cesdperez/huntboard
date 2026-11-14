@@ -68,4 +68,7 @@ export function claimMedia(key: string | null): ClaimMedia | null {
 export const TEAM_UPLOADS_PER_CHALLENGE = 3;
 // The model game stores about 1 GB in all, about 150 MB a team.
 export const TEAM_MEDIA_MAX_BYTES = 500 * 1024 * 1024;
-export const GAME_MEDIA_MAX_BYTES = 3 * 1024 * 1024 * 1024;
+export const GAME_MEDIA_MAX_BYTES = 2 * 1024 * 1024 * 1024;
+// Matches the claim media bucket lifecycle rule.
+export const MEDIA_RETENTION_DAYS = 10;
+export const ALL_MEDIA_MAX_BYTES = 50 * 1024 ** 3;

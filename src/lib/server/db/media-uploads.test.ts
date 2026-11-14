@@ -5,7 +5,13 @@ import { createTestDb } from './testing/test-db.js';
 import { seedChallenge, seedTeam } from './testing/seed.js';
 import type { GameRow, TeamRow } from './types.js';
 
-const LIMITS = { uploadsPerChallenge: 2, teamMaxBytes: 100, gameMaxBytes: 150 };
+const LIMITS = {
+	uploadsPerChallenge: 2,
+	teamMaxBytes: 100,
+	gameMaxBytes: 150,
+	allMaxBytes: 200,
+	retentionDays: 10
+};
 
 let db: D1Database;
 let game: GameRow;
@@ -61,6 +67,38 @@ describe('recordMediaUpload', () => {
 			LIMITS
 		);
 		expect(await record(rats, 'a', 100)).toBe('recorded');
+	});
+
+	it('limits recent uploads across games and allows the exact limit', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const theirs = await seedTeam(db, other.id);
+		await seedChallenge(db, other.id);
+		await recordMediaUpload(
+			db,
+			{ gameId: other.id, teamId: theirs.id, key: 'x', size: 100 },
+			LIMITS
+		);
+		await record(rats, 'a', 60);
+		expect(await record(owls, 'b', 41)).toBe('all-bytes');
+		expect(await record(owls, 'b', 40)).toBe('recorded');
+	});
+
+	it('excludes uploads older than the retention window', async () => {
+		const other = await createGame(db, 'Other hunt');
+		const theirs = await seedTeam(db, other.id);
+		await seedChallenge(db, other.id);
+		await recordMediaUpload(
+			db,
+			{ gameId: other.id, teamId: theirs.id, key: 'x', size: 100 },
+			LIMITS
+		);
+		await db
+			.prepare(
+				"UPDATE media_upload SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-11 days') WHERE key = 'x'"
+			)
+			.run();
+		await record(rats, 'a', 100);
+		expect(await record(owls, 'b', 50)).toBe('recorded');
 	});
 
 	it('reports a team deleted since its link was checked', async () => {

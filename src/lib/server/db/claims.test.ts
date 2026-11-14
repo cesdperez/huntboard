@@ -273,7 +273,13 @@ describe('editClaim', () => {
 	const NEW_KEY = '1/claims/newnewnewnewnewnewnewn.mp4';
 
 	function signed(teamId: number, key: string) {
-		const roomy = { uploadsPerChallenge: 1000, teamMaxBytes: 2 ** 40, gameMaxBytes: 2 ** 40 };
+		const roomy = {
+			uploadsPerChallenge: 1000,
+			teamMaxBytes: 2 ** 40,
+			gameMaxBytes: 2 ** 40,
+			allMaxBytes: 2 ** 40,
+			retentionDays: 10
+		};
 		return recordMediaUpload(db, { gameId: game.id, teamId, key, size: 10 }, roomy);
 	}
 
