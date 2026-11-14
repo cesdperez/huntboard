@@ -5,10 +5,6 @@
 - `pnpm test` runs `vitest run` and exits after the tests.
 - `pnpm exec vitest run src/path/to/file.test.ts` runs one test file.
 - `pnpm exec vitest run -t "test name"` runs tests matching a name.
-- `pnpm check` runs Svelte and load-test type checks.
-- `pnpm lint` runs Prettier and ESLint.
-- `pnpm rehearsal` runs the browser rehearsal against this checkout's dev server.
-- `pnpm loadtest` builds and runs the HTTP load test.
 - `pnpm ports` prints this checkout's preview, load-test and dev URLs.
 - `bash scripts/stop-servers.sh` stops this checkout's servers.
 

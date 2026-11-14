@@ -38,6 +38,13 @@ describe('previewPortFor', () => {
 		expect(previewPortFor(worktree, '6000')).toBe(6000);
 	});
 
+	it.each(['1', '65533'])('accepts the boundary override %s', (override) => {
+		const port = Number(override);
+		expect(previewPortFor(worktree, override)).toBe(port);
+		expect(loadtestPortFor(worktree, override)).toBe(port + 1);
+		expect(devPortFor(worktree, override)).toBe(port + 2);
+	});
+
 	it.each(['abc', '0', '65534', '65535', '80.5'])('rejects the override %s', (override) => {
 		expect(() => previewPortFor(worktree, override)).toThrow(/HUNTBOARD_PORT/);
 	});
