@@ -1,14 +1,55 @@
 // Draws each theme's touch icon from its icon.svg, and its link preview image from the card below.
-// Run with `node scripts/theme-images.ts` after changing a theme's look. Needs network for fonts.
+// Run with `node scripts/theme-images.ts` after changing a theme's look.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
-import { THEMES, themeImages, type Theme } from '../src/lib/themes/index.ts';
+import { THEMES, themeImages } from '../src/lib/themes/index.ts';
 
 const STATIC_DIR = path.join(import.meta.dirname, '../static');
 const TOUCH_ICON_SIZE = 180;
 // WhatsApp, iMessage and Slack all show 1.91:1 previews without cropping.
 const SHARE_SIZE = { width: 1200, height: 630 };
+const FONTS = [
+	[
+		'Archivo',
+		'@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2',
+		'100 900',
+		'62% 125%'
+	],
+	[
+		'Fraunces',
+		'@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2',
+		'100 900',
+		'normal'
+	],
+	[
+		'Big Shoulders',
+		'@fontsource-variable/big-shoulders/files/big-shoulders-latin-opsz-normal.woff2',
+		'100 900',
+		'normal'
+	],
+	[
+		'Instrument Sans',
+		'@fontsource-variable/instrument-sans/files/instrument-sans-latin-wdth-normal.woff2',
+		'400 700',
+		'75% 100%'
+	],
+	['Barlow', '@fontsource/barlow/files/barlow-latin-600-normal.woff2', '600', 'normal'],
+	[
+		'Barlow Condensed',
+		'@fontsource/barlow-condensed/files/barlow-condensed-latin-800-normal.woff2',
+		'800',
+		'normal'
+	],
+	['Jersey 10', '@fontsource/jersey-10/files/jersey-10-latin-400-normal.woff2', '400', 'normal']
+]
+	.map(([family, file, weight, stretch]) => {
+		const data = readFileSync(path.join(import.meta.dirname, '../node_modules', file)).toString(
+			'base64'
+		);
+		return `@font-face { font-family: '${family}'; font-weight: ${weight}; font-stretch: ${stretch}; src: url(data:font/woff2;base64,${data}) format('woff2'); }`;
+	})
+	.join('');
 
 const THISTLE = `<svg viewBox="0 0 64 112" fill="none" stroke="#151515" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M32 44V14M28 44L22 16M36 44L42 16M25 44L14 22M39 44L50 22M23 44L10 31M41 44L54 31"/><path d="M18 44H46M18 44L14 39M46 44L50 39"/><path d="M21 44C21 54 26 60 32 60S43 54 43 44"/><path d="M24 47L35 59M30 45L41 52M40 47L29 59M34 45L23 52"/><path d="M32 60C33 76 31 94 32 112"/><path d="M32 94C24 92 16 86 9 74L16 77L13 68L20 73L20 64L26 72L27 64L29 76C30 84 31 89 32 94"/><path d="M32 80C40 78 48 72 55 61L48 64L51 55L44 61L44 52L38 60L37 52L35 64C34 70 33 76 32 80"/></svg>`;
 
@@ -169,9 +210,8 @@ function iconBase64(id: string) {
 	return staticBase64(`/themes/${id}/icon.svg`);
 }
 
-function page(theme: Theme, body: string) {
-	const fonts = theme.fonts.map((href) => `<link rel="stylesheet" href="${href}">`).join('');
-	return `<!doctype html><html><head>${fonts}<style>* { box-sizing: border-box; } body { margin: 0; height: 100vh; overflow: hidden; }</style></head><body>${body}</body></html>`;
+function page(body: string) {
+	return `<!doctype html><html><head><style>${FONTS} * { box-sizing: border-box; } body { margin: 0; height: 100vh; overflow: hidden; }</style></head><body>${body}</body></html>`;
 }
 
 const browser = await chromium.launch();
@@ -186,14 +226,13 @@ try {
 		});
 		await icon.setContent(
 			page(
-				theme,
 				`<div style="background:${art.touchBackground};height:100%;padding:16px"><img src="data:image/svg+xml;base64,${iconBase64(theme.id)}" style="width:100%;height:100%;display:block"></div>`
 			)
 		);
 		await icon.screenshot({ path: staticPath(images.touchIcon) });
 
 		const share = await browser.newPage({ viewport: SHARE_SIZE });
-		await share.setContent(page(theme, art.shareCard), { waitUntil: 'networkidle' });
+		await share.setContent(page(art.shareCard), { waitUntil: 'networkidle' });
 		await share.evaluate(() => document.fonts.ready);
 		await share.screenshot({ path: staticPath(images.share) });
 	}

@@ -12,8 +12,6 @@ export interface Theme {
 	name: string;
 	/** The colour modes the theme supports. One mode is forced; both follow the OS. */
 	modes: Partial<Record<ColorMode, { themeColor: string }>>;
-	/** Stylesheets for every family the theme's tokens name, Archivo too if it keeps the flag sans. */
-	fonts: readonly string[];
 	layout: ThemeLayout;
 	/** A partner's artwork, which the app bar shows after "Huntboard ×". It never replaces the name. */
 	wordmark?: { src: string; alt: string };
@@ -31,9 +29,6 @@ export const FLAG_THEME: Theme = {
 	id: 'flag',
 	name: 'Control flag',
 	modes: { light: { themeColor: '#f5f7fa' }, dark: { themeColor: '#0f1a30' } },
-	fonts: [
-		'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap'
-	],
 	layout: 'plain',
 	qr: { ink: '#14213d', eye: '#14213d' }
 };
@@ -42,21 +37,14 @@ const HIGHLAND_BRU: Theme = {
 	id: 'highland-bru',
 	name: 'Highland Bru',
 	modes: { light: { themeColor: '#10241b' } },
-	fonts: [
-		'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600..900&family=Jersey+10&display=swap'
-	],
 	layout: 'event',
 	qr: { ink: '#151515', eye: '#124bcc' }
 };
 
-// Georgia is a system font, so only Archivo is loaded.
 const AZULEJO: Theme = {
 	id: 'azulejo',
 	name: 'Lightmile Azulejo',
 	modes: { light: { themeColor: '#fff7e8' } },
-	fonts: [
-		'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap'
-	],
 	layout: 'event',
 	qr: { ink: '#283950', eye: '#b8412d' },
 	wordmark: { src: '/themes/azulejo/wordmark.svg', alt: 'Lightmile' }
@@ -66,9 +54,6 @@ const CONTOUR: Theme = {
 	id: 'contour',
 	name: 'Contour',
 	modes: { light: { themeColor: '#1b2230' }, dark: { themeColor: '#0c1117' } },
-	fonts: [
-		'https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,700..900&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap'
-	],
 	layout: 'event',
 	qr: { ink: '#1b2230', eye: '#b4247e' }
 };

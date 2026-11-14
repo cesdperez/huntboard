@@ -20,7 +20,6 @@ const night: Theme = {
 	id: 'night',
 	name: 'Night',
 	modes: { dark: { themeColor: '#101b2b' } },
-	fonts: [],
 	layout: 'plain',
 	qr: { ink: '#101b2b', eye: '#101b2b' }
 };

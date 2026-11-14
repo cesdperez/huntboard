@@ -61,8 +61,8 @@
 	--section-ornament: none;
 	--section-ornament-order: 0;
 
-	--font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
-	--font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+	--font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
 	--font-score: var(--font-display);
 	--font-banner: var(--font-display);
 	/* Archivo's width axis. A font without one ignores these. */

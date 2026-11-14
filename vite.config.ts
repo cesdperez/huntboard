@@ -20,8 +20,8 @@ export default defineConfig({
 					'default-src': ['self'],
 					'script-src': ['self', 'https://static.cloudflareinsights.com'],
 					// Svelte and bits-ui render style attributes, which nonces cannot cover.
-					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
-					'font-src': ['self', 'https://fonts.gstatic.com'],
+					'style-src': ['self', 'unsafe-inline'],
+					'font-src': ['self'],
 					// blob: shows the photo a team is sending before the upload ends.
 					'img-src': ['self', 'data:', 'blob:'],
 					'media-src': ['self'],

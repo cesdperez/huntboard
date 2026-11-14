@@ -42,10 +42,10 @@
 	--section-rule: #b4247e;
 	--section-ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23b4247e' stroke-width='2.25'%3E%3Ccircle cx='10' cy='10' r='7'/%3E%3C/svg%3E");
 
-	--font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-	--font-display: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-	--font-score: 'Big Shoulders', ui-sans-serif, system-ui, sans-serif;
-	--font-banner: 'Big Shoulders', ui-sans-serif, system-ui, sans-serif;
+	--font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-score: 'Big Shoulders Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-banner: 'Big Shoulders Variable', ui-sans-serif, system-ui, sans-serif;
 	/* Instrument Sans has a width axis from 75% to 100%, so display type stays at its widest. */
 	--stretch-display: 100%;
 	--stretch-condensed: 87%;

@@ -48,13 +48,6 @@
 			media={modes.length > 1 ? `(prefers-color-scheme: ${mode})` : undefined}
 		/>
 	{/each}
-	{#if appearance.theme.fonts.length > 0}
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	{/if}
-	{#each appearance.theme.fonts as href (href)}
-		<link rel="stylesheet" {href} />
-	{/each}
 </svelte:head>
 
 {@render children()}

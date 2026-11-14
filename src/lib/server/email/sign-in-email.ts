@@ -1,5 +1,3 @@
-import { resolveTheme } from '#lib/themes/index.js';
-
 export interface SignInEmail {
 	to: string;
 	subject: string;
@@ -38,7 +36,8 @@ const DARK: typeof LIGHT = {
  */
 export const SIGN_IN_EMAIL_COLORS = { light: LIGHT, dark: DARK };
 
-const [FONTS] = resolveTheme('contour').fonts;
+const FONTS =
+	'https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,700..900&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap';
 const SANS = "'Instrument Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 const BANNER = "'Big Shoulders', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif";
 

@@ -64,7 +64,7 @@ A square, 28px on lists (`--marker-size`, which a theme may raise to 32px) and 4
 
 ## Typography
 
-One family: **Archivo** (variable, Google Fonts), using its width axis as the active element. It fills every font token: `--font-sans` for everything, `--font-display` for screen titles, ranks and team page section headings, and `--font-score` for totals, which `flag` points at `--font-display`. The widths come from `--stretch-display` (125), `--stretch-condensed` (87) and `--stretch-compressed` (70), so a theme with a font that has no width axis can set them to `normal`.
+One family: **Archivo** (self-hosted variable font), using its width axis as the active element. It fills every font token: `--font-sans` for everything, `--font-display` for screen titles, ranks and team page section headings, and `--font-score` for totals, which `flag` points at `--font-display`. The widths come from `--stretch-display` (125), `--stretch-condensed` (87) and `--stretch-compressed` (70), so a theme with a font that has no width axis can set them to `normal`.
 
 | Role | Setting | Size (phone) |
 |---|---|---|

@@ -60,7 +60,7 @@
 	--section-ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 28' fill='none' stroke='%23ff741f' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13V3M8 13L4 5M12 13L16 5M7 13L2 9M13 13L18 9M5 13H15'/%3E%3Cpath d='M6 13C6 18 8 21 10 21S14 18 14 13M10 21V27'/%3E%3C/svg%3E");
 
 	--font-sans: 'Barlow', ui-sans-serif, system-ui, sans-serif;
-	--font-display: 'Fraunces', ui-serif, Georgia, serif;
+	--font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
 	--font-score: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
 	--font-banner: 'Jersey 10', ui-monospace, monospace;
 	/* None of these families has a width axis. */
