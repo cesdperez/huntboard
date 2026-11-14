@@ -44,6 +44,20 @@ describe('addTeamAdjustment', () => {
 		nickname: 'Alex'
 	};
 
+	it('reports when the game has reached its adjustment limit', async () => {
+		for (let i = 0; i < 500; i++) await seedAdjustment(db, rats.id);
+
+		expect(
+			await addTeamAdjustment(db, game.id, form({ ...fields, teamId: String(rats.id) }))
+		).toEqual({
+			status: 400,
+			result: {
+				kind: 'error',
+				message: 'This game has reached 500 adjustments. Remove one before adding another.'
+			}
+		});
+	});
+
 	it('adds the adjustment by the nickname', async () => {
 		const outcome = await addTeamAdjustment(
 			db,

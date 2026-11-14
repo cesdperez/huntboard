@@ -1,3 +1,4 @@
+import { ADJUSTMENTS_PER_GAME_MAX } from '#lib/domain/adjustment.js';
 import { nextId } from './ids.js';
 import type { AdjustmentRow } from './types.js';
 
@@ -21,30 +22,33 @@ export interface NewAdjustment {
 	requestId: string | null;
 }
 
-/** Null when the team is not in this game. A request id seen before returns what it added. */
+/** Null when the team is not in this game, or 'full' at the limit. Repeated request ids return their row. */
 export async function addAdjustment(
 	db: D1Database,
 	gameId: number,
 	teamId: number,
 	{ points, reason, createdBy, requestId }: NewAdjustment
-): Promise<AdjustmentRow | null> {
-	const [added, earlier] = await db.batch<AdjustmentRow>([
+): Promise<AdjustmentRow | 'full' | null> {
+	const [added, earlier, team] = await db.batch<AdjustmentRow>([
 		db
 			.prepare(
 				`INSERT INTO adjustment (id, team_id, points, reason, created_by, request_id)
 				SELECT ${nextId('adjustment')}, id, ?, ?, ?, ? FROM team WHERE id = ? AND game_id = ?
+				AND (SELECT count(*) FROM adjustment JOIN team ON team.id = adjustment.team_id
+					WHERE team.game_id = ?) < ?
 				ON CONFLICT DO NOTHING
 				RETURNING *`
 			)
-			.bind(points, reason, createdBy, requestId, teamId, gameId),
+			.bind(points, reason, createdBy, requestId, teamId, gameId, gameId, ADJUSTMENTS_PER_GAME_MAX),
 		db
 			.prepare(
 				`SELECT adjustment.* FROM adjustment JOIN team ON team.id = adjustment.team_id
 				WHERE adjustment.request_id = ? AND team.id = ? AND team.game_id = ?`
 			)
-			.bind(requestId, teamId, gameId)
+			.bind(requestId, teamId, gameId),
+		db.prepare('SELECT id FROM team WHERE id = ? AND game_id = ?').bind(teamId, gameId)
 	]);
-	return added.results[0] ?? earlier.results[0] ?? null;
+	return added.results[0] ?? earlier.results[0] ?? (team.results.length ? 'full' : null);
 }
 
 /** False when the adjustment is not in this game, or already gone. */

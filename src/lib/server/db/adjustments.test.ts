@@ -34,6 +34,32 @@ describe('listAdjustments', () => {
 });
 
 describe('addAdjustment', () => {
+	it('refuses at 500 across teams but keeps repeats and missing teams distinct', async () => {
+		const input = { points: 5, reason: 'Bonus', createdBy: 'Alex', requestId: 'request' };
+		const first = await addAdjustment(db, game.id, rats.id, input);
+		const owls = await seedTeam(db, game.id);
+		for (let i = 0; i < 499; i++) await seedAdjustment(db, owls.id);
+
+		expect(await addAdjustment(db, game.id, rats.id, { ...input, requestId: null })).toBe('full');
+		expect(await addAdjustment(db, game.id, rats.id, input)).toEqual(first);
+		expect(await addAdjustment(db, game.id, 999999, input)).toBeNull();
+		expect(await listAdjustments(db, game.id)).toHaveLength(500);
+	});
+
+	it('does not count adjustments in other games', async () => {
+		const team = await outsider();
+		for (let i = 0; i < 500; i++) await seedAdjustment(db, team.id);
+
+		expect(
+			await addAdjustment(db, game.id, rats.id, {
+				points: 5,
+				reason: 'Bonus',
+				createdBy: 'Alex',
+				requestId: null
+			})
+		).toEqual(expect.objectContaining({ team_id: rats.id }));
+	});
+
 	it('adds a signed adjustment with its reason and author', async () => {
 		const added = await addAdjustment(db, game.id, rats.id, {
 			points: -10,
@@ -77,7 +103,7 @@ describe('addAdjustment', () => {
 			requestId: null
 		});
 
-		expect(added?.id).toBe(deleted.id + 1);
+		expect(added).toEqual(expect.objectContaining({ id: deleted.id + 1 }));
 	});
 
 	it('adds once per request id and returns the first adjustment to a repeat', async () => {

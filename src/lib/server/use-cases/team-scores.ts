@@ -1,4 +1,5 @@
 import {
+	ADJUSTMENTS_PER_GAME_MAX,
 	validateAdjustment,
 	type AdjustmentErrors,
 	type AdjustmentInput
@@ -54,6 +55,12 @@ export async function addTeamAdjustment(
 		requestId: isToken(requestId) ? requestId : null
 	});
 	if (!added) return error(404, TEAM_GONE);
+	if (added === 'full') {
+		return error(
+			400,
+			`This game has reached ${ADJUSTMENTS_PER_GAME_MAX} adjustments. Remove one before adding another.`
+		);
+	}
 	return { status: 200, result: { kind: 'adjusted' } };
 }
 

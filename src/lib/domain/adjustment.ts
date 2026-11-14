@@ -3,6 +3,7 @@ import { parsePoints } from './points.js';
 
 // Keeps any realistic sum of adjustments far below Number.MAX_SAFE_INTEGER.
 export const ADJUSTMENT_MAX_POINTS = 100_000;
+export const ADJUSTMENTS_PER_GAME_MAX = 500;
 
 /** The add adjustment form's raw text fields. */
 export interface AdjustmentInput {
