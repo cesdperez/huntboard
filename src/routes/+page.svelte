@@ -249,7 +249,7 @@
 				target="_blank"
 				rel="noopener noreferrer"
 				class="inline-flex min-h-12 items-center font-semibold underline underline-offset-4"
-				>Buy me a gel<HeartIcon class="ml-1 h-4 w-4" aria-hidden="true" /><span class="sr-only">
+				>Buy me a coffee<HeartIcon class="ml-1 h-4 w-4" aria-hidden="true" /><span class="sr-only">
 					(opens in a new tab)</span
 				></a
 			>
