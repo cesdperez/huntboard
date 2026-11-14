@@ -96,6 +96,18 @@ async function names(gameId = game.id) {
 }
 
 describe('addTeam', () => {
+	it('allows 50 teams per game and refuses further concurrent additions', async () => {
+		for (let i = 0; i < 49; i++) await seedTeam(db, game.id, { name: `Team ${i}` });
+		const other = await createGame(db, 'Other');
+		await seedTeam(db, other.id, { name: 'Other team' });
+		const results = await Promise.all(
+			Array.from({ length: 3 }, (_, i) => addTeam(db, game.id, `Extra ${i}`, ''))
+		);
+		expect(results.filter((result) => result.status === 'added')).toHaveLength(1);
+		expect(results.filter((result) => result.status === 'full')).toHaveLength(2);
+		expect(await listSetupTeams(db, game.id)).toHaveLength(50);
+	});
+
 	it('adds the team at the end with its own link token', async () => {
 		await seedTeam(db, game.id, { name: 'Canal Rats' });
 

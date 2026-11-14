@@ -35,7 +35,10 @@ export async function listTeamLinks(db: D1Database, gameId: number): Promise<Tea
 	return results;
 }
 
-export type AddTeamResult = { status: 'added'; team: TeamRow } | { status: 'name-taken' };
+export const TEAMS_PER_GAME_MAX = 50;
+
+export type AddTeamResult =
+	{ status: 'added'; team: TeamRow } | { status: 'name-taken' } | { status: 'full' };
 
 /** Adds a team after the last one, with a fresh link token, unless another team has its name. */
 export async function addTeam(
@@ -50,11 +53,12 @@ export async function addTeam(
 				`INSERT INTO team (id, game_id, name, name_key, members, token, position)
 				SELECT ${nextId('team')}, ?1, ?2, ?3, ?4, ?5, coalesce(max(position) + 1, 0)
 				FROM team WHERE game_id = ?1
+				HAVING count(*) < ?6
 				RETURNING *`
 			)
-			.bind(gameId, name, teamNameKey(name), members, generateToken())
+			.bind(gameId, name, teamNameKey(name), members, generateToken(), TEAMS_PER_GAME_MAX)
 			.first<TeamRow>();
-		if (!team) throw new Error('Inserting a team returned no row');
+		if (!team) return { status: 'full' };
 		return { status: 'added', team };
 	} catch (error) {
 		if (isNameTaken(error)) return { status: 'name-taken' };

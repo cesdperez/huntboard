@@ -48,6 +48,14 @@ async function teamNames() {
 }
 
 describe('createTeam', () => {
+	it('returns the typed values when the game is full', async () => {
+		for (let i = 0; i < 48; i++) await seedTeam(db, game.id, { name: `Team ${i}` });
+		expect(await createTeam(db, game.id, form({ name: 'Gulls', members: 'Sam' }))).toEqual({
+			status: 409,
+			result: { error: 'A game can have at most 50 teams.', name: 'Gulls', members: 'Sam' }
+		});
+	});
+
 	it('adds the team at the end', async () => {
 		const outcome = await createTeam(db, game.id, form({ name: ' Pier  Gulls ', members: 'Sam' }));
 

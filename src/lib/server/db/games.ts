@@ -19,14 +19,15 @@ export async function createGame(
 }
 
 /**
- * Creates the owner's game unless they made `maxPerDay` games in the last 24 hours. Null when refused.
+ * Creates the owner's game within the daily and 30-day limits. Null when refused.
  * One statement, so parallel requests cannot all pass the count.
  */
 export function createOwnedGameWithinLimit(
 	db: D1Database,
 	name: string,
 	ownerUserId: number,
-	maxPerDay: number
+	maxPerDay: number,
+	maxPerMonth: number
 ): Promise<GameRow | null> {
 	return db
 		.prepare(
@@ -34,10 +35,32 @@ export function createOwnedGameWithinLimit(
 			SELECT ?1, ?2, ?3, ?4, ?5
 			WHERE (SELECT count(*) FROM game WHERE owner_user_id = ?5
 				AND created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 day')) < ?6
+			AND (SELECT count(*) FROM game WHERE owner_user_id = ?5
+				AND created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-30 days')) < ?7
 			RETURNING *`
 		)
-		.bind(name, generateToken(), generateToken(), DEFAULT_THEME.id, ownerUserId, maxPerDay)
+		.bind(
+			name,
+			generateToken(),
+			generateToken(),
+			DEFAULT_THEME.id,
+			ownerUserId,
+			maxPerDay,
+			maxPerMonth
+		)
 		.first<GameRow>();
+}
+
+export async function countRecentOwnedGames(db: D1Database, ownerUserId: number): Promise<number> {
+	return (
+		(await db
+			.prepare(
+				`SELECT count(*) AS n FROM game WHERE owner_user_id = ?
+		AND created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 day')`
+			)
+			.bind(ownerUserId)
+			.first<number>('n')) ?? 0
+	);
 }
 
 export function getGameByAdminToken(db: D1Database, token: string): Promise<GameRow | null> {

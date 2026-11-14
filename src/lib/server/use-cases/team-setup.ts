@@ -6,7 +6,7 @@ import {
 	teamNameError
 } from '#lib/domain/team-name.js';
 import type { ActionOutcome } from './action-outcome.js';
-import { addTeam, moveTeam, updateTeam } from '../db/teams.js';
+import { addTeam, moveTeam, TEAMS_PER_GAME_MAX, updateTeam } from '../db/teams.js';
 import { readId, readString } from './form.js';
 import type { ImageBucket } from '../storage/image-store.js';
 import { deleteTeamWithAvatar, removeTeamAvatar } from './images.js';
@@ -33,6 +33,11 @@ export async function createTeam(
 	if ('error' in team) return failure(400, { error: team.error, ...typed });
 
 	const added = await addTeam(db, gameId, team.name, team.members);
+	if (added.status === 'full')
+		return failure(409, {
+			error: `A game can have at most ${TEAMS_PER_GAME_MAX} teams.`,
+			...typed
+		});
 	if (added.status === 'name-taken')
 		return failure(409, { error: TEAM_NAME_TAKEN_ERROR, ...typed });
 	return success({ teamId: added.team.id });

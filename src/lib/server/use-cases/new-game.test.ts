@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getGameByAdminToken } from '../db/games.js';
+import { createGame, getGameByAdminToken } from '../db/games.js';
 import { createTestDb } from '../db/testing/test-db.js';
 import { findOrCreateUser } from '../db/users.js';
 import { createNewGame, GAMES_PER_DAY } from './new-game.js';
@@ -42,6 +42,7 @@ describe('createNewGame', () => {
 	});
 
 	it('refuses a game past the daily limit, and counts only the last day', async () => {
+		expect(GAMES_PER_DAY).toBe(5);
 		for (let i = 0; i < GAMES_PER_DAY; i++)
 			await createNewGame(db, userId, form({ name: `Hunt ${i}` }));
 
@@ -57,6 +58,33 @@ describe('createNewGame', () => {
 
 		await db.prepare("UPDATE game SET created_at = '2000-01-01T00:00:00.000Z'").run();
 		expect(await createNewGame(db, userId, form({ name: 'Next day' }))).toEqual({
+			adminToken: expect.any(String)
+		});
+	});
+
+	it('limits games in 30 days but excludes older games and other owners', async () => {
+		const other = (await findOrCreateUser(db, 'other@example.com', 'Other')).id;
+		for (let i = 0; i < 20; i++) {
+			const game = await createGame(db, `Old ${i}`, userId);
+			await db
+				.prepare(
+					"UPDATE game SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 days') WHERE id = ?"
+				)
+				.bind(game.id)
+				.run();
+		}
+		await createGame(db, 'Other', other);
+		expect(await createNewGame(db, userId, form({ name: 'Refused' }))).toEqual({
+			status: 429,
+			result: { name: 'Refused', error: 'You can create 20 games in 30 days. Try again later.' }
+		});
+		await db
+			.prepare(
+				"UPDATE game SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-31 days') WHERE id = (SELECT min(id) FROM game WHERE owner_user_id = ?)"
+			)
+			.bind(userId)
+			.run();
+		expect(await createNewGame(db, userId, form({ name: 'Allowed' }))).toEqual({
 			adminToken: expect.any(String)
 		});
 	});
