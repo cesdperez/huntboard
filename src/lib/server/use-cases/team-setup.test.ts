@@ -239,6 +239,24 @@ describe('removeTeam', () => {
 		expect(await teamNames()).toEqual(['Canal Rats', 'Night Owls']);
 	});
 
+	it('keeps a team with uploaded media', async () => {
+		await db
+			.prepare('INSERT INTO media_upload (key, team_id, size) VALUES (?, ?, ?)')
+			.bind('photo', rats.id, 100)
+			.run();
+
+		expect(
+			await removeTeam(db, bucket.asBucket(), game.id, form({ teamId: String(rats.id) }))
+		).toEqual({
+			status: 409,
+			result: {
+				error:
+					'This team has uploaded photos or videos, so it cannot be deleted. Use Delete all media in Setup first, or rename it.',
+				teamId: rats.id
+			}
+		});
+	});
+
 	it('reports a team that is already gone', async () => {
 		const outcome = await removeTeam(db, bucket.asBucket(), game.id, form({ teamId: '9999' }));
 

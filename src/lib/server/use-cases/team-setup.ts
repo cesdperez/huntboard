@@ -83,6 +83,12 @@ export async function removeTeam(
 				error: 'This team has claims, so it cannot be deleted. Rename it instead.',
 				teamId
 			});
+		case 'has-media':
+			return failure(409, {
+				error:
+					'This team has uploaded photos or videos, so it cannot be deleted. Use Delete all media in Setup first, or rename it.',
+				teamId
+			});
 		case 'not-found':
 			return failure(404, { error: MISSING_ERROR, teamId });
 		case 'deleted':

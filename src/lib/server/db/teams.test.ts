@@ -293,6 +293,20 @@ describe('deleteTeam', () => {
 		expect(await names()).toEqual(['0:Canal Rats']);
 	});
 
+	it('keeps a team and its unattached upload', async () => {
+		const rats = await seedTeam(db, game.id, { name: 'Canal Rats' });
+		await db
+			.prepare('INSERT INTO media_upload (key, team_id, size) VALUES (?, ?, ?)')
+			.bind('photo', rats.id, 100)
+			.run();
+
+		expect(await deleteTeam(db, game.id, rats.id)).toEqual({ status: 'has-media' });
+		expect(await names()).toEqual(['0:Canal Rats']);
+		expect(
+			await db.prepare('SELECT key FROM media_upload WHERE team_id = ?').bind(rats.id).first()
+		).toEqual({ key: 'photo' });
+	});
+
 	it('reports a team of another game as not found', async () => {
 		const other = await createGame(db, 'Other hunt');
 		const elsewhere = await seedTeam(db, other.id);
