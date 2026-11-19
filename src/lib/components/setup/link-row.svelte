@@ -224,8 +224,8 @@
 			<div class="flex gap-3">
 				<Button onclick={() => copy(url, field)}>
 					{clipboard.state === 'copied' ? 'Copied' : 'Copy'}<span class="sr-only">
-						{label} link</span
-					>
+						{label} link
+					</span>
 				</Button>
 				<Button onclick={() => (showingQr = true)}>
 					Show QR<span class="sr-only"> code of the {label} link</span>

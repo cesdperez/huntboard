@@ -11,7 +11,7 @@
 
 <p class="type-secondary">
 	Join code
-	<span class="ml-1 font-score text-[22px] font-extrabold tracking-wider text-ink select-all"
-		>{code}</span
-	>. Without the link, players type it at {joinPage}.
+	<span class="ml-1 font-score text-[22px] font-extrabold tracking-wider text-ink select-all">
+		{code}
+	</span>. Without the link, players type it at {joinPage}.
 </p>

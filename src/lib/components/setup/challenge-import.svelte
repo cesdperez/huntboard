@@ -181,9 +181,9 @@
 				<ul class="flex flex-col gap-1">
 					{#each preview.deletedWithClaims as deleted (deleted.id)}
 						<li class="text-[15px] break-words">
-							<bdi>{deleted.title}</bdi><span class="text-muted"
-								>, {plural(deleted.claimCount, 'claim')}</span
-							>
+							<bdi>{deleted.title}</bdi><span class="text-muted">
+								, {plural(deleted.claimCount, 'claim')}
+							</span>
 						</li>
 					{/each}
 				</ul>

@@ -126,11 +126,15 @@
 										class={[
 											'scoreboard-name line-clamp-2 break-words',
 											layout === 'event' && 'font-semibold'
-										]}>{row.name}</span
+										]}
 									>
-									{#if row.members}<span class="scoreboard-members block type-secondary break-words"
-											>{row.members}</span
-										>{/if}
+										{row.name}
+									</span>
+									{#if row.members}<span
+											class="scoreboard-members block type-secondary break-words"
+										>
+											{row.members}
+										</span>{/if}
 								</span>
 								{#if layout === 'event'}
 									<span class="flex shrink-0 flex-col items-end">

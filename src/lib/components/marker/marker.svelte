@@ -29,8 +29,10 @@
 		<span
 			class="marker-points"
 			data-long={String(points).length > 2 || undefined}
-			style:--digits={String(points).length}>{points}</span
+			style:--digits={String(points).length}
 		>
+			{points}
+		</span>
 	{:else if state === 'rejected'}
 		<svg class="marker-cross" viewBox="0 0 10 10" preserveAspectRatio="none" aria-hidden="true">
 			<path d="M0 0 L10 10 M10 0 L0 10" />

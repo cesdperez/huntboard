@@ -130,16 +130,16 @@
 					Everyone follows the same leaderboard as it changes.
 				</p>
 				<div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-					<Button href={resolve('/new')} data-sveltekit-reload variant="primary" size="lg"
-						>Create a game</Button
-					>
+					<Button href={resolve('/new')} data-sveltekit-reload variant="primary" size="lg">
+						Create a game
+					</Button>
 				</div>
 				<p class="mt-8 max-w-[40ch] text-[15px] leading-snug">
 					Playing in a hunt? Open the team link your organiser sent you. There is nothing to
 					install.
-					<a href={resolve('/join')} class="font-semibold underline underline-offset-4"
-						>Have a join code? Enter it</a
-					>
+					<a href={resolve('/join')} class="font-semibold underline underline-offset-4">
+						Have a join code? Enter it
+					</a>
 				</p>
 				<RecentGames class="mt-4 max-w-[40ch]" />
 			</div>
@@ -166,9 +166,9 @@
 							>
 								<span class="w-8 type-rank text-[20px]">{index + 1}</span>
 								<span class="flex-1 truncate font-semibold">{team.name}</span>
-								<span class="type-score text-[30px] text-score"
-									>{team.name === CLAIM.team ? Math.round(claimTotal.current) : team.total}</span
-								>
+								<span class="type-score text-[30px] text-score">
+									{team.name === CLAIM.team ? Math.round(claimTotal.current) : team.total}
+								</span>
 							</li>
 						{/each}
 					</ol>
@@ -246,8 +246,10 @@
 				data-sveltekit-reload
 				variant="primary"
 				size="lg"
-				class="self-start lg:self-end">Create a game</Button
+				class="self-start lg:self-end"
 			>
+				Create a game
+			</Button>
 		</div>
 	</section>
 </main>
@@ -262,18 +264,20 @@
 				target="_blank"
 				rel="noopener noreferrer"
 				class="inline-flex min-h-12 items-center font-semibold underline underline-offset-4"
-				>Buy me a coffee<HeartIcon class="ml-1 h-4 w-4" aria-hidden="true" /><span class="sr-only">
-					(opens in a new tab)</span
-				></a
 			>
+				Buy me a coffee<HeartIcon class="ml-1 h-4 w-4" aria-hidden="true" /><span class="sr-only">
+					(opens in a new tab)
+				</span>
+			</a>
 		</p>
 		<a
 			href={AUTHOR_URL}
 			target="_blank"
 			rel="noopener noreferrer"
 			class="inline-flex min-h-12 items-center type-secondary underline underline-offset-4"
-			>See my other projects<span class="sr-only"> (opens in a new tab)</span></a
 		>
+			See my other projects<span class="sr-only"> (opens in a new tab)</span>
+		</a>
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	</div>
 </footer>

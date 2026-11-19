@@ -63,8 +63,10 @@
 		The grid fills once the game has teams and challenges. Add them in
 		<a
 			class="font-semibold text-ink underline"
-			href={resolve('/a/[token]/setup', { token: data.game.admin_token })}>Setup</a
-		>.
+			href={resolve('/a/[token]/setup', { token: data.game.admin_token })}
+		>
+			Setup
+		</a>.
 	</p>
 {:else}
 	<div
@@ -99,8 +101,9 @@
 							<th colspan={data.teams.length + 1} class="border-b px-0 pt-4 pb-1 text-left">
 								<span
 									class="sticky left-0 pr-gutter pl-[max(var(--spacing-gutter),env(safe-area-inset-left))] font-display type-heading"
-									>{group.section}</span
 								>
+									{group.section}
+								</span>
 							</th>
 						</tr>
 					{/if}

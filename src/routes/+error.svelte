@@ -61,8 +61,9 @@
 				data-sveltekit-reload
 				data-sveltekit-replacestate
 				class="inline-flex min-h-touch items-center font-semibold text-ink underline"
-				>Open the new admin link</a
 			>
+				Open the new admin link
+			</a>
 		</p>
 	{:else if notFound}
 		<p class="type-secondary">
@@ -84,7 +85,8 @@
 		<a
 			href={resolve('/')}
 			class="inline-flex min-h-touch items-center font-semibold text-ink underline"
-			>Go to the home page</a
 		>
+			Go to the home page
+		</a>
 	</p>
 </main>

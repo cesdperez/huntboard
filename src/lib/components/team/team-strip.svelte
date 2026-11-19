@@ -68,19 +68,20 @@
 					     after its text, which would otherwise widen the page. -->
 					<span
 						class="relative line-clamp-2 font-display text-[20px] leading-tight font-bold break-words"
-						>{teamName}<span class="sr-only">,</span></span
 					>
+						{teamName}<span class="sr-only">,</span>
+					</span>
 					<!-- Kept out of the button's name, which would otherwise change every second. -->
-					<span aria-hidden="true" class="block truncate type-secondary tabular-nums"
-						>{countdown ?? ' '}</span
-					>
+					<span aria-hidden="true" class="block truncate type-secondary tabular-nums">
+						{countdown ?? ' '}
+					</span>
 				{:else}
-					<span class="relative line-clamp-2 type-heading break-words"
-						>{teamName}<span class="sr-only">,</span></span
-					>
-					{#if members}<span class="relative block truncate type-secondary"
-							>{members}<span class="sr-only">,</span></span
-						>{/if}
+					<span class="relative line-clamp-2 type-heading break-words">
+						{teamName}<span class="sr-only">,</span>
+					</span>
+					{#if members}<span class="relative block truncate type-secondary">
+							{members}<span class="sr-only">,</span>
+						</span>{/if}
 				{/if}
 			</span>
 			<!-- At full size a picture and a four digit total leave a phone too little room for the name. -->
@@ -120,9 +121,9 @@
 							{/if}
 							<span class="relative min-w-0 flex-1 truncate">
 								<bdi>{row.name}</bdi>{#if row.own}<span class="sr-only">, your team</span>{/if}
-								{#if row.members}<span class="block truncate type-secondary font-normal"
-										>{row.members}</span
-									>{/if}
+								{#if row.members}<span class="block truncate type-secondary font-normal">
+										{row.members}
+									</span>{/if}
 							</span>
 							<Points value={row.total} />
 						</li>

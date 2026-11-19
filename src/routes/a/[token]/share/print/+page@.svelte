@@ -81,9 +81,9 @@
 				{#if card.joinCode}
 					<p class="text-[15px]">
 						No camera? Go to {links.joinPage} and type
-						<span class="block font-score text-[32px] font-extrabold tracking-wider"
-							>{card.joinCode}</span
-						>
+						<span class="block font-score text-[32px] font-extrabold tracking-wider">
+							{card.joinCode}
+						</span>
 					</p>
 				{:else}
 					<p class="text-[13px] break-all">{card.url}</p>

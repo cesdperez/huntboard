@@ -57,8 +57,8 @@
 		</Button>
 		<Button disabled={!message} onclick={() => message && clipboard.copy(message)}>
 			{clipboard.state === 'copied' ? 'Copied' : 'Copy'}<span class="sr-only">
-				message for the captain of {team.name}</span
-			>
+				message for the captain of {team.name}
+			</span>
 		</Button>
 	</div>
 	<p class={cn('type-secondary', status && 'mt-2')} role="status">{status}</p>

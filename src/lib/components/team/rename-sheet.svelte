@@ -43,9 +43,9 @@
 	<Sheet.Content>
 		<Sheet.Header>
 			<Sheet.Title>Edit team</Sheet.Title>
-			<Sheet.Description
-				>Everyone sees the name and members, the organiser included.</Sheet.Description
-			>
+			<Sheet.Description>
+				Everyone sees the name and members, the organiser included.
+			</Sheet.Description>
 		</Sheet.Header>
 		{#key open}
 			<form

@@ -32,8 +32,10 @@
 		No teams yet. Add them in
 		<a
 			class="font-semibold text-ink underline"
-			href={resolve('/a/[token]/setup', { token: page.params.token ?? '' })}>Setup</a
-		>.
+			href={resolve('/a/[token]/setup', { token: page.params.token ?? '' })}
+		>
+			Setup
+		</a>.
 	</p>
 {:else}
 	<ol class="mt-4 flex flex-col border-t" aria-label="Teams">
