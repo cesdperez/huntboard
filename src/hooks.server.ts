@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { dev } from '$app/env';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
+import { LANDING_MARKDOWN, markdownResponse } from '#lib/server/http/markdown.js';
 import { measureD1Usage } from '#lib/server/http/d1-usage.js';
 import { analyticsHead, rejection, securityHeaders } from '#lib/server/http/request-guard.js';
 import { htmlAttributes, resolveAppearance } from '#lib/themes/index.js';
@@ -13,7 +14,9 @@ const guard: Handle = async ({ event, resolve }) => {
 	for (const [name, value] of Object.entries(securityHeaders(event.url))) {
 		response.headers.set(name, value);
 	}
-	return response;
+	return event.url.pathname === '/'
+		? markdownResponse(event.request, response, LANDING_MARKDOWN)
+		: response;
 };
 
 // On <html> from the first byte, so the page never paints in another theme and portalled sheets match.
