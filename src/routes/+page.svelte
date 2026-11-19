@@ -8,7 +8,14 @@
 	import { Marker } from '#lib/components/marker/index.js';
 	import { RecentGames } from '#lib/components/recent-games/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import { AUTHOR_URL, KOFI_URL } from '#lib/constants/site.js';
+	import {
+		HOME_DESCRIPTION,
+		HOME_TITLE,
+		HUNT_QUESTIONS,
+		HUNT_STEPS
+	} from '#lib/constants/homepage.js';
+	import { AUTHOR_URL, KOFI_URL, SITE_URL } from '#lib/constants/site.js';
+	import { DEFAULT_THEME, themeImages } from '#lib/themes/index.js';
 
 	// The example claim the hero judges once, so the leaderboard shows what a scored claim does.
 	const CLAIM = {
@@ -41,28 +48,15 @@
 		return () => clearTimeout(timer);
 	});
 
-	const steps = [
-		{
-			symbol: 'start',
-			title: 'Write your challenges',
-			text: 'Paste a list with a points range for each one. Set the start and end time, and a late penalty if you want one.'
-		},
-		{
-			symbol: 1,
-			title: 'Send each team its link',
-			text: 'Players need no account. Each team gets a private link and a QR code, picks a nickname and starts.'
-		},
-		{
-			symbol: 2,
-			title: 'Judge claims as they arrive',
-			text: 'Teams mark a challenge done and can attach a photo or video. You score it inside its range or reject it with a reason.'
-		},
-		{
-			symbol: 'finish',
-			title: 'Show the scoreboard',
-			text: 'Put it on a big screen at the finish. Totals change as you judge, and a QR code lets everyone follow on their phone.'
-		}
-	] as const;
+	const applicationSchema = JSON.stringify({
+		'@context': 'https://schema.org',
+		'@type': 'WebApplication',
+		name: 'Huntboard',
+		url: SITE_URL,
+		description: HOME_DESCRIPTION,
+		applicationCategory: 'GameApplication',
+		image: new URL(themeImages(DEFAULT_THEME).share, SITE_URL).href
+	}).replaceAll('<', '\\u003c');
 
 	const facts = [
 		{
@@ -85,11 +79,14 @@
 </script>
 
 <svelte:head>
-	<title>Huntboard: a live scoreboard for team scavenger hunts</title>
-	<meta
-		name="description"
-		content="Run a scavenger hunt from your phone. Teams claim challenges with photos and videos, you judge them, and everyone follows one live leaderboard."
-	/>
+	<title>{HOME_TITLE}</title>
+	<meta name="description" content={HOME_DESCRIPTION} />
+	<link rel="canonical" href={SITE_URL} />
+	<link rel="alternate" type="text/markdown" href={resolve('/index.md')} />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content={SITE_URL} />
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html `<script type="application/ld+json">${applicationSchema}</` + 'script>'}
 </svelte:head>
 
 {#snippet contours(className: string)}
@@ -190,7 +187,7 @@
 			scores are read out.
 		</p>
 		<ol class="course mt-10 lg:mt-14">
-			{#each steps as step (step.title)}
+			{#each HUNT_STEPS as step (step.title)}
 				<li class="course-step">
 					<div class="course-mark">
 						{@render courseSymbol(step.symbol)}
@@ -219,6 +216,18 @@
 				{/each}
 			</dl>
 		</div>
+	</section>
+
+	<section class="wide py-14 lg:py-24" aria-labelledby="questions-heading">
+		<h2 id="questions-heading" class="section-title">Frequently asked questions</h2>
+		<dl class="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2">
+			{#each HUNT_QUESTIONS as { question, answer } (question)}
+				<div class="border-t-2 border-line pt-4">
+					<dt class="type-heading text-[19px]">{question}</dt>
+					<dd class="mt-2 max-w-[52ch] type-secondary text-[16px]">{answer}</dd>
+				</div>
+			{/each}
+		</dl>
 	</section>
 
 	<section class="surface-app-bar" aria-labelledby="start-heading">

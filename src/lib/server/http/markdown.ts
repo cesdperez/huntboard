@@ -1,14 +1,20 @@
+import { HOME_DESCRIPTION, HUNT_QUESTIONS, HUNT_STEPS } from '#lib/constants/homepage.js';
+import { SITE_URL } from '#lib/constants/site.js';
+
 export const LANDING_MARKDOWN = `# Huntboard
 
-Run a scavenger hunt with a live scoreboard. Teams claim challenges from their phones. You judge each claim with its photo or video, and everyone follows the leaderboard as it changes.
+${HOME_DESCRIPTION}
 
-1. Write your challenges and set a points range, start and end times, and a late penalty if needed.
-2. Send each team its private link or QR code. Players choose a nickname and start.
-3. Judge claims as they arrive and award points or reject each claim with a reason.
-4. Show the scoreboard at the finish.
+## How a hunt runs
 
-- [Create a game](/new)
-- [Enter a join code](/join)
+${HUNT_STEPS.map((step, index) => `${index + 1}. **${step.title}.** ${step.text}`).join('\n')}
+
+## Frequently asked questions
+
+${HUNT_QUESTIONS.map(({ question, answer }) => `### ${question}\n\n${answer}`).join('\n\n')}
+
+- [Create a game](${SITE_URL}new)
+- [Enter a join code](${SITE_URL}join)
 `;
 
 function prefersMarkdown(request: Request) {
@@ -41,7 +47,6 @@ export function markdownResponse(request: Request, response: Response, markdown:
 	}
 
 	const headers = new Headers(response.headers);
-	headers.set('Content-Signal', 'ai-train=no, search=no, ai-input=no');
 	const vary = (headers.get('Vary') ?? '').split(',').map((value) => value.trim().toLowerCase());
 	if (!vary.includes('*') && !vary.includes('accept')) headers.append('Vary', 'Accept');
 	if (!prefersMarkdown(request))

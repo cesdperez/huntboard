@@ -84,8 +84,32 @@ describe('securityHeaders', () => {
 			'accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), bluetooth=(), serial=(), hid=(), midi=(), browsing-topics=(), publickey-credentials-get=(), screen-wake-lock=(), xr-spatial-tracking=()'
 		);
 		expect(headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
-		expect(headers['X-Robots-Tag']).toBe('noindex, nofollow');
 		expect(headers['Cache-Control']).toBeUndefined();
+	});
+
+	it.each(['/', '/sitemap.xml', '/llms.txt', '/index.md'])(
+		'allows crawlers to index successful public documents at %s',
+		(path) => {
+			const headers = securityHeaders(new URL(`https://huntboard.example${path}`), 200);
+			expect(headers['X-Robots-Tag']).toBeUndefined();
+			expect(headers['Content-Signal']).toBe('ai-train=no, search=yes, ai-input=yes');
+		}
+	);
+
+	it.each([
+		['/', 500],
+		['/a/example', 200],
+		['/t/example', 200],
+		['/s/example', 200],
+		['/media/123/claims/example.mp4', 200],
+		['/images/123/example.webp', 200],
+		['/join', 200],
+		['/login', 200],
+		['/missing', 404]
+	])('keeps %s (HTTP %i) out of search and AI answers', (path, status) => {
+		const headers = securityHeaders(new URL(`https://huntboard.example${path}`), status);
+		expect(headers['X-Robots-Tag']).toBe('noindex, nofollow');
+		expect(headers['Content-Signal']).toBe('ai-train=no, search=no, ai-input=no');
 	});
 
 	it.each([

@@ -1,3 +1,16 @@
 User-agent: *
-Content-Signal: ai-train=no, search=no, ai-input=no
-Disallow: /
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Disallow: /a/
+Disallow: /t/
+Disallow: /s/
+Disallow: /dev/
+Disallow: /images/
+Disallow: /media/
+Disallow: /games
+Disallow: /join
+Disallow: /login
+Disallow: /logout
+Disallow: /new
+
+Sitemap: https://huntboard.checho.xyz/sitemap.xml

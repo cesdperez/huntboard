@@ -1,9 +1,7 @@
 /*
-  Content-Signal: ai-train=no, search=no, ai-input=no
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: same-origin
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
-  X-Robots-Tag: noindex, nofollow
   Cross-Origin-Opener-Policy: same-origin
   Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), bluetooth=(), serial=(), hid=(), midi=(), browsing-topics=(), publickey-credentials-get=(), screen-wake-lock=(), xr-spatial-tracking=()

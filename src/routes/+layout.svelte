@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
+	import { HOME_DESCRIPTION, HOME_TITLE } from '#lib/constants/homepage.js';
 	import { connection, reportOnline } from '#lib/components/connection/index.js';
 	import { resolveAppearance, supportedModes, themeImages } from '#lib/themes/index.js';
 	import type { LayoutProps } from './$types';
@@ -34,8 +35,16 @@
 	<link rel="apple-touch-icon" href={images.touchIcon} />
 	<!-- Link previews in chats. The image URL must be absolute. -->
 	<meta property="og:site_name" content="Huntboard" />
-	<meta property="og:title" content={page.data.game?.name ?? 'Huntboard'} />
-	<meta property="og:description" content="A live scoreboard for team scavenger hunts." />
+	<meta
+		property="og:title"
+		content={page.route.id === '/' ? HOME_TITLE : (page.data.game?.name ?? 'Huntboard')}
+	/>
+	<meta
+		property="og:description"
+		content={page.route.id === '/'
+			? HOME_DESCRIPTION
+			: 'A live scoreboard for team scavenger hunts.'}
+	/>
 	<meta property="og:image" content={new URL(images.share, page.url.origin).href} />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />

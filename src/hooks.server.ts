@@ -7,11 +7,8 @@ import { analyticsHead, rejection, securityHeaders } from '#lib/server/http/requ
 import { htmlAttributes, resolveAppearance } from '#lib/themes/index.js';
 
 const guard: Handle = async ({ event, resolve }) => {
-	const early = rejection(event.request, { dev });
-	if (early) return early;
-
-	const response = await resolve(event);
-	for (const [name, value] of Object.entries(securityHeaders(event.url))) {
+	const response = rejection(event.request, { dev }) ?? (await resolve(event));
+	for (const [name, value] of Object.entries(securityHeaders(event.url, response.status))) {
 		response.headers.set(name, value);
 	}
 	return event.url.pathname === '/'

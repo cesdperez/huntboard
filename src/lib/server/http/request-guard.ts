@@ -6,6 +6,7 @@ export const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 // Secret links, and pages that show who is signed in.
 const PRIVATE_PATH = /^\/(?:[ats]\/[^/]+|login|games|new)(?:\/|$)/;
+const PUBLIC_DOCUMENTS = new Set(['/', '/sitemap.xml', '/llms.txt', '/index.md']);
 const BODYLESS_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const DEV_PATH = /^\/dev(?:\/|$)/;
 
@@ -31,7 +32,7 @@ export function rejection(request: Request, { dev } = { dev: false }): Response 
 }
 
 /** Headers for every dynamic response. CSP is set by SvelteKit so it can add nonces. */
-export function securityHeaders(url: URL): Record<string, string> {
+export function securityHeaders(url: URL, status = 200): Record<string, string> {
 	const headers: Record<string, string> = {
 		'X-Content-Type-Options': 'nosniff',
 		'X-Frame-Options': 'DENY',
@@ -40,9 +41,13 @@ export function securityHeaders(url: URL): Record<string, string> {
 		'Referrer-Policy': 'same-origin',
 		'Cross-Origin-Opener-Policy': 'same-origin',
 		'Permissions-Policy':
-			'accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), bluetooth=(), serial=(), hid=(), midi=(), browsing-topics=(), publickey-credentials-get=(), screen-wake-lock=(), xr-spatial-tracking=()',
-		'X-Robots-Tag': 'noindex, nofollow'
+			'accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), bluetooth=(), serial=(), hid=(), midi=(), browsing-topics=(), publickey-credentials-get=(), screen-wake-lock=(), xr-spatial-tracking=()'
 	};
+	const discoverable = status === 200 && PUBLIC_DOCUMENTS.has(url.pathname);
+	headers['Content-Signal'] = discoverable
+		? 'ai-train=no, search=yes, ai-input=yes'
+		: 'ai-train=no, search=no, ai-input=no';
+	if (!discoverable) headers['X-Robots-Tag'] = 'noindex, nofollow';
 	if (url.protocol === 'https:') {
 		headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload';
 	}
